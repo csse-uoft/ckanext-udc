@@ -1,0 +1,14 @@
+# udc_theme-js:
+#   filter: rjsmin
+#   output: ckanext-udc_theme/%(version)s-udc_theme.js
+#   contents:
+#     - js/udc_theme.js
+#   extra:
+#     preload:
+#       - base/main
+
+# udc_theme-css:
+#   filter: cssrewrite
+#   output: ckanext-udc_theme/%(version)s-udc_theme.css
+#   contents:
+#     - css/udc_theme.css
