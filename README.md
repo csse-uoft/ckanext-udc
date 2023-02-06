@@ -1,4 +1,4 @@
-[![Tests](https://github.com/LesterLyu/ckanext-udc/workflows/Tests/badge.svg?branch=main)](https://github.com/LesterLyu/ckanext-udc/actions)
+[![Tests](https://github.com/csse-uoft/ckanext-udc/workflows/Tests/badge.svg?branch=main)](https://github.com/csse-uoft/ckanext-udc/actions)
 
 # ckanext-udc
 
@@ -43,7 +43,7 @@ To install ckanext-udc:
 
 2. Clone the source and install it on the virtualenv
 
-    git clone https://github.com/LesterLyu/ckanext-udc.git
+    git clone https://github.com/csse-uoft/ckanext-udc.git
     cd ckanext-udc
     pip install -e .
 	pip install -r requirements.txt
@@ -73,7 +73,7 @@ None at present
 To install ckanext-udc for development, activate your CKAN virtualenv and
 do:
 
-    git clone https://github.com/LesterLyu/ckanext-udc.git
+    git clone https://github.com/csse-uoft/ckanext-udc.git
     cd ckanext-udc
     python setup.py develop
     pip install -r dev-requirements.txt
