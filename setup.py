@@ -11,19 +11,19 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='''ckanext-udc-theme''',
+    name='''ckanext-udc''',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
     version='0.0.1',
 
-    description='''Theme for Urban Data Centre''',
+    description='''Ckan Extension for Urban Data Centre''',
     long_description=long_description,
     long_description_content_type="text/markdown",
 
     # The project's main homepage.
-    url='https://github.com/LesterLyu/ckanext-udc-theme',
+    url='https://github.com/csse-uoft/ckanext-udc',
 
     # Author details
     author='''Lester Lyu''',
@@ -84,7 +84,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points='''
         [ckan.plugins]
-        udc_theme=ckanext.udc_theme.plugin:UdcThemePlugin
+        udc=ckanext.udc.plugin:UdcPlugin
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan

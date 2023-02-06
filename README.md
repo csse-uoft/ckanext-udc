@@ -1,6 +1,6 @@
 [![Tests](https://github.com/LesterLyu/ckanext-udc-theme/workflows/Tests/badge.svg?branch=main)](https://github.com/LesterLyu/ckanext-udc-theme/actions)
 
-# ckanext-udc-theme
+# ckanext-udc
 
 **TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
 
