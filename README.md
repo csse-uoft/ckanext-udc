@@ -2,13 +2,7 @@
 
 # ckanext-udc
 
-**TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
-
-
 ## Requirements
-
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
 
 If your extension works across different versions you can add the following table:
 
@@ -20,6 +14,7 @@ Compatibility with core CKAN versions:
 | 2.7             | not tested    |
 | 2.8             | not tested    |
 | 2.9             | not tested    |
+| 2.11.X          | yes           |
 
 Suggested values:
 
@@ -39,33 +34,33 @@ To install ckanext-udc:
 
 1. Activate your CKAN virtual environment, for example:
 
-     . /usr/lib/ckan/default/bin/activate
+    ```shell
+    . /usr/lib/ckan/default/bin/activate
+    ```
 
 2. Clone the source and install it on the virtualenv
 
+    ```shell
     git clone https://github.com/csse-uoft/ckanext-udc.git
     cd ckanext-udc
     pip install -e .
 	pip install -r requirements.txt
+    ```
 
-3. Add `udc-theme` to the `ckan.plugins` setting in your CKAN
+3. Add `udc` to the `ckan.plugins` setting in your CKAN
    config file (by default the config file is located at
    `/etc/ckan/default/ckan.ini`).
 
 4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
-     sudo service apache2 reload
+     ```shell
+     sudo supervisorctl reload
+     ```
 
 
 ## Config settings
 
 None at present
-
-**TODO:** Document any optional config settings here. For example:
-
-	# The minimum number of hours to wait before re-checking a resource
-	# (optional, default: 24).
-	ckanext.udc_theme.some_setting = some_default_value
 
 
 ## Developer installation
@@ -73,10 +68,12 @@ None at present
 To install ckanext-udc for development, activate your CKAN virtualenv and
 do:
 
-    git clone https://github.com/csse-uoft/ckanext-udc.git
-    cd ckanext-udc
-    python setup.py develop
-    pip install -r dev-requirements.txt
+```shell
+git clone https://github.com/csse-uoft/ckanext-udc.git
+cd ckanext-udc
+python setup.py develop
+pip install -r dev-requirements.txt
+```
 
 
 ## Tests
@@ -94,7 +91,7 @@ If ckanext-udc should be available on PyPI you can follow these steps to publish
 
 2. Make sure you have the latest version of necessary packages:
 
-    pip install --upgrade setuptools wheel twine
+       pip install --upgrade setuptools wheel twine
 
 3. Create a source and binary distributions of the new version:
 
