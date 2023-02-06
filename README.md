@@ -41,10 +41,11 @@ To install ckanext-udc:
 2. Clone the source and install it on the virtualenv
 
     ```shell
+    cd /usr/lib/ckan/default/src/
     git clone https://github.com/csse-uoft/ckanext-udc.git
     cd ckanext-udc
     pip install -e .
-	pip install -r requirements.txt
+    pip install -r requirements.txt
     ```
 
 3. Add `udc` to the `ckan.plugins` setting in your CKAN
