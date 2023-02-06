@@ -1,4 +1,4 @@
-[![Tests](https://github.com/LesterLyu/ckanext-udc-theme/workflows/Tests/badge.svg?branch=main)](https://github.com/LesterLyu/ckanext-udc-theme/actions)
+[![Tests](https://github.com/LesterLyu/ckanext-udc/workflows/Tests/badge.svg?branch=main)](https://github.com/LesterLyu/ckanext-udc/actions)
 
 # ckanext-udc
 
@@ -35,7 +35,7 @@ Suggested values:
    For example installing any non-Python dependencies or adding any required
    config settings.
 
-To install ckanext-udc-theme:
+To install ckanext-udc:
 
 1. Activate your CKAN virtual environment, for example:
 
@@ -43,8 +43,8 @@ To install ckanext-udc-theme:
 
 2. Clone the source and install it on the virtualenv
 
-    git clone https://github.com/LesterLyu/ckanext-udc-theme.git
-    cd ckanext-udc-theme
+    git clone https://github.com/LesterLyu/ckanext-udc.git
+    cd ckanext-udc
     pip install -e .
 	pip install -r requirements.txt
 
@@ -70,11 +70,11 @@ None at present
 
 ## Developer installation
 
-To install ckanext-udc-theme for development, activate your CKAN virtualenv and
+To install ckanext-udc for development, activate your CKAN virtualenv and
 do:
 
-    git clone https://github.com/LesterLyu/ckanext-udc-theme.git
-    cd ckanext-udc-theme
+    git clone https://github.com/LesterLyu/ckanext-udc.git
+    cd ckanext-udc
     python setup.py develop
     pip install -r dev-requirements.txt
 
@@ -86,9 +86,9 @@ To run the tests, do:
     pytest --ckan-ini=test.ini
 
 
-## Releasing a new version of ckanext-udc-theme
+## Releasing a new version of ckanext-udc
 
-If ckanext-udc-theme should be available on PyPI you can follow these steps to publish a new version:
+If ckanext-udc should be available on PyPI you can follow these steps to publish a new version:
 
 1. Update the version number in the `setup.py` file. See [PEP 440](http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers) for how to choose version numbers.
 
