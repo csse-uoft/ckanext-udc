@@ -1,0 +1,12 @@
+{% import 'macros/form.html' as form %}
+
+{% for level in h.config %}
+  <hr/>
+  <h1>{{ level["title"] }}</h1>
+  {% for field in level["fields"] %}
+    {# Here we have the field #}
+    {% set id = "field" + field["name"] %}
+    {{ form.input(field["name"], label=_(field["label"]), type=field.get("type"), id=id, value=data[field["name"]], error=errors[field["name"]], classes=['control-medium']) }}
+  
+  {% endfor %}
+{% endfor %}

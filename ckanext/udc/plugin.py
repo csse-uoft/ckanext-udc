@@ -1,6 +1,8 @@
 from ckan.types import Schema
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
+import json
+import os
 
 
 """
@@ -14,24 +16,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
 
-    # Basic Information
-    extra_basic_information = [
-        'theme',
-        'access_category',
-    ]
+    # Load JSON config
+    config_file = open(os.path.join(os.path.dirname(__file__), "config.json"))
+    config = json.load(config_file)
 
-    # Data Generation
-    extra_data_generation = [
-        'content_generated',
-        'access_diff_version',
-        'access_undo',
-        'ownership_owns_previous_data',
-        'ownership_owns_tool',
-        'provenance_standard',
-        'provenance_involved_people',
-        'temporal_location',
-        'statistical_gained_and_lost',
-    ]
+    all_fields = []
+    for level in config:
+        for field in level["fields"]:
+            all_fields.append(field["name"])
 
     def update_config(self, config_):
         tk.add_template_directory(config_, 'templates')
@@ -40,15 +32,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def _modify_package_schema(self, schema: Schema) -> Schema:
         # our custom field
-        for field in [*self.extra_basic_information, *self.extra_data_generation]:
+        for field in self.all_fields:
             schema.update({
                 field: [tk.get_validator('ignore_missing'),
                         tk.get_converter('convert_to_extras')],
             })
-        schema.update({
-            'published_date': [tk.get_validator('ignore_missing'),
-                               tk.get_converter('convert_to_extras')],
-        })
 
         return schema
 
@@ -64,20 +52,16 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def show_package_schema(self) -> Schema:
         schema: Schema = super(UdcPlugin, self).show_package_schema()
-        for field in [*self.extra_basic_information, *self.extra_data_generation]:
+        for field in self.all_fields:
             schema.update({
                 field: [tk.get_converter('convert_from_extras'),
                         tk.get_validator('ignore_missing')],
             })
-        schema.update({
-            'published_date': [tk.get_converter('convert_from_extras'),
-                               tk.get_validator('ignore_missing')],
-        })
 
         return schema
 
     def get_helpers(self):
-        return {}
+        return {"config": self.config}
 
     def is_fallback(self):
         # Return True to register this plugin as the default handler for

@@ -1,0 +1,61 @@
+[   
+    {
+        "title": "Basic Information",
+        "fields": [
+            {
+                "name": "theme",
+                "label": "Domain / Topic"
+            },
+            {
+                "name": "access_category",
+                "label": "Access Category"
+            },
+            {
+                "name": "published_date",
+                "label": "Published Date",
+                "type": "date"
+            }
+        ]
+    },
+    {
+        "title": "Data Generation",
+        "fields": [
+            {
+                "name": "content_generated",
+                "label": "How was data generated?"
+            },
+            {
+                "name": "access_diff_version",
+                "label": "Can different versions of the data be accessed?"
+            },
+            {
+                "name": "access_undo",
+                "label": "Can you undo latest changes to a previous version?"
+            },
+            {
+                "name": "ownership_owns_previous_data",
+                "label": "Who owns the previous data?"
+            },
+            {
+                "name": "ownership_owns_tool",
+                "label": "Who owns the tool that generated the data?"
+            },
+            {
+                "name": "provenance_standard",
+                "label": "What standard was used to generate the data?"
+            },
+            {
+                "name": "provenance_involved_people",
+                "label": "Who was involved in generating the data?"
+            },
+            {
+                "name": "temporal_location",
+                "label": "Where was the data generated?"
+            },
+            {
+                "name": "statistical_gained_and_lost",
+                "label": "How much data was gained or lost in the generation processes?"
+            }
+        ]
+    }
+]
