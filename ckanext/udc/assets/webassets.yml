@@ -1,11 +1,11 @@
-# udc-js:
-#   filter: rjsmin
-#   output: ckanext-udc/%(version)s-udc.js
-#   contents:
-#     - js/udc.js
-#   extra:
-#     preload:
-#       - base/main
+package-js:
+  filter: rjsmin
+  output: ckanext-udc/%(version)s-package.js
+  contents:
+    - js/package.js
+  extra:
+    preload:
+      - base/main
 
 # udc-css:
 #   filter: cssrewrite

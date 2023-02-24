@@ -2,6 +2,13 @@
 
 # ckanext-udc
 
+## Supported CKAN Fields
+- `title`: Title
+- `description`: Description
+- `tags`: Tags / Keywords
+- `license`: License
+- `author`: Author/Creator
+
 ## Requirements
 
 If your extension works across different versions you can add the following table:

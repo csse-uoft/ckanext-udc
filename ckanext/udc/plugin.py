@@ -23,12 +23,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     all_fields = []
     for level in config:
         for field in level["fields"]:
-            all_fields.append(field["name"])
+            if field.get("name"):
+                all_fields.append(field["name"])
 
     def update_config(self, config_):
         tk.add_template_directory(config_, 'templates')
         tk.add_public_directory(config_, 'public')
-        tk.add_resource('fanstatic', 'udc')
+        tk.add_resource('assets', 'udc')
 
     def _modify_package_schema(self, schema: Schema) -> Schema:
         # our custom field

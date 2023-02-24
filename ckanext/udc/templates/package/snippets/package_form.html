@@ -1,9 +1,12 @@
 {% import 'macros/form.html' as form %}
+{% import 'package/macros/ckan_fields.html' as package_fields with context %}
 {% set action = g.form_action or '' %}
+
+{% asset 'udc/package-js'%}
 
 {# This provides a full page that renders a form for adding a dataset. It can
 then itself be extended to add/remove blocks of functionality. #}
-<form id="dataset-edit" method="post" action="{{ action }}" data-module="basic-form" novalidate>
+<form id="dataset-edit" method="post" action="{{ action }}" data-module="basic-form package-form" novalidate>
   {{ h.csrf_input() }}
   {% block stages %}
     {{ h.snippet('package/snippets/stages.html', stages=stage, dataset_type=dataset_type) }}
@@ -14,21 +17,58 @@ then itself be extended to add/remove blocks of functionality. #}
   <input type="hidden" name="pkg_name" value="{{ data.id }}" />
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
-  {% block basic_fields %}
-    {% snippet 'package/snippets/package_basic_information.html', data=data, errors=errors %}
-  {% endblock %}
+  <div>
+    <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
+      </li>
 
-  {% block metadata_fields %}
-    {% snippet 'package/snippets/package_metadata_fields.html', data=data, errors=errors %}
-  {% endblock %}
+       {% for level in h.config %}
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+        </li>
+      {% endfor %}
 
-  {% block data_generation %}
-    {% snippet 'package/snippets/package_maturity_fields.html', data=data, errors=errors %}
-  {% endblock %}
+    </ul>
+    {# CKAN Default fields #}
+    <div class="tab-content" style="display:initial;">
+      <div class="tab-pane active" id="basic-information" role="tabpanel">
+        {% block basic_fields %}
+          {% snippet 'package/snippets/package_basic_information.html', data=data, errors=errors %}
+        {% endblock %}
+        {% block metadata_fields %}
+          {% snippet 'package/snippets/package_metadata_fields.html', data=data, errors=errors %}
+        {% endblock %}
+        {% block custom_fields %}
+          {% snippet 'package/snippets/package_custom_fields.html', data=data, errors=errors %}
+        {% endblock %}
+      </div>
+      <script type=text/javascript>
+        window.packageConfig = {{h.config | tojson}};
+      </script>
+      {% for level in h.config %}
+        <div class="tab-pane fade" id="{{ level["name"] }}" role="tabpanel">
+          <h2 style="padding-top:12px">{{ level["title"] }}</h1>
+          <div class="progress" style="margin-bottom:24px">
+            <div class="progress-bar" id="progress-{{loop.index}}" role="progressbar" style="width: 0%;">0%</div>
+          </div>
+          {% for field in level["fields"] %}
+            {# Here we have the field #}
+            {% if field.get("ckanField") != none %}
+              {# CKAN predefined field #}
+              {{ package_fields[field["ckanField"]](data=data, errors=errors, custom_id=("field-" + field["ckanField"] + "-clone") , is_custom=True) }}
+            {% else %}
+              {# Our customized field #}
+              {% set id = "field-" + field["name"] %}
+              {{ form.input(field["name"], label=_(field["label"]), type=field.get("type"), id=id, value=data[field["name"]], error=errors[field["name"]], classes=['control-medium']) }}
+            {% endif %}
+          
+        {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
 
-  {% block custom_fields %}
-    {% snippet 'package/snippets/package_custom_fields.html', data=data, errors=errors %}
-  {% endblock %}
+  </div>
 
   {% block form_actions %}
     <div class="form-actions">

@@ -1,24 +1,41 @@
 [   
     {
-        "title": "Basic Information",
+        "title": "Other Information",
+        "name": "maturity_level_1",
         "fields": [
             {
                 "name": "theme",
                 "label": "Domain / Topic"
             },
             {
+                "ckanField": "title"
+            },
+            {
+                "ckanField": "description"
+            },
+            {
+                "ckanField": "tags"
+            },
+            {
                 "name": "access_category",
                 "label": "Access Category"
+            },
+            {
+                "ckanField": "license"
             },
             {
                 "name": "published_date",
                 "label": "Published Date",
                 "type": "date"
+            },
+            {
+                "ckanField": "author"
             }
         ]
     },
     {
         "title": "Data Generation",
+        "name": "maturity_level_2",
         "fields": [
             {
                 "name": "content_generated",

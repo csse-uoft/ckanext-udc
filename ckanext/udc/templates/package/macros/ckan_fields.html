@@ -1,0 +1,105 @@
+{% import 'macros/form.html' as form %}
+
+{# CKAN Package Title+URL #}
+{% macro title(data, errors, custom_id="", is_custom=False) %}
+
+{% if not is_custom %}
+    {% block package_basic_fields_title %}
+      {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target', 'class': 'form-control'}) }}
+    {% endblock %}
+    {% block package_basic_fields_url %}
+      {% set prefix = h.url_for('dataset.read', id='') %}
+      {% set domain = h.url_for('dataset.read', id='', qualified=true) %}
+      {% set domain = domain|replace("http://", "")|replace("https://", "") %}
+      {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<dataset>', 'class': 'form-control input-sm'} %}
+
+      {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+    {% endblock %}
+{% else %}
+  {{ form.input(custom_id, id=custom_id, label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.name, classes=['control-full', 'control-large'], attrs={'class': 'form-control', 'sync-with': 'field-title'}) }}
+{% endif %}
+{% endmacro %}
+
+{# CKAN Package Description/Notes #}
+{% macro description(data, errors, custom_id="", is_custom=False)%}
+
+  {% if not is_custom %}
+    {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes) }}
+  {% else %}
+    {{ form.markdown(custom_id, id=custom_id, label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes, attrs={'class': 'form-control', 'sync-with': 'field-notes'}) }}
+  {% endif %}
+{% endmacro%}
+
+
+
+{# CKAN Package Tags/Keywards #}
+{% macro tags(data, errors, custom_id="", is_custom=False)%}
+  {% if not is_custom %}
+    {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+    {{ form.input('tag_string', id='field-tags', label=_('Tags / Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
+  {% else %}
+    {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?', 'sync-with': 'field-tags'} %}
+    {{ form.input(custom_id, id=custom_id, label=_('Tags / Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
+  {% endif %}
+{% endmacro%}
+
+{# CKAN Package License #}
+{% macro license(data, errors, custom_id="", is_custom=False)%}
+  {% if not is_custom %}
+    <div class="form-group control-full">
+      {% set error = errors.license_id %}
+      <label class="form-label" for="field-license">{{ _("License") }}</label>
+      <div class="controls">
+        <select id="field-license" name="license_id" data-module="autocomplete">
+          {% set existing_license_id = data.get('license_id') %}
+          {% set empty_license = _('Please select the license') %}
+          <option value="">{{ empty_license }}</option>
+          {% for license_id, license_desc in h.license_options(existing_license_id) %}
+            <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+          {% endfor %}
+        </select>
+        {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+        <span class="info-block">
+          <i class="fa fa-info-circle"></i>
+          {% trans %}
+          License definitions and additional information can be found
+          at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+          {% endtrans %}
+        </span>
+      </div>
+    </div>
+  {% else %}
+    <div class="form-group control-full">
+      {% set error = errors.license_id %}
+      <label class="form-label" for="field-license-clone">{{ _("License") }}</label>
+      <div class="controls">
+        <select id="{{ custom_id }}" name="{{ custom_id }}" data-module="autocomplete" sync-with="field-license">
+          {% set existing_license_id = data.get('license_id') %}
+          {% set empty_license = _('Please select the license') %}
+          <option value="">{{ empty_license }}</option>
+          {% for license_id, license_desc in h.license_options(existing_license_id) %}
+            <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+          {% endfor %}
+        </select>
+        {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+        <span class="info-block">
+          <i class="fa fa-info-circle"></i>
+          {% trans %}
+          License definitions and additional information can be found
+          at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+          {% endtrans %}
+        </span>
+      </div>
+    </div>
+  {% endif %}
+{% endmacro%}
+
+{# CKAN Package Author #}
+{% macro author(data, errors, custom_id="", is_custom=False)%}
+  {% if not is_custom %}
+    {{ form.input('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium']) }}
+  {% else %}
+    {{ form.input(custom_id, label=_('Author'), id=custom_id, placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium'], attrs={'class': 'form-control', 'sync-with': 'field-author'}) }}
+  {% endif %}
+{% endmacro%}
+
