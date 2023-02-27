@@ -9,7 +9,9 @@ this.ckan.module('package-form', function ($) {
 
             // Percentages on each maturity level
             this.levels = []; // number of fields in each level
+            this.tabs = []; // tab elements for each level
             for (const [i, level] of window.packageConfig.entries()) {
+                this.tabs.push(document.querySelector("#maturity_level_" + (i + 1) + "-tab"));
                 if (level.fields) {
                     this.levels[i] = {
                         totalFields: level.fields.length,
@@ -95,12 +97,13 @@ this.ckan.module('package-form', function ($) {
 
             // Trigger _onFieldChange to set percentage
             this._onFieldChange();
+            
 
         },
         _onFieldChange: function() {
             console.log('updated')
             // Calculate percentage after field changed
-            for (const {totalFields, fieldElements, progressElement} of this.levels) {
+            for (const [i, {totalFields, fieldElements, progressElement}] of this.levels.entries()) {
                 let inputtedFields = 0;
                 for (const fieldElement of fieldElements) {
                     if (fieldElement.value != null && fieldElement.value !== '') {
@@ -111,6 +114,9 @@ this.ckan.module('package-form', function ($) {
                 const percentage = (inputtedFields / totalFields * 100).toFixed(0);
                 progressElement.innerHTML = `${percentage}%`;
                 progressElement.style = `width: ${percentage}%`
+
+                // Update the percentage in the tab
+                this.tabs[i].innerHTML = `Maturity Level ${i + 1} (${percentage}%)`
             }
         },
         _onClick: function () {

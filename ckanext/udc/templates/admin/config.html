@@ -1,0 +1,20 @@
+{% ckan_extends %}
+{% import 'macros/form.html' as form %}
+
+{% block admin_form_help %}
+  {{ super() }}
+  {% set udc_help = "https://github.com/csse-uoft/ckanext-udc#supported-ckan-fields" %}
+  <p><strong>Maturity Model JSON:</strong> This is the JSON config that defines the maturity model. See <a href="{{ udc_help }}" target="_blank">supported CKAN fields</a>.</p>
+  
+{% endblock %}
+
+
+
+{% block admin_form %}
+
+  {{ super() }}
+  
+  <h3>UDC configuration options </h3>
+  {{ form.textarea('ckanext.udc.maturity_model', id='field-ckanext.udc.maturity_model', label=_('Maturity Model JSON'), value=data['ckanext.udc.maturity_model'], error=errors['ckanext.udc.maturity_model'], attrs={'class': 'form-control'}) }}
+  
+{% endblock %}
