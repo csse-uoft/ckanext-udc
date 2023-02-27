@@ -156,9 +156,9 @@ def config_option_update(original_action, context, data_dict):
 
 
 # CKAN Config Validator
-def udc_config_validor(config):
+def udc_config_validor(config_str):
     try:
-        config = json.loads(config)
+        config = json.loads(config_str)
         all_fields = []
         for level in config:
             for field in level["fields"]:
@@ -166,4 +166,4 @@ def udc_config_validor(config):
                     all_fields.append(field["name"])
     except:
         raise tk.Invalid("Malformed UDC JSON Config.")
-    return config
+    return config_str
