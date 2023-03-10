@@ -6,6 +6,12 @@ this.ckan.module('package-form', function ($) {
     return {
         initialize: function () {
             this.clonedFields = [];
+            
+            // Initialize Tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            })
 
             // Percentages on each maturity level
             this.levels = []; // number of fields in each level

@@ -5,7 +5,9 @@
         "fields": [
             {
                 "name": "theme",
-                "label": "Domain / Topic"
+                "label": "Domain / Topic",
+                "short_description": "The theme.",
+                "long_description": "The theme or topic of the package."
             },
             {
                 "ckanField": "title"
@@ -43,7 +45,13 @@
             },
             {
                 "name": "access_diff_version",
-                "label": "Can different versions of the data be accessed?"
+                "label": "Can different versions of the data be accessed?",
+                "type": "single_select",
+                "options": [
+                    {"text": "N/A", "value": ""},
+                    {"text": "Yes", "value": "true"},
+                    {"text": "No", "value": "false"}
+                ]
             },
             {
                 "name": "access_undo",
