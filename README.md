@@ -9,6 +9,25 @@
 - `license`: License
 - `author`: Author/Creator
 
+## Supported field types
+- `text`
+- `date`
+- `datetime`
+- `time`
+- `single_select`
+   ```json
+   {
+       "name": "access_diff_version",
+       "label": "Can different versions of the data be accessed?",
+       "type": "single_select",
+       "options": [
+           {"text": "N/A", "value": ""},
+           {"text": "Yes", "value": "true"},
+           {"text": "No", "value": "false"}
+       ]
+   }
+   ```
+
 ## Requirements
 
 If your extension works across different versions you can add the following table:
