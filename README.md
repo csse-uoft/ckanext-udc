@@ -2,24 +2,69 @@
 
 # ckanext-udc
 
-## Supported CKAN Fields
+## Config Schema
+```js
+[   
+    // The first level.
+    {
+        "title": "level 1 title",
+        "name": "maturity_level_1",
+        "fields": [
+            {
+                // Internal names, used in APIs. Special characters are not allowed.
+                "name": "theme",
+
+                // The Label of this field
+                "label": "Domain / Topic",
+
+                // The short description is under the field
+                "short_description": "The theme.",
+
+                // The long description is displayed when the cursor is hovered/clicked on the `quesion mark icon`
+                "long_description": "The theme or topic of the package.",
+
+                // The type of this field, default to "text".        
+                // See "Supported field types" section for all supported types.
+                "type": "text"
+            },
+            {
+                // This clones the field that predefined in CKAN.
+                // See "Supported CKAN Fields" section for all supported CKAN Fields
+                "ckanField": "title"
+            },
+        ]
+    },
+    // The second level.
+    {
+        "title": "level 2 title",
+        "name": "maturity_level_2",
+        "fields": [
+            {...}
+        ]
+    }
+]
+```
+
+### Supported CKAN Fields
 - `title`: Title
 - `description`: Description
 - `tags`: Tags / Keywords
 - `license`: License
 - `author`: Author/Creator
 
-## Supported field types
+### Supported field types
 - `text`
 - `date`
 - `datetime`
 - `time`
 - `single_select`
-   ```json
+   ```js
    {
        "name": "access_diff_version",
        "label": "Can different versions of the data be accessed?",
        "type": "single_select",
+       // A list of available options.
+       // The "value" must be a string.
        "options": [
            {"text": "N/A", "value": ""},
            {"text": "Yes", "value": "true"},
@@ -27,6 +72,8 @@
        ]
    }
    ```
+
+## 
 
 ## Requirements
 
