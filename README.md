@@ -2,6 +2,7 @@
 
 # ckanext-udc
 
+## [Developer Manual](./DEV.md)
 ## Config Schema
 ```js
 [   
@@ -72,8 +73,6 @@
        ]
    }
    ```
-
-## 
 
 ## Requirements
 
