@@ -1,4 +1,5 @@
 <section class="additional-info">
+  <script src="/base/javascript/modules/package-view.js" type="text/javascript"></script>
   <h3>{{ _('Additional Info') }}</h3>
 
   <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
@@ -132,21 +133,32 @@
 
           {% for field in level["fields"] %}
           {# Here we have the field #}
-          {% if pkg_dict[field["name"]] %}
+          {% if field["label"] %}
             <tr>
-              <th scope="row" class="dataset-label">{{ _(field["label"]) }}</th>
-
+              <th scope="row" class="dataset-label">
+                {# Label #}
+                {{ _(field["label"]) }}
+                {# Descriptions if exist #}
+                {% if field["short_description"] %}
+                  <div class="form-text">
+                    {{ field["short_description"] }}
+                    {% if field["long_description"] %}
+                      <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ field["long_description"] }}">
+                        <i class="fa-regular fa-circle-question"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </th>
+              <td class="dataset-details">
               {% if field.get("ckanField") != none %}
                 {# TODO: CKAN predefined field #}
-                <td class="dataset-details">
-                  {{ pkg_dict[field["ckanField"]] }}
-                </td>
+                {{ pkg_dict[field["ckanField"]] }}
               {% else %}
-                <td class="dataset-details">
-                  {{ pkg_dict[field["name"]] }}
-                </td>
+                {{ pkg_dict[field["name"]] }}
               {% endif %}
-              
+
+              </td>
             </tr>
           {% endif %}
           
