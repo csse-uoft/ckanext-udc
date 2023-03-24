@@ -60,7 +60,38 @@ then itself be extended to add/remove blocks of functionality. #}
             {% else %}
               {# Our customized field #}
               {% set id = "field-" + field["name"] %}
-              {{ form.input(field["name"], label=_(field["label"]), type=field.get("type"), id=id, value=data[field["name"]], error=errors[field["name"]], classes=['control-medium']) }}
+              {% if field.get("type") == "single_select" %}
+
+                {% call form.select(field["name"], label=_(field["label"]), id=id, selected=data[field["name"]], options=field["options"], error=errors[field["name"]], classes=['control-medium']) %}
+                  {% if field["short_description"] %}
+                    <span class="form-text">
+                      {{ field["short_description"] }}
+                      {% if field["long_description"] %}
+                        <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ field["long_description"] }}">
+                          <i class="fa-regular fa-circle-question"></i>
+                        </button>
+                      {% endif %}
+                    </span>
+                  {% endif %}
+                {% endcall %}
+
+              {% else %}
+
+                {% call form.input(field["name"], label=_(field["label"]), type=field.get("type"), id=id, value=data[field["name"]], error=errors[field["name"]], classes=['control-medium']) %}
+                  {% if field["short_description"] %}
+                    <span class="form-text">
+                      {{ field["short_description"] }}
+                      {% if field["long_description"] %}
+                        <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ field["long_description"] }}">
+                          <i class="fa-regular fa-circle-question"></i>
+                        </button>
+                      {% endif %}
+                    </span>
+                  {% endif %}
+                {% endcall %}
+
+              {% endif %}
+              
             {% endif %}
           
         {% endfor %}
