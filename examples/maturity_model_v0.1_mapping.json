@@ -1,0 +1,114 @@
+/*
+	Mapping between met models and CKAN plugin metamodel fields.
+
+ 	CKAN metadata fields shoudl be reused as much as possible. 
+ 	For example, if defining a name for a dataset, use ckanField:name.
+ 	
+	List of possible CKAN field. Prefix with ckanField: (e.g. "ckanField:name")
+		name
+		title
+		private
+		author
+		author_email
+		maintainer
+		maintainer_email
+		license_id
+		notes
+		url
+		version
+		state
+		resources
+		tags
+*/
+
+[
+	{
+		"name"			: "maturity_level_1",
+		"mapping"		: 
+		{
+			"content_theme"			: {"dcat:theme":"skos:Concept"},
+			"ckanField:title"		: {"dct:title":"rdfs:Literal"},
+			"unique_identifier" 	: {"dct:Identifier":"rdfs:Label"},
+			"ckanField:description"	: {"dct:description":"rdfs:Literal"},
+			"ckanField:tags"		: {"dcat:keyword":"rdfs:Literal"},
+
+			"access_category"		: {"dct:accessRights"	: "dct:RightsStatement"},
+			"ckanFile:license"		: {"dct:license"		: "dct:LicenseDocument"},
+			"ckanField:format"		: {"dct:format"			: "dct:MediaTypeOrExtent"},
+			"location"				: {"dcat:accessURL"		: "rdfs:Resource"},
+
+			"ckanField:author"		: {"dct:creator"		: "foaf:Agent"},
+			"owner"					: {"dct:rightsHolder"	: "foaf:Agent"},
+
+			"published_date"		: {"dct:issued"			: "xsd:datetime"},
+
+			"time_span_start"		: {"hasTemporalStart"	: "xsd:datetime"},
+			"time_span_end"			: {"hasTemporalEnd"		: "xsd:datetime"},
+			"time_span"				: {"dct:temporal"		: "dct:PeriodOfTime"},
+			"geo_span"				: {"dct:spatial"		: "dct:Location"},
+		}
+	},
+	{
+		"name"			: "maturity_level_2",
+		"mapping"		: 
+		{
+			"contains_individual_data"	: {"containsIndividualData":"xsd:boolean"},
+			"contains_identifiable_individual_data"	: {"containsIdentifiableIndividualData":"xsd:boolean"},
+			"contains_indigenous_data"	: {"containsIndigenousData":"xsd:boolean"},
+
+			"limits_on_use"				: {"odrl:hasPolicy"		: "odrl:Policy"},
+
+			"access_steward"			: {"rightsHolder"		: "foaf:Agent"},
+			"indigenous_access_steward"	: {"indigenousRightsHolder"		: "foaf:Agent"},
+
+			"indigenous_span"			: {"communitySpan"		: "rdfs:Literal"}
+
+
+		}
+	},
+	{
+		"name"			: "maturity_level_3",
+		"mapping"		: 
+		{
+			"language"					: {"dct:Language"	: "dct:LinguisticSystem"},
+			"persistent_identifier"		: {"fair:rda-f1-01d"	: "xsd:boolean"},
+			"global_unique_identifier"	: {"fair:rda-f1-02d"	: "xsd:boolean"},
+			"description_document"		: {"dcat:landingPage"	: "foaf:Document"},
+
+			"temporal_resolution"		: {"dcat:temporalResolution"		: "xsd:duration"},
+			"geospatial_resolution"		: {"dcat:spatialResolutionInMeters"	: "xsd:decimal"}
+
+		}
+	},
+
+	{
+		"name"			: "maturity_level_5",
+		"mapping"		: 
+		{
+			"fair_rda_i1_01d"		: {"fair:rda-i1-01d"		: "xsd:boolean"},
+			"fair_rda_i1_02d"		: {"fair:rda-i1-02d"		: "xsd:boolean"},
+			"fair_rda_i2_01d"		: {"fair:rda-i2-01d"		: "xsd:boolean"},
+			"fair_rda_i3_01d "		: {"fair:rda-i3-01d"		: "xsd:boolean"},
+			"fair_rda_i3_02d "		: {"fair:rda-i3-02d"		: "xsd:boolean"},
+			"fair_rda_a1_2_01d"		: {"fair:rda-a1.2-01d"		: "xsd:boolean"},
+			"fair_rda_a1_02d "		: {"fair:rda-a1-02d"		: "xsd:boolean"},
+			"fair_rda_a1_03d "		: {"fair:rda-a1-03d"		: "xsd:boolean"},
+			"fair_rda_a1_04d "		: {"fair:rda-a1-04d"		: "xsd:boolean"},
+			"fair_rda_r1_3_01d "	: {"fair:rda-r1.3-01d"		: "xsd:boolean"},
+			"fair_rda_a1_05d "		: {"fair:rda-a1-05d"		: "xsd:boolean"},
+			"fair_rda_a1_1_01d "	: {"fair:rda-a1.1-01d"		: "xsd:boolean"}
+		}
+	},
+	{
+		"name"			: "maturity_level_7",
+		"mapping"		: 
+		{
+			"quality_annotation"					: {"dqv:hasQualityAnnotation"		: "dqv:QualityAnnotation"},
+			"quality_dimension_metric"				: {"dqv:inDimension":		"dqv:Dimension"}
+		}
+	}
+
+
+]
+
+
