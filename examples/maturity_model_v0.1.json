@@ -1,0 +1,218 @@
+[{
+        "title": "Maturity Level 1 (Basic Information)",
+        "name": "maturity_level_1",
+        "fields": [{
+                "name": "theme",
+                "label": "Domain / Topic",
+                "type": "text"
+            },
+            {
+                "ckanField": "title"
+            },
+            {
+                "name": "unique_identifier",
+                "label": "Identifier"
+            },
+            {
+                "ckanField": "description"
+            },
+            {
+                "ckanField": "tags"
+            },
+            {
+                "name": "access_category",
+                "label": "Access category"
+            },
+            {
+                "ckanField": "license"
+            },
+            {
+                "ckanField": "author"
+            },
+            {
+                "name": "owner",
+                "label": "Owner",
+                "type": "text"
+            },
+            {
+                "name": "published_date",
+                "label": "Published Date",
+                "type": "date"
+            },
+            {
+                "name": "time_span_start",
+                "label": "Time Span (start date)",
+                "type": "date"
+            },
+            {
+                "name": "time_span_end",
+                "label": "Time Span (end date)",
+                "type": "date"
+            },
+            {
+                "name": "geo_span",
+                "label": "GeoSpatial Area Span (a spatial region or named place)",
+                "type": "text"
+            }
+        ]
+    },
+
+    {
+        "title": "Maturity Level 2 (Privacy)",
+        "name": "maturity_level_2",
+        "fields": [{
+                "name": "contains_individual_data",
+                "label": "Contains Individual Data",
+                "type": "bool"
+            },
+            {
+                "name": "contains_identifiable_individual_data",
+                "label": "Contains Identifiable Data",
+                "type": "bool"
+            },
+            {
+                "name": "contains_indigenous_data",
+                "label": "Contains Indigenous Data",
+                "type": "bool"
+            },
+            {
+                "name": "limits_on_use",
+                "label": "Limits on use",
+                "type": "text"
+            },
+            {
+                "name": "access_steward",
+                "label": "Who to contact regarding access",
+                "type": "text"
+            },
+            {
+                "name": "indigenous_access_steward",
+                "label": "Who gave permission (for Indigenous data)",
+                "type": "text"
+            },
+            {
+                "name": "indigenous_span",
+                "label": "Indigenous communities from which data is derived",
+                "type": "text"
+            }
+        ]
+    },
+
+    {
+        "title": "Maturity Level 3 (Content)",
+        "name": "maturity_level_3",
+        "fields": [{
+                "name": "language",
+                "label": "Language",
+                "type": "text"
+            },
+            {
+                "name": "persistent_identifier",
+                "label": "Persistent Identifier",
+                "type": "bool"
+            },
+            {
+                "name": "global_unique_identifier",
+                "label": "Globally Unique Identifier",
+                "type": "bool"
+            },
+            {
+                "name": "description_document",
+                "label": "Link to dataset description",
+                "type": "text"
+            },
+            {
+                "name": "temporal_resolution",
+                "label": "Temporal resolution",
+                "type": "number"
+            },
+            {
+                "name": "geospatial_resolution",
+                "label": "GeoSpatial resolution",
+                "type": "number"
+            }
+        ]
+    },
+
+
+    {
+        "title": "Maturity Level 5 (FAIR)",
+        "name": "maturity_level_5",
+        "fields": [{
+                "label": "Data uses knowledge representation expressed in standardised format",
+                "name": "fair_rda_i1_01d",
+                "type": "bool"
+            },
+            {
+                "label": "Data uses machine-understandable knowledge representation",
+                "name": "fair_rda_i1_02d",
+                "type": "bool"
+            },
+            {
+                "label": "Data uses FAIR-compliant vocabularies",
+                "name": "fair_rda_i2_01d",
+                "type": "bool"
+            },
+            {
+                "label": "Data includes references to other data",
+                "name": "fair_rda_i3_01d",
+                "type": "bool",
+
+                "label": "Data includes qualified references to other data",
+                "name": "fair_rda_i3_02d",
+                "type": "bool"
+            },
+            {
+                "label": "Data is accessible through an access protocol that supports authentication and authorisation",
+                "name": "fair_rda_a1_2_01d",
+                "type": "bool"
+            },
+            {
+                "label": "Data can be accessed manually (i.e., with human intervention)",
+                "name": "fair_rda_a1_02d",
+                "type": "bool"
+            },
+            {
+                "label": "Data identifier resolves to a digital object",
+                "name": "fair_rda_a1_03d",
+                "type": "bool"
+            },
+            {
+                "label": "Data is accessible through standardised protocol",
+                "name": "fair_rda_a1_04d",
+                "type": "bool"
+            },
+            {
+                "label": "Data complies with a community standard",
+                "name": "fair_rda_r1_3_01d",
+                "type": "bool"
+            },
+            {
+                "label": "Data can be accessed automatically (i.e. by a computer program)",
+                "name": "fair_rda_a1_05d",
+                "type": "bool"
+            },
+            {
+                "label": "Data is accessible through a free access protocol",
+                "name": "fair_rda_a1_1_01d",
+                "type": "bool"
+            }
+
+        ]
+    },
+    {
+        "title": "Maturity Level 7 (Quality)",
+        "name": "maturity_level_7",
+        "fields": [{
+                "name": "quality_annotation",
+                "label": "Description of data quality",
+                "type": "text"
+            },
+            {
+                "name": "quality_dimension_metric",
+                "label": "Metric for data quality",
+                "type": "text"
+            }
+        ]
+    }
+]
