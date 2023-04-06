@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
-import os
 import traceback
+import re
 
 from ckan.types import Schema
 import ckan
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 from ckan.plugins.toolkit import (chained_action,side_effect_free)
+import logging
 
 
 
@@ -19,39 +20,33 @@ See https://docs.ckan.org/en/2.10/extensions/remote-config-update.html
 See https://docs.ckan.org/en/2.10/extensions/custom-config-settings.html?highlight=config%20declaration
 """
 
-udcPlugin = None
+log = logging.getLogger(__name__)
 
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
-    plugins.implements(plugins.IConfigDeclaration)
     plugins.implements(plugins.IActions)
 
-    # Load JSON config
-    config_file = open(os.path.join(os.path.dirname(__file__), "config.json"))
-    default_config = json.load(config_file)
-    config = default_config
-
-    all_fields = []
+    SUPPORTED_CKAN_FIELDS = ["title", "description", "tags", "license", "author"]
 
     def __init__(self, name=""):
-        global udcPlugin
-        udcPlugin = self
         existing_config = ckan.model.system_info.get_system_info("ckanext.udc.maturity_model")
+        self.config = []
+        self.all_fields = []
         if existing_config:
             try:
                 # Call our plugin to update the config
-                udcPlugin.reload_config(json.loads(existing_config)) 
+                self.reload_config(json.loads(existing_config))
             except:
-                print
-        print("UDC Plugin Loaded!")
+                log.error
+        log.info("UDC Plugin Loaded!")
         
 
     def reload_config(self, config: list):
         try:
-            print("tring to load udc config:")
-            print(config)
+            log.info("tring to load udc config:")
+            log.info(config)
             all_fields = []
             for level in config:
                 for field in level["fields"]:
@@ -64,7 +59,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             self.config.extend(config)
 
         except Exception as e:
-            print("UDC Plugin Error:")
+            log.error("UDC Plugin Error:")
             traceback.print_exc()
 
     def update_config(self, config_):
@@ -130,11 +125,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
         return schema
 
-    def declare_config_options(self, declaration, key):
-        # if tk.config.get("ckanext.udc.maturity_model") is None:
-        # declaration.annotate("UDC Config section")
-        # declaration.declare("ckanext.udc.maturity_model", json.dumps(self.default_config, indent=4))
-        pass
 
     def get_actions(self):
         return {
@@ -147,9 +137,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 def config_option_update(original_action, context, data_dict):
     try:
         # Call our plugin to update the config
-        udcPlugin.reload_config(json.loads(data_dict["ckanext.udc.maturity_model"]))
+        log.info("config_option_update: Update UDC Config")
+        plugins.get_plugin('udc').reload_config(json.loads(data_dict["ckanext.udc.maturity_model"]))
     except:
-        print
+        log.error
 
     res = original_action(context, data_dict)
     return res
@@ -159,11 +150,20 @@ def config_option_update(original_action, context, data_dict):
 def udc_config_validor(config_str):
     try:
         config = json.loads(config_str)
-        all_fields = []
-        for level in config:
-            for field in level["fields"]:
-                if field.get("name"):
-                    all_fields.append(field["name"])
     except:
-        raise tk.Invalid("Malformed UDC JSON Config.")
+        raise tk.Invalid("UDC Config: Malformed JSON Format.")
+    
+    for level in config:
+        if not ("title" in level and "name" in level and "fields" in level):
+            raise tk.Invalid(f'Malformed UDC Config: "title", "name" and "fields" are required for each level.')
+        for field in level["fields"]:
+            if "ckanField" in field:
+                if field["ckanField"] not in UdcPlugin.SUPPORTED_CKAN_FIELDS:
+                    raise tk.Invalid(f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is not supported.")
+            else:
+                if not ("name" in field and "label" in field):
+                    raise tk.Invalid(f"Malformed UDC Config: `name` and `label` is required for custom field.")
+                if re.match(r'^\w+$', field['name']) is None:
+                    raise tk.Invalid(f"Malformed UDC Config: The provided field name `{field['name']}` is not alpha-numeric.")
+                
     return config_str
