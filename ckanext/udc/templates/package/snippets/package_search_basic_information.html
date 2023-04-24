@@ -1,0 +1,114 @@
+{% import 'macros/form.html' as form %}
+{% import 'package/macros/ckan_fields.html' as package_fields with context %}
+
+{% set default_group_type = h.default_group_type('organization') %}
+
+{% block package_basic_fields_title %}
+  {{ form.input('title', label=_('Title'), id='field-title', value=data.title, error=errors.title, classes=['control-medium']) }}
+{% endblock %}
+
+{% block package_basic_fields_description %}
+  {{ form.input('description', label=_('Description'), id='field-description', value=data.description, error=errors.description, classes=['control-medium']) }}
+{% endblock %}
+
+{% block package_basic_fields_tags %}
+  {{ package_fields.tags(data=data, errors=errors) }}
+{% endblock %}
+
+{% block package_basic_fields_license %}
+    {{ package_fields.license(data=data, errors=errors) }}
+{% endblock %}
+
+{% block package_basic_fields_org %}
+  {# if we have a default group then this wants remembering #}
+  {% if data.group_id %}
+    <input type="hidden" name="groups__0__id" value="{{ data.group_id }}" />
+  {% endif %}
+
+  {% set dataset_is_draft = data.get('state', 'draft').startswith('draft') or data.get('state', 'none') ==  'none' %}
+  {% set dataset_has_organization = data.owner_org or data.group_id %}
+  {% set organizations_available = h.organizations_available('create_dataset') %}
+  {% set user_can_update_owner_org = h.can_update_owner_org(data, organizations_available) %}
+  {% set user_is_sysadmin = h.check_access('sysadmin') %}
+  {% set show_organizations_selector = organizations_available and user_can_update_owner_org %}
+  {% set show_visibility_selector = dataset_has_organization or (organizations_available and (user_is_sysadmin or dataset_is_draft)) %}
+
+  {% if show_organizations_selector and show_visibility_selector %}
+    <div data-module="dataset-visibility">
+  {% endif %}
+
+  {% if show_organizations_selector %}
+    {% set existing_org = data.owner_org or data.group_id %}
+    <div class="form-group control-medium">
+      <label for="field-organizations" class="form-label">{{ h.humanize_entity_type('organization', default_group_type, 'default label') or _('Organization') }}</label>
+      <div class="controls">
+        <select id="field-organizations" name="owner_org" data-module="autocomplete">
+          {% if h.check_config_permission('create_unowned_dataset') %}
+            <option value="" {% if not selected_org and data.id %} selected="selected" {% endif %}>{{ h.humanize_entity_type('organization', default_group_type, 'no label') or _('No Organization') }}</option>
+          {% endif %}
+          {% for organization in organizations_available %}
+            {# get out first org from users list only if there is not an existing org #}
+          {% set selected_org = (existing_org and existing_org == organization.id) or (not existing_org and not data.id and organization.id == organizations_available[0].id) %}
+          <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.display_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if show_visibility_selector %}
+    {% block package_metadata_fields_visibility %}
+    <div class="form-group control-medium">
+      <label for="field-private" class="form-label">{{ _('Visibility') }}</label>
+      <div class="controls">
+        <select id="field-private" name="private" class="form-control">
+          {% for option in [('True', _('Private')), ('False', _('Public'))] %}
+          <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endblock %}
+    {% endif %}
+
+    {% if show_organizations_selector and show_visibility_selector %}
+  </div>
+  {% endif %}
+
+
+  {% if data.id and h.check_access('package_delete', {'id': data.id}) and data.state != 'active' %}
+  <div class="form-group control-medium">
+    <label for="field-state" class="form-label">{{ _('State') }}</label>
+    <div class="controls">
+      <select class="form-control" id="field-state" name="state">
+        <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
+        <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
+      </select>
+    </div>
+  </div>
+  {% endif %}
+
+  {% endblock %}
+
+  {% block package_metadata_fields_url %}
+    {{ form.input('url', label=_('Source'), id='field-url', placeholder=_('http://example.com/dataset.json'), value=data.url, error=errors.url, classes=['control-medium']) }}
+  {% endblock %}
+
+  {% block package_metadata_fields_version %}
+    {{ form.input('version', label=_('Version'), id='field-version', placeholder=_('1.0'), value=data.version, error=errors.version, classes=['control-medium']) }}
+  {% endblock %}
+
+  {% block package_metadata_author %}
+    {{ package_fields.author(data=data, errors=errors) }}
+
+    {{ form.input('author_email', label=_('Author Email'), id='field-author-email', placeholder=_('joe@example.com'), value=data.author_email, error=errors.author_email, classes=['control-medium']) }}
+  {% endblock %}
+
+  {% block package_metadata_fields_maintainer %}
+    {{ form.input('maintainer', label=_('Maintainer'), id='field-maintainer', placeholder=_('Joe Bloggs'), value=data.maintainer, error=errors.maintainer, classes=['control-medium']) }}
+
+    {{ form.input('maintainer_email', label=_('Maintainer Email'), id='field-maintainer-email', placeholder=_('joe@example.com'), value=data.maintainer_email, error=errors.maintainer_email, classes=['control-medium']) }}
+  {% endblock %}
+
+  {% block dataset_fields %}
+  {% endblock %}

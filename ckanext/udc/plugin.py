@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import traceback
 import re
+from collections import OrderedDict
+from typing import Any, Callable, Collection, KeysView, Optional, Union
 
 from ckan.types import Schema
 import ckan
@@ -27,6 +29,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IFacets)
 
     SUPPORTED_CKAN_FIELDS = ["title", "description", "tags", "license", "author"]
 
@@ -130,6 +133,21 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return {
             "config_option_update": config_option_update
         }
+    
+    def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
+        print(facets_dict)
+        for level in self.config:
+            for field in level["fields"]:
+                type = field.get("type")
+                if field.get("name") and (type is '' or type == 'text' or type == 'single_select'):
+                    facets_dict[field["name"]] = plugins.toolkit._(field["label"])
+        return facets_dict
+    
+    def group_facets(self, facets_dict: OrderedDict[str, Any], group_type: str, package_type: Optional[str]):
+        return facets_dict
+    
+    def organization_facets(self, facets_dict: OrderedDict[str, Any], organization_type: str, package_type: Optional[str]):
+        return facets_dict
 
 
 @side_effect_free
