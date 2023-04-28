@@ -1,95 +1,81 @@
-<script src="/base/javascript/modules/package-search.js" type="text/javascript"></script>
-  <script type=text/javascript>
-    window.packageConfig = {{h.config | tojson}};
-  </script>
-  <section class="module module-narrow module-shallow">
-    <h2 class="module-heading">
-        <i class="fa fa-filter"></i>
-        Maturity Model
-    </h2>
+{% import 'macros/form.html' as form %}
 
-    {# Popup #}
+{% asset 'udc/package-filter'%}
 
-    <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
-      Show Filter
-    </button>
+<script type=text/javascript>
+  window.facets = {
+    data: {{facets_data | tojson}},
+    titles: {{facet_titles | tojson}},
+  };
+  window.maturityModel = {{h.config | tojson}};
+  
+</script>
 
-    <div class="modal fade" id="maturityModelFilter" tabindex="-1" data-bs-backdrop="false" aria-labelledby="maturityModelFilter" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="min-width:550px">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Maturity Model Filter</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            {# The content of the maturity filter popup #}
-             <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
-              </li>
 
-              {% for level in h.config %}
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
-                </li>
-              {% endfor %}
+<div class="modal fade" id="maturityModelFilter" tabindex="-1" data-bs-backdrop="false" aria-labelledby="maturityModelFilter" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="min-width:550px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Maturity Model Filter</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {# The content of the maturity filter popup #}
+        <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
+          {# <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
+          </li> #}
 
-            </ul>
-            <div class="tab-content" style="display:initial;">
-              <div class="tab-pane active" id="basic-information" role="tabpanel">
-                {% snippet 'package/snippets/package_search_basic_information.html', data={}, errors="" %}
-              </div>
-              {% for level in h.config %}
-                <div class="tab-pane fade" id="{{ level["name"] }}" role="tabpanel">
-                  <h3 style="padding-top:3px">{{ level["title"] }}</h1>
-                  {% for field in level["fields"] %}
-                    {% if field.get("ckanField") == none %}
+          {% for level in h.config %}
+            <li class="nav-item" role="presentation">
+              <button class="{{'nav-link active' if loop.index == 1 else 'nav-link'}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+            </li>
+          {% endfor %}
 
-                      {% set id = "field-" + field["name"] %}
-                      {% if field.get("type") == "single_select" %}
-                        {% call form.select(field["name"], label=_(field["label"]), id=id, options=field["options"], classes=['control-medium']) %}
-                          {% if field["short_description"] %}
-                            <span class="form-text">
-                              {{ field["short_description"] }}
-                              {% if field["long_description"] %}
-                                <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ field["long_description"] }}">
-                                  <i class="fa-regular fa-circle-question"></i>
-                                </button>
-                              {% endif %}
-                            </span>
-                          {% endif %}
-                        {% endcall %}
+        </ul>
+        <div class="tab-content" style="display:initial;">
+          {# <div class="tab-pane active" id="basic-information" role="tabpanel">
+            {% snippet 'package/snippets/package_search_basic_information.html', data={}, errors="" %}
+          </div> #}
+          {% for level in h.config %}
+            <div class="tab-pane {{'active' if loop.index == 1 else 'fade' }}" id="{{ level["name"] }}" role="tabpanel">
+              <h3 style="padding-top:3px">{{ level["title"] }}</h1>
+              {% for field in level["fields"] %}
 
-                      {% else %}
+                {% if field.get("ckanField") == none %}
+                  {% if field["name"] in facet_titles %}
+                    <div class="form-group control-full">
+                      <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(facet_titles[field["name"]]) }}</label>
+                      <div class="controls">
+                        <input id="filter-{{field["name"]}}" name="{{field["name"]}}" data-module="filter-multiple-select"></input>
+                      </div>
+                    </div>
+                  {% endif %}
 
-                        {% call form.input(field["name"], label=_(field["label"]), type=field.get("type"), id=id, classes=['control-medium']) %}
-                          {% if field["short_description"] %}
-                            <span class="form-text">
-                              {{ field["short_description"] }}
-                              {% if field["long_description"] %}
-                                <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ field["long_description"] }}">
-                                  <i class="fa-regular fa-circle-question"></i>
-                                </button>
-                              {% endif %}
-                            </span>
-                          {% endif %}
-                        {% endcall %}
+                {% else %}
 
-                      {% endif %}
-                    {% endif %}
-                  {% endfor %}
-                </div>
+                  {% if field["ckanField"] in facet_titles %}
+
+                    <div class="form-group control-full">
+                      <label class="form-label" for="{{'filter-' + field["ckanField"]}}">{{ _(facet_titles[field["ckanField"]]) }}</label>
+                      <div class="controls">
+                        <input id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select"></input>
+                      </div>
+                    </div>
+
+                  {% endif %}
+                {% endif %}
+                
               {% endfor %}
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Apply</button>
-          </div>
+          {% endfor %}
         </div>
       </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" data-module="filter-apply-button">Apply</button>
+      </div>
     </div>
+  </div>
+</div>
 
-    
-
-  </section>

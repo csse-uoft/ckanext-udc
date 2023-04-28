@@ -17,3 +17,31 @@
   %}
   {% snippet 'snippets/search_form.html', type='dataset', query=q, sorting=sorting, sorting_selected=sort_by_selected, count=page.item_count, facets=facets, show_empty=request.args, error=query_error %}
 {% endblock %}
+
+{% block secondary_content %}
+  {% set facets_data = {} %}
+  {% for facet_title in facet_titles %}
+    {% do facets_data.update({facet_title: h.get_facet_items_dict(facet_title, search_facets)}) %}
+  {% endfor %}
+
+  <div class="filters">
+    <div>
+      <section class="module module-narrow module-shallow">
+        <h2 class="module-heading">
+            <i class="fa fa-filter"></i>
+            Advanced Filter
+        </h2>
+
+        <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
+          Show Filter
+        </button>
+        {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data, facet_titles=facet_titles) }}
+      </section>
+      
+      {% for facet in facet_titles %}
+        {{ h.snippet('snippets/facet_list.html', title=facet_titles[facet], name=facet, search_facets=search_facets) }}
+      {% endfor %}
+    </div>
+    <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">close</span></a>
+  </div>
+{% endblock %}

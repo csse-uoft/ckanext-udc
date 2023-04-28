@@ -135,11 +135,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         }
     
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
-        print(facets_dict)
         for level in self.config:
             for field in level["fields"]:
                 type = field.get("type")
-                if field.get("name") and (type is '' or type == 'text' or type == 'single_select'):
+                if field.get("name") and (type is '' or type is None or type == 'text' or type == 'single_select'):
                     facets_dict[field["name"]] = plugins.toolkit._(field["label"])
         return facets_dict
     
