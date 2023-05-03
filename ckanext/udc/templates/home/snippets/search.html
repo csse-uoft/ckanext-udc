@@ -12,11 +12,25 @@
         <i class="fa fa-search"></i>
         <span class="sr-only" id="search-label">{{ _('Search') }}</span>
       </button>
-      <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
-        Show Filter
-      </button>
     </div>
+    <span id="maturity-filter-btn" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
+      <i class="fa-sharp fa-solid fa-filter"></i> Advanced Filter
+    </span>
   </form>
+      
+      {% set facets_data = {} %}
+      {% set facet_titles = {} %}
+
+      {# Get combined facet_titles #}
+      {% set search_facets = h.get_full_search_facets()%}
+      {% do facet_titles.update(g.facet_titles)%}
+      {% do facet_titles.update(h.facet_titles)%}
+
+      {% for facet_title in facet_titles %}
+        {% do facets_data.update({facet_title: h.get_facet_items_dict(facet_title, search_facets)}) %}
+      {% endfor %}
+
+      {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data, facet_titles=facet_titles) }}
   <div class="tags">
     <h3>{{ _('Popular tags') }}</h3>
     {% for tag in tags %}
