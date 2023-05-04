@@ -75,6 +75,14 @@ ckan.plugins = activity udc
 ckan.resource_proxy.timeout = 5
 ...
 ```
+
+#### Change `dataset` to `catalogue`
+Look for `ckan.default.package_type`
+```ini
+## Theming Settings ############################################################
+...
+ckan.default.package_type = catalogue
+```
   
 ## Understand the basic structure of UDC plugin
 ```

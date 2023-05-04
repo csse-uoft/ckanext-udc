@@ -17,7 +17,7 @@ import ckan.lib.helpers as h
 from ckan.common import current_user
 
 import logging
-
+from .cli import udc as cli_udc
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -28,6 +28,10 @@ See https://docs.ckan.org/en/2.10/theming/webassets.html
 """
 
 log = logging.getLogger(__name__)
+
+# Add UDC CLI
+# We can then `ckan -c /etc/ckan/default/ckan.ini udc move-to-catalogues` to run the migration script
+ckan.cli.cli.ckan.add_command(cli_udc.udc)
 
 
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
@@ -129,7 +133,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def package_types(self):  # -> list[str]
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
-        return []
+        return ['dataset', 'catalogue']
 
     def update_config_schema(self, schema: Schema):
 

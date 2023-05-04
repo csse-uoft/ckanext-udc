@@ -56,7 +56,7 @@ this.ckan.module('filter-apply-button', function($) {
                 }
 
                 // Redirect
-                window.location.href = "/dataset/?" + [...params].join('&');
+                window.location.href = "/catalogue/?" + [...params].join('&');
             }
         }
     }
