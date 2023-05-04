@@ -31,7 +31,8 @@ log = logging.getLogger(__name__)
 
 # Add UDC CLI
 # We can then `ckan -c /etc/ckan/default/ckan.ini udc move-to-catalogues` to run the migration script
-ckan.cli.cli.ckan.add_command(cli_udc.udc)
+if hasattr(ckan, 'cli') and hasattr(ckan.cli, 'cli'):
+    ckan.cli.cli.ckan.add_command(cli_udc.udc)
 
 
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
@@ -69,7 +70,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     if field.get("name"):
                         all_fields.append(field["name"])
                     type = field.get("type")
-                    if field.get("name") and (type is '' or type is None or type == 'text' or type == 'single_select'):
+                    if field.get("name") and (type == '' or type is None or type == 'text' or type == 'single_select'):
                         self.facet_titles[field["name"]
                                           ] = plugins.toolkit._(field["label"])
 
