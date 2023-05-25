@@ -3,14 +3,14 @@
 this.ckan.module('filter-multiple-select', function ($) {
     return {
         options: {
-            
+
         },
-        initialize: function() {
+        initialize: function () {
             const fieldName = this.el[0].name;
             const data = [];
             const selected = [];
 
-            for (const {name, display_name, active, count} of window.facets.data[fieldName]) {
+            for (const { name, display_name, active, count } of window.facets.data[fieldName]) {
                 const item = {
                     id: encodeURIComponent(name), // prevent special characters that mess up select2
                     text: display_name + ` - (${count})`
@@ -20,22 +20,29 @@ this.ckan.module('filter-multiple-select', function ($) {
                     selected.push(item);
                 }
             }
-        
-            this.el.select2({multiple: true, width: 'resolve', data});
+
+            this.el.select2({
+                multiple: true, width: 'resolve', data,
+                createSearchChoice: function (term, data) {
+                    if ($(data).filter(function () { return this.text.localeCompare(term) === 0; }).length === 0) {
+                        return { id: term, text: term };
+                    }
+                }
+            });
             this.el.select2('data', selected);
         }
 
     }
 });
 
-this.ckan.module('filter-apply-button', function($) {
+this.ckan.module('filter-apply-button', function ($) {
     return {
         initialize: function () {
             this.el[0].onclick = () => {
                 const url = window.location.pathname;
                 const params = new Set();
                 const usedNames = new Set();
-                
+
                 // Set filters that we selected in the popup
                 for (const filteName in window.facets.titles) {
                     const el = $(`#filter-${filteName}`);
@@ -69,6 +76,6 @@ window.onload = function () {
     const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
+
 }
 
