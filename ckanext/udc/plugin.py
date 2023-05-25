@@ -43,7 +43,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IFacets)
 
     SUPPORTED_CKAN_FIELDS = [
-        "title", "description", "tags", "license", "author"]
+        "title", "description", "tags", "license", "organization_and_visibility", "source", "version",
+        "author", "author_email", "maintainer", "maintainer_email", "custom_fields",
+    ]
+    REQUIRED_CKAN_FIELDS = [
+        "title", "organization_and_visibility",
+    ]
 
     def __init__(self, name=""):
         existing_config = ckan.model.system_info.get_system_info(
@@ -192,6 +197,7 @@ def udc_config_validor(config_str):
     except:
         raise tk.Invalid("UDC Config: Malformed JSON Format.")
 
+    used_fields = set()
     for level in config:
         if not ("title" in level and "name" in level and "fields" in level):
             raise tk.Invalid(
@@ -201,6 +207,10 @@ def udc_config_validor(config_str):
                 if field["ckanField"] not in UdcPlugin.SUPPORTED_CKAN_FIELDS:
                     raise tk.Invalid(
                         f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is not supported.")
+                if field["ckanField"] in used_fields:
+                    raise tk.Invalid(
+                        f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is duplicated.")
+                used_fields.add(field["ckanField"])
             else:
                 if not ("name" in field and "label" in field):
                     raise tk.Invalid(
@@ -208,7 +218,15 @@ def udc_config_validor(config_str):
                 if re.match(r'^\w+$', field['name']) is None:
                     raise tk.Invalid(
                         f"Malformed UDC Config: The provided field name `{field['name']}` is not alpha-numeric.")
-
+                if field["name"] in used_fields:
+                    raise tk.Invalid(
+                        f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is duplicated.")
+                used_fields.add(field["name"])
+    # Check required CKAN fields
+    for field_name in UdcPlugin.REQUIRED_CKAN_FIELDS:
+        if field_name not in used_fields:
+            raise tk.Invalid(
+                f"Malformed UDC Config: Missing the required CKAN field `{field_name}`.")
     return config_str
 
 
