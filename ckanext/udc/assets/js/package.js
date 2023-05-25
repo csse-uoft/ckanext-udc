@@ -19,7 +19,6 @@ this.ckan.module('package-form', function ($) {
                 this.tabs.push(document.querySelector("#maturity_level_" + (i + 1) + "-tab"));
                 if (level.fields) {
                     this.levels[i] = {
-                        totalFields: level.fields.length,
                         fieldElements: [],
                         progressElement: document.querySelector('#progress-' + (i + 1))
                     }
@@ -49,6 +48,7 @@ this.ckan.module('package-form', function ($) {
                     }
                 }
             }
+            console.log(this)
 
             // Trigger _onFieldChange to set percentage
             this._onFieldChange();
@@ -57,7 +57,7 @@ this.ckan.module('package-form', function ($) {
         _onFieldChange: function() {
             console.log('updated')
             // Calculate percentage after field changed
-            for (const [i, {totalFields, fieldElements, progressElement}] of this.levels.entries()) {
+            for (const [i, {fieldElements, progressElement}] of this.levels.entries()) {
                 let inputtedFields = 0;
                 for (const fieldElement of fieldElements) {
                     if (fieldElement.value != null && fieldElement.value !== '') {
@@ -65,7 +65,7 @@ this.ckan.module('package-form', function ($) {
                     }
                 }
                 // Update the percentage bar
-                const percentage = (inputtedFields / totalFields * 100).toFixed(0);
+                const percentage = (inputtedFields / fieldElements.length * 100).toFixed(0);
                 progressElement.innerHTML = `${percentage}%`;
                 progressElement.style = `width: ${percentage}%`
 
