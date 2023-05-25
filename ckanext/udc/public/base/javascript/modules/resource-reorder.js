@@ -42,7 +42,7 @@ this.ckan.module('resource-reorder', function($) {
       jQuery.proxyAll(this, /_on/);
 
       var labelText = this._('Reorder datasets');
-      var helpText = this._('You can rearrange the datasets by dragging them using the arrow icon. Drag the resource ' +
+      var helpText = this._('You can rearrange the datasets by dragging them using the arrow icon. Drag the dataset ' +
         'to the right and place it to the desired location on the list. When you are done, click the "Save order" -button.');
 
       this.html_title = $(this.template.title)
