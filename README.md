@@ -58,7 +58,7 @@
 - `title` (*required): Title
 - `description`: Description
 - `tags`: Tags / Keywords
-- `license`: License
+- `license_id`: License
 - `organization_and_visibility` (*required): organization dropdown
 - `source`: url to the source
 - `version`: version number
