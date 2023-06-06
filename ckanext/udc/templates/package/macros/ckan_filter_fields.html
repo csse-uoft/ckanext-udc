@@ -1,0 +1,52 @@
+{% import 'macros/form.html' as form %}
+
+{% macro _text_multiple_input(name, id, label) %}
+  <div class="form-group control-full">
+    <label class="form-label" for="{{id}}">{{ label }}</label>
+    <div class="controls">
+      <input id="{{id}}" name="{{name}}" data-module="filter-multiple-select"></input>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro title() %}
+  {{ _text_multiple_input("title", "filter-title", _("Title")) }}
+{% endmacro %}
+
+{% macro description() %}
+  {{ _text_multiple_input("notes", "filter-notes", _("Description")) }}
+{% endmacro %}
+
+{% macro organization_and_visibility() %}
+  <div class="form-group control-full">
+    <label class="form-label" for="filter-organization">{{ _("Organization") }}</label>
+    <div class="controls">
+      <input id="filter-organization" name="organization" data-module="filter-multiple-select"></input>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro source() %}
+  {{ _text_multiple_input("source", "filter-source", _("Source")) }}
+{% endmacro %}
+
+{% macro version() %}
+  {{ _text_multiple_input("version", "filter-version", _("Version")) }}
+{% endmacro %}
+
+{% macro author() %}
+  {{ _text_multiple_input("author", "filter-author", _("Author")) }}
+{% endmacro %}
+{% macro author_email() %}
+  {{ _text_multiple_input("author_email", "filter-author_email", _("Author Email")) }}
+{% endmacro %}
+{% macro maintainer() %}
+  {{ _text_multiple_input("maintainer", "filter-maintainer", _("Maintainer")) }}
+{% endmacro %}
+{% macro maintainer_email() %}
+  {{ _text_multiple_input("maintainer_email", "filter-maintainer_email", _("Maintainer Email")) }}
+{% endmacro %}
+
+{% macro custom_fields() %}
+{% endmacro %}
+

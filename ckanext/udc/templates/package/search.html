@@ -1,5 +1,14 @@
 {% ckan_extends %}
 
+{% block breadcrumb_content %}
+  {% if dataset_type == "catalogue" %}
+    {# We want HomeIcon / Catalogue (without s) #}
+    <li class="active">{{ h.nav_link(_("Catalogue"), named_route='%s.search' % dataset_type) }}</li>
+  {% else %}
+    <li class="active">{{ h.nav_link(_(dataset_type.title() + 's'), named_route='%s.search' % dataset_type) }}</li>
+  {% endif %}
+{% endblock %}
+
 {% block form %}
   {% set facets = {
     'fields': fields_grouped,
@@ -8,6 +17,16 @@
     'translated_fields': translated_fields,
     'remove_field': remove_field }
   %}
+  {% do facets.titles.update({
+    'title': _("Title"),
+    'notes': _('Description'),
+    'source': _('Source'),
+    'version': _('Version'),
+    'author': _('Author'),
+    'author_email': _('Author Email'),
+    'maintainer': _('Maintainer'),
+    'maintainer_email': _('Maintainer Email'),
+  })%}
   {% set sorting = [
     (_('Relevance'), 'score desc, metadata_modified desc'),
     (_('Name Ascending'), 'title_string asc'),
@@ -15,14 +34,19 @@
     (_('Last Modified'), 'metadata_modified desc'),
     (_('Popular'), 'views_recent desc') if g.tracking_enabled else (false, false) ]
   %}
+  {% if dataset_type == "catalogue" %}
+  {# This is not a typo! we want catalogue entries #}
+  {% set dataset_type = "catalogue entrie"%} 
+  {% endif %}
   {% snippet 'snippets/search_form.html', form_id='dataset-search-form', type=dataset_type, query=q, sorting=sorting, sorting_selected=sort_by_selected, count=page.item_count, placeholder=h.humanize_entity_type('package', dataset_type, 'search placeholder') or _('Search datasets...'), facets=facets, show_empty=request.args, error=query_error, fields=fields %}
 
 {% endblock %}
 
 {% block secondary_content %}
-  {% set facets_data = {} %}
+  {% set search_facets_for_popup = h.get_full_search_facets()%}
+  {% set facets_data_for_popup = {} %}
   {% for facet_title in facet_titles %}
-    {% do facets_data.update({facet_title: h.get_facet_items_dict(facet_title, search_facets)}) %}
+    {% do facets_data_for_popup.update({facet_title: h.get_facet_items_dict(facet_title, search_facets_for_popup)}) %}
   {% endfor %}
 
   <div class="filters">
@@ -36,7 +60,7 @@
         <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
           Show Filter
         </button>
-        {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data, facet_titles=facet_titles) }}
+        {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data_for_popup, facet_titles=facet_titles) }}
       </section>
       
       {% for facet in facet_titles %}

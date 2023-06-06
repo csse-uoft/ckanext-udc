@@ -18,6 +18,9 @@ from ckan.common import current_user
 
 import logging
 from .cli import udc as cli_udc
+from .validator import udc_config_validor
+from .helpers import config_option_update, get_full_search_facets,\
+      get_default_facet_titles, process_facets_fields, humanize_entity_type
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -41,14 +44,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IFacets)
-
-    SUPPORTED_CKAN_FIELDS = [
-        "title", "description", "tags", "license", "organization_and_visibility", "source", "version",
-        "author", "author_email", "maintainer", "maintainer_email", "custom_fields",
-    ]
-    REQUIRED_CKAN_FIELDS = [
-        "title", "organization_and_visibility",
-    ]
 
     def __init__(self, name=""):
         existing_config = ckan.model.system_info.get_system_info(
@@ -76,14 +71,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                         all_fields.append(field["name"])
                     type = field.get("type")
                     if field.get("name") and (type == '' or type is None or type == 'text' or type == 'single_select'):
-                        self.facet_titles[field["name"]
-                                          ] = plugins.toolkit._(field["label"])
+                        self.facet_titles[field["name"]] = tk._(field["label"])
 
             # Do not mutate the vars
             self.all_fields.clear()
             self.all_fields.extend(all_fields)
             self.config.clear()
             self.config.extend(config)
+            # self.facet_titles.update(get_default_facet_titles())
 
         except Exception as e:
             log.error("UDC Plugin Error:")
@@ -128,7 +123,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return {
             "config": self.config,
             "facet_titles": self.facet_titles,
-            "get_full_search_facets": get_full_search_facets
+            "get_full_search_facets": get_full_search_facets,
+            "get_default_facet_titles": get_default_facet_titles,
+            "process_facets_fields": process_facets_fields,
+            "humanize_entity_type": humanize_entity_type,
         }
 
     def is_fallback(self):
@@ -157,6 +155,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return schema
 
     def get_actions(self):
+        """
+        Override CKAN's default actions.
+        """
         return {
             "config_option_update": config_option_update
         }
@@ -171,83 +172,3 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def organization_facets(self, facets_dict: OrderedDict[str, Any], organization_type: str, package_type: Optional[str]):
         return facets_dict
-
-
-# Add a hook after `config_option_update(...)` is triggered, i.e. config is saved from the settings page.
-# We need to reload the UDC plugin to make sure the maturity model is up to date.
-@side_effect_free
-@chained_action
-def config_option_update(original_action, context, data_dict):
-    try:
-        # Call our plugin to update the config
-        log.info("config_option_update: Update UDC Config")
-        plugins.get_plugin('udc').reload_config(
-            json.loads(data_dict["ckanext.udc.maturity_model"]))
-    except:
-        log.error
-
-    res = original_action(context, data_dict)
-    return res
-
-
-# CKAN Config Validator
-def udc_config_validor(config_str):
-    try:
-        config = json.loads(config_str)
-    except:
-        raise tk.Invalid("UDC Config: Malformed JSON Format.")
-
-    used_fields = set()
-    for level in config:
-        if not ("title" in level and "name" in level and "fields" in level):
-            raise tk.Invalid(
-                f'Malformed UDC Config: "title", "name" and "fields" are required for each level.')
-        for field in level["fields"]:
-            if "ckanField" in field:
-                if field["ckanField"] not in UdcPlugin.SUPPORTED_CKAN_FIELDS:
-                    raise tk.Invalid(
-                        f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is not supported.")
-                if field["ckanField"] in used_fields:
-                    raise tk.Invalid(
-                        f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is duplicated.")
-                used_fields.add(field["ckanField"])
-            else:
-                if not ("name" in field and "label" in field):
-                    raise tk.Invalid(
-                        f"Malformed UDC Config: `name` and `label` is required for custom field.")
-                if re.match(r'^\w+$', field['name']) is None:
-                    raise tk.Invalid(
-                        f"Malformed UDC Config: The provided field name `{field['name']}` is not alpha-numeric.")
-                if field["name"] in used_fields:
-                    raise tk.Invalid(
-                        f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is duplicated.")
-                used_fields.add(field["name"])
-    # Check required CKAN fields
-    for field_name in UdcPlugin.REQUIRED_CKAN_FIELDS:
-        if field_name not in used_fields:
-            raise tk.Invalid(
-                f"Malformed UDC Config: Missing the required CKAN field `{field_name}`.")
-    return config_str
-
-
-# The home page view does not pass the full search_facets to template.
-# This helper get all search_facets that are required to call `h.get_facet_items_dict(...)`
-def get_full_search_facets():
-    context = cast(Context, {
-        'model': model,
-        'session': model.Session,
-        'user': current_user.name,
-        'auth_user_obj': current_user
-    }
-    )
-    default_limit: int = ckan.common.config.get('search.facets.default')
-    facets = [*h.facets(), *plugins.get_plugin('udc').facet_titles.keys()]
-    data_dict: dict[str, Any] = {
-        'q': '*:*',
-        'facet.field': facets,
-        'rows': default_limit,
-        'start': 0,
-        'sort': 'view_recent desc',
-        'fq': 'capacity:"public"'}
-    query = logic.get_action('package_search')(context, data_dict)
-    return query['search_facets']

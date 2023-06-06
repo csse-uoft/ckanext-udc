@@ -48,14 +48,14 @@ this.ckan.module('package-form', function ($) {
                     }
                 }
             }
-            console.log(this)
+            // console.log(this)
 
             // Trigger _onFieldChange to set percentage
             this._onFieldChange();
 
         },
         _onFieldChange: function() {
-            console.log('updated')
+            // console.log('updated')
             // Calculate percentage after field changed
             for (const [i, {fieldElements, progressElement}] of this.levels.entries()) {
                 let inputtedFields = 0;

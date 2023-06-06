@@ -54,12 +54,12 @@
 {% endmacro%}
 
 {# CKAN Package License #}
-{% macro license(data, errors, short_description="", long_description="")%}
+{% macro license_id(data, errors, short_description="", long_description="")%}
   <div class="form-group control-full">
     {% set error = errors.license_id %}
     <label class="form-label" for="field-license">{{ _("License") }}</label>
     <div class="controls">
-      <select id="field-license" name="license_id" data-module="autocomplete">
+      <select id="field-license_id" name="license_id" data-module="autocomplete">
         {% set existing_license_id = data.get('license_id') %}
         {% set empty_license = _('Please select the license') %}
         <option value="">{{ empty_license }}</option>
