@@ -90,8 +90,7 @@
                 {% endif %}
               </th>
               <td class="dataset-details">
-              {{ pkg_dict[field["ckanField"]] }}
-
+              {{ pkg_dict[field["name"]] }}
               </td>
             </tr>
           {% elif field.get("ckanField")%}
