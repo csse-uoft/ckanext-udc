@@ -71,7 +71,7 @@ this.ckan.module('filter-multiple-select', function ($) {
 
 this.ckan.module('filter-apply-button', function ($) {
     // The fields that are always use fuzzy search
-    const CKANFields = ["title", "notes", "source", "version",
+    const CKANFields = ["title", "notes", "url", "version",
         "author", "author_email", "maintainer", "maintainer_email"]
     return {
         initialize: function () {
