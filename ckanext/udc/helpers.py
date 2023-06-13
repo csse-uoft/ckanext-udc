@@ -136,5 +136,37 @@ def process_facets_fields(facets_fields):
                     "ori_value": item,
                     "value": item
                 })
-    print(results)
+    # print(results)
     return results
+
+def get_maturity_percentages(config, pkg_dict):
+    percentages = []
+    for idx, level in enumerate(config):
+        num_not_empty = 0
+        total_size = 0
+        for field in level["fields"]:
+            # Skip custom_fields
+            if field.get("ckanField") in ['custom_fields']:
+                continue
+            # organization_and_visibility is always filled
+            if field.get("ckanField") == 'organization_and_visibility':
+                num_not_empty += 2
+                total_size += 2
+                continue
+            
+            # `description` is stored as `notes`
+            if field.get("ckanField") == 'description' and pkg_dict.get("notes"):
+                num_not_empty += 1
+            # `source` is stored as `url`
+            if field.get("ckanField") == 'source' and pkg_dict.get("url"):
+                num_not_empty += 1
+            elif field.get("label") and pkg_dict.get(field["name"]):
+                num_not_empty += 1
+            elif field.get("ckanField") and pkg_dict.get(field["ckanField"]):
+                num_not_empty += 1
+            # else:
+            #     print(idx, field.get("ckanField") or field.get("name"), pkg_dict.get(field.get("ckanField") or field.get("name")))
+            total_size += 1
+        percentages.append(str(round(num_not_empty / total_size * 100)) + "%")
+
+    return percentages

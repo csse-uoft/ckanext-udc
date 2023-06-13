@@ -20,7 +20,7 @@ import logging
 from .cli import udc as cli_udc
 from .validator import udc_config_validor
 from .helpers import config_option_update, get_full_search_facets,\
-      get_default_facet_titles, process_facets_fields, humanize_entity_type
+      get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -127,6 +127,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "get_default_facet_titles": get_default_facet_titles,
             "process_facets_fields": process_facets_fields,
             "humanize_entity_type": humanize_entity_type,
+            "get_maturity_percentages": get_maturity_percentages,
         }
 
     def is_fallback(self):
