@@ -1,0 +1,8 @@
+{% ckan_extends %}
+
+{% block subtitle %}{{ _('Datasets') }} {{ g.template_title_delimiter }} {{ h.dataset_display_name(pkg) }}{% endblock %}
+
+{% block page_primary_action %}
+  {% link_for _('Add new dataset'), named_route=pkg_dict.type ~ '_resource.new', id=pkg_dict.name, class_='btn btn-primary', icon='plus' %}
+{% endblock %}
+

@@ -7,8 +7,18 @@ package-js:
     preload:
       - base/main
 
-# udc-css:
-#   filter: cssrewrite
-#   output: ckanext-udc/%(version)s-udc.css
-#   contents:
-#     - css/udc.css
+package-filter:
+  filter: rjsmin
+  output: ckanext-udc/%(version)s-package-filter.js
+  contents:
+    - js/package-filter.js
+  extra:
+    preload:
+      - base/main
+
+
+udc-css:
+  filter: cssrewrite
+  output: ckanext-udc/%(version)s-udc.css
+  contents:
+    - css/udc.css

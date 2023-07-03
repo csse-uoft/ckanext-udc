@@ -31,7 +31,14 @@
             {
                 // This clones the field that predefined in CKAN.
                 // See "Supported CKAN Fields" section for all supported CKAN Fields
-                "ckanField": "title"
+                "ckanField": "tags",
+
+                // The short description is under the field
+                "short_description": "The tags or keywords.",
+
+                // The long description is displayed when the cursor is hovered/clicked on the `quesion mark icon`
+                "long_description": "The tags or keywords of the package.",
+
             },
         ]
     },
@@ -47,11 +54,19 @@
 ```
 
 ### Supported CKAN Fields
-- `title`: Title
+> Notes: short description and long description are not available for `title`, `license`, `organization_and_visibility` 
+- `title` (*required): Title
 - `description`: Description
 - `tags`: Tags / Keywords
-- `license`: License
+- `license_id`: License
+- `organization_and_visibility` (*required): organization dropdown
+- `source`: url to the source
+- `version`: version number
 - `author`: Author/Creator
+- `author_email`
+- `maintainer`
+- `maintainer_email`
+- `custom_fields`: Custom CKAN Fields, key/value pairs
 
 ### Supported field types
 - `text`

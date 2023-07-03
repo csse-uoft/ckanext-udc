@@ -19,8 +19,7 @@
 - Prepare environment: 
     ```shell
     sudo apt update
-    sudo apt update
-    sudo apt install build-essentials
+    sudo apt install build-essential
     ```
 - [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
   - follow the guide to install the latest version, don't install it from `apt` nor `snap`
@@ -74,6 +73,14 @@ Add `udc` to `ckan.plugins`:
 ckan.plugins = activity udc
 ckan.resource_proxy.timeout = 5
 ...
+```
+
+#### Change `dataset` to `catalogue`
+Look for `ckan.default.package_type`
+```ini
+## Theming Settings ############################################################
+...
+ckan.default.package_type = catalogue
 ```
   
 ## Understand the basic structure of UDC plugin

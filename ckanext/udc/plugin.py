@@ -1,70 +1,87 @@
 from __future__ import annotations
 
 import json
-import os
 import traceback
+import re
+from collections import OrderedDict
+from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
 
-from ckan.types import Schema
+from ckan.types import Schema, Context
 import ckan
 import ckan.plugins as plugins
+import ckan.logic as logic
+import ckan.model as model
 import ckan.plugins.toolkit as tk
-from ckan.plugins.toolkit import (chained_action,side_effect_free)
+from ckan.plugins.toolkit import (chained_action, side_effect_free)
+import ckan.lib.helpers as h
+from ckan.common import current_user
 
-
+import logging
+from .cli import udc as cli_udc
+from .validator import udc_config_validor
+from .helpers import config_option_update, get_full_search_facets,\
+      get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
 See https://docs.ckan.org/en/latest/extensions/adding-custom-fields.html
 See https://docs.ckan.org/en/2.10/extensions/remote-config-update.html
 See https://docs.ckan.org/en/2.10/extensions/custom-config-settings.html?highlight=config%20declaration
+See https://docs.ckan.org/en/2.10/theming/webassets.html
 """
 
-udcPlugin = None
+log = logging.getLogger(__name__)
+
+# Add UDC CLI
+# We can then `ckan -c /etc/ckan/default/ckan.ini udc move-to-catalogues` to run the migration script
+if hasattr(ckan, 'cli') and hasattr(ckan.cli, 'cli'):
+    ckan.cli.cli.ckan.add_command(cli_udc.udc)
+
 
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
-    plugins.implements(plugins.IConfigDeclaration)
     plugins.implements(plugins.IActions)
-
-    # Load JSON config
-    config_file = open(os.path.join(os.path.dirname(__file__), "config.json"))
-    default_config = json.load(config_file)
-    config = default_config
-
-    all_fields = []
+    plugins.implements(plugins.IFacets)
 
     def __init__(self, name=""):
-        global udcPlugin
-        udcPlugin = self
-        existing_config = ckan.model.system_info.get_system_info("ckanext.udc.maturity_model")
+        existing_config = ckan.model.system_info.get_system_info(
+            "ckanext.udc.maturity_model")
+        self.config = []
+        self.all_fields = []
+        self.facet_titles = {}
         if existing_config:
             try:
                 # Call our plugin to update the config
-                udcPlugin.reload_config(json.loads(existing_config)) 
+                self.reload_config(json.loads(existing_config))
             except:
-                print
-        print("UDC Plugin Loaded!")
-        
+                log.error
+        log.info("UDC Plugin Loaded!")
 
     def reload_config(self, config: list):
         try:
-            print("tring to load udc config:")
-            print(config)
+            log.info("tring to load udc config:")
+            log.info(config)
             all_fields = []
+            self.facet_titles.clear()
             for level in config:
                 for field in level["fields"]:
                     if field.get("name"):
                         all_fields.append(field["name"])
+                    type = field.get("type")
+                    if field.get("name") and (type == '' or type is None or type == 'text' or type == 'single_select'):
+                        self.facet_titles[field["name"]] = tk._(field["label"])
+
             # Do not mutate the vars
             self.all_fields.clear()
             self.all_fields.extend(all_fields)
             self.config.clear()
             self.config.extend(config)
+            # self.facet_titles.update(get_default_facet_titles())
 
         except Exception as e:
-            print("UDC Plugin Error:")
+            log.error("UDC Plugin Error:")
             traceback.print_exc()
 
     def update_config(self, config_):
@@ -103,7 +120,15 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return schema
 
     def get_helpers(self):
-        return {"config": self.config}
+        return {
+            "config": self.config,
+            "facet_titles": self.facet_titles,
+            "get_full_search_facets": get_full_search_facets,
+            "get_default_facet_titles": get_default_facet_titles,
+            "process_facets_fields": process_facets_fields,
+            "humanize_entity_type": humanize_entity_type,
+            "get_maturity_percentages": get_maturity_percentages,
+        }
 
     def is_fallback(self):
         # Return True to register this plugin as the default handler for
@@ -113,7 +138,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def package_types(self):  # -> list[str]
         # This plugin doesn't handle any special package types, it just
         # registers itself as the default (above).
-        return []
+        return ['dataset', 'catalogue']
 
     def update_config_schema(self, schema: Schema):
 
@@ -130,40 +155,21 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
         return schema
 
-    def declare_config_options(self, declaration, key):
-        # if tk.config.get("ckanext.udc.maturity_model") is None:
-        # declaration.annotate("UDC Config section")
-        # declaration.declare("ckanext.udc.maturity_model", json.dumps(self.default_config, indent=4))
-        pass
-
     def get_actions(self):
+        """
+        Override CKAN's default actions.
+        """
         return {
             "config_option_update": config_option_update
         }
 
+    def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
+        for name in self.facet_titles:
+            facets_dict[name] = self.facet_titles[name]
+        return facets_dict
 
-@side_effect_free
-@chained_action
-def config_option_update(original_action, context, data_dict):
-    try:
-        # Call our plugin to update the config
-        udcPlugin.reload_config(json.loads(data_dict["ckanext.udc.maturity_model"]))
-    except:
-        print
+    def group_facets(self, facets_dict: OrderedDict[str, Any], group_type: str, package_type: Optional[str]):
+        return facets_dict
 
-    res = original_action(context, data_dict)
-    return res
-
-
-# CKAN Config Validator
-def udc_config_validor(config_str):
-    try:
-        config = json.loads(config_str)
-        all_fields = []
-        for level in config:
-            for field in level["fields"]:
-                if field.get("name"):
-                    all_fields.append(field["name"])
-    except:
-        raise tk.Invalid("Malformed UDC JSON Config.")
-    return config_str
+    def organization_facets(self, facets_dict: OrderedDict[str, Any], organization_type: str, package_type: Optional[str]):
+        return facets_dict

@@ -1,105 +1,202 @@
 {% import 'macros/form.html' as form %}
+{% set dataset_type = h.default_package_type() %}
 
+{# Notes: short description and long description are not available for title, license, organization, visibility #}
 {# CKAN Package Title+URL #}
-{% macro title(data, errors, custom_id="", is_custom=False) %}
+{% macro title(data, errors, short_description="", long_description="") %}
 
-{% if not is_custom %}
-    {% block package_basic_fields_title %}
-      {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target', 'class': 'form-control'}) }}
-    {% endblock %}
-    {% block package_basic_fields_url %}
-      {% set prefix = h.url_for('dataset.read', id='') %}
-      {% set domain = h.url_for('dataset.read', id='', qualified=true) %}
-      {% set domain = domain|replace("http://", "")|replace("https://", "") %}
-      {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<dataset>', 'class': 'form-control input-sm'} %}
+  {% block package_basic_fields_title %}
+    {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target', 'class': 'form-control'}) }}
+  {% endblock %}
+  {% block package_basic_fields_url %}
+    {% set prefix = h.url_for(dataset_type + '.read', id='') %}
+    {% set domain = h.url_for(dataset_type + '.read', id='', qualified=true) %}
+    {% set domain = domain|replace("http://", "")|replace("https://", "") %}
+    {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<dataset>', 'class': 'form-control input-sm'} %}
 
-      {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
-    {% endblock %}
-{% else %}
-  {{ form.input(custom_id, id=custom_id, label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.name, classes=['control-full', 'control-large'], attrs={'class': 'form-control', 'sync-with': 'field-title'}) }}
-{% endif %}
+    {{ form.prepend('name', id='field-name', label=_('URL'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+  {% endblock %}
+
 {% endmacro %}
 
 {# CKAN Package Description/Notes #}
-{% macro description(data, errors, custom_id="", is_custom=False)%}
-
-  {% if not is_custom %}
-    {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes) }}
-  {% else %}
-    {{ form.markdown(custom_id, id=custom_id, label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes, attrs={'class': 'form-control', 'sync-with': 'field-notes'}) }}
-  {% endif %}
+{% macro description(data, errors, short_description="", long_description="")%}
+  {% call form.markdown('notes', id='field-description', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes) %}
+  {% if short_description %}
+      <span class="form-text">
+        {{ short_description }}
+        {% if long_description %}
+          <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{long_description}}">
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+        {% endif %}
+      </span>
+    {% endif %}
+  {% endcall %}
 {% endmacro%}
-
 
 
 {# CKAN Package Tags/Keywards #}
-{% macro tags(data, errors, custom_id="", is_custom=False)%}
-  {% if not is_custom %}
-    {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
-    {{ form.input('tag_string', id='field-tags', label=_('Tags / Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
-  {% else %}
-    {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?', 'sync-with': 'field-tags'} %}
-    {{ form.input(custom_id, id=custom_id, label=_('Tags / Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
-  {% endif %}
+{% macro tags(data, errors, short_description="", long_description="")%}
+  {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+  {% call form.input('tag_string', id='field-tags', label=_('Tags / Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs) %}
+  {% if short_description %}
+      <span class="form-text">
+        {{ short_description }}
+        {% if long_description %}
+          <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{long_description}}">
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+        {% endif %}
+      </span>
+    {% endif %}
+  {% endcall %}
 {% endmacro%}
 
 {# CKAN Package License #}
-{% macro license(data, errors, custom_id="", is_custom=False)%}
-  {% if not is_custom %}
-    <div class="form-group control-full">
-      {% set error = errors.license_id %}
-      <label class="form-label" for="field-license">{{ _("License") }}</label>
+{% macro license_id(data, errors, short_description="", long_description="")%}
+  <div class="form-group control-full">
+    {% set error = errors.license_id %}
+    <label class="form-label" for="field-license">{{ _("License") }}</label>
+    <div class="controls">
+      <select id="field-license_id" name="license_id" data-module="autocomplete">
+        {% set existing_license_id = data.get('license_id') %}
+        {% set empty_license = _('Please select the license') %}
+        <option value="">{{ empty_license }}</option>
+        {% for license_id, license_desc in h.license_options(existing_license_id) %}
+          <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+        {% endfor %}
+      </select>
+      {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+      <span class="info-block">
+        <i class="fa fa-info-circle"></i>
+        {% trans %}
+        License definitions and additional information can be found
+        at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+        {% endtrans %}
+      </span>
+    </div>
+  </div>
+{% endmacro%}
+
+
+{# CKAN Package Organization + Visibility #}
+{% macro organization_and_visibility(data, errors, short_description="", long_description="")%}
+  {# if we have a default group then this wants remembering #}
+  {% if data.group_id %}
+    <input type="hidden" name="groups__0__id" value="{{ data.group_id }}" />
+  {% endif %}
+
+  {% set default_group_type = h.default_group_type('organization') %}
+  {% set dataset_is_draft = data.get('state', 'draft').startswith('draft') or data.get('state', 'none') ==  'none' %}
+  {% set dataset_has_organization = data.owner_org or data.group_id %}
+  {% set organizations_available = h.organizations_available('create_dataset') %}
+  {% set user_can_update_owner_org = h.can_update_owner_org(data, organizations_available) %}
+  {% set user_is_sysadmin = h.check_access('sysadmin') %}
+  {% set show_organizations_selector = organizations_available and user_can_update_owner_org %}
+  {% set show_visibility_selector = dataset_has_organization or (organizations_available and (user_is_sysadmin or dataset_is_draft)) %}
+
+  {% if show_organizations_selector and show_visibility_selector %}
+    <div data-module="dataset-visibility">
+  {% endif %}
+
+  {% if show_organizations_selector %}
+    {% set existing_org = data.owner_org or data.group_id %}
+    <div class="form-group control-medium">
+      <label for="field-organizations" class="form-label">{{ h.humanize_entity_type('organization', default_group_type, 'default label') or _('Organization') }}</label>
       <div class="controls">
-        <select id="field-license" name="license_id" data-module="autocomplete">
-          {% set existing_license_id = data.get('license_id') %}
-          {% set empty_license = _('Please select the license') %}
-          <option value="">{{ empty_license }}</option>
-          {% for license_id, license_desc in h.license_options(existing_license_id) %}
-            <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+        <select id="field-organizations" name="owner_org" data-module="autocomplete">
+          {% if h.check_config_permission('create_unowned_dataset') %}
+            <option value="" {% if not selected_org and data.id %} selected="selected" {% endif %}>{{ h.humanize_entity_type('organization', default_group_type, 'no label') or _('No Organization') }}</option>
+          {% endif %}
+          {% for organization in organizations_available %}
+            {# get out first org from users list only if there is not an existing org #}
+          {% set selected_org = (existing_org and existing_org == organization.id) or (not existing_org and not data.id and organization.id == organizations_available[0].id) %}
+          <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.display_name }}</option>
           {% endfor %}
         </select>
-        {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
-        <span class="info-block">
-          <i class="fa fa-info-circle"></i>
-          {% trans %}
-          License definitions and additional information can be found
-          at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
-          {% endtrans %}
-        </span>
       </div>
     </div>
-  {% else %}
-    <div class="form-group control-full">
-      {% set error = errors.license_id %}
-      <label class="form-label" for="field-license-clone">{{ _("License") }}</label>
+    {% endif %}
+
+    {% if show_visibility_selector %}
+    {% block package_metadata_fields_visibility %}
+    <div class="form-group control-medium">
+      <label for="field-private" class="form-label">{{ _('Visibility') }}</label>
       <div class="controls">
-        <select id="{{ custom_id }}" name="{{ custom_id }}" data-module="autocomplete" sync-with="field-license">
-          {% set existing_license_id = data.get('license_id') %}
-          {% set empty_license = _('Please select the license') %}
-          <option value="">{{ empty_license }}</option>
-          {% for license_id, license_desc in h.license_options(existing_license_id) %}
-            <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+        <select id="field-private" name="private" class="form-control">
+          {% for option in [('True', _('Private')), ('False', _('Public'))] %}
+          <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
           {% endfor %}
         </select>
-        {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
-        <span class="info-block">
-          <i class="fa fa-info-circle"></i>
-          {% trans %}
-          License definitions and additional information can be found
-          at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
-          {% endtrans %}
-        </span>
       </div>
     </div>
+    {% endblock %}
+    {% endif %}
+
+    {% if show_organizations_selector and show_visibility_selector %}
+  </div>
+  {% endif %}
+
+
+  {% if data.id and h.check_access('package_delete', {'id': data.id}) and data.state != 'active' %}
+  <div class="form-group control-medium">
+    <label for="field-state" class="form-label">{{ _('State') }}</label>
+    <div class="controls">
+      <select class="form-control" id="field-state" name="state">
+        <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
+        <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
+      </select>
+    </div>
+  </div>
   {% endif %}
 {% endmacro%}
+
+{# Wrapper with short_description and long_description #}
+{% macro _simple_text_field(name, label="", id="", placeholder="", value="", error="", short_description="", long_description="") %}
+ {% call form.input(name, label=label, id=id, placeholder=placeholder, value=value, error=error, classes=['control-medium']) %}
+    {% if short_description %}
+      <span class="form-text">
+        {{ short_description }}
+        {% if long_description %}
+          <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{long_description}}">
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+        {% endif %}
+      </span>
+    {% endif %}
+  {% endcall %}
+{% endmacro%}
+
+
+{# CKAN Package Source #}
+{% macro source(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('url', label=_('Source'), id='field-source', placeholder=_('http://example.com/dataset.json'), value=data.url, error=errors.url, short_description=short_description, long_description=long_description) }}
+{% endmacro%}
+
+{% macro version(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('version', label=_('Version'), id='field-version', placeholder=_('1.0'), value=data.version, error=errors.version, short_description=short_description, long_description=long_description) }}
+ {% endmacro%}
 
 {# CKAN Package Author #}
-{% macro author(data, errors, custom_id="", is_custom=False)%}
-  {% if not is_custom %}
-    {{ form.input('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium']) }}
-  {% else %}
-    {{ form.input(custom_id, label=_('Author'), id=custom_id, placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium'], attrs={'class': 'form-control', 'sync-with': 'field-author'}) }}
-  {% endif %}
+{% macro author(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, short_description=short_description, long_description=long_description) }}
 {% endmacro%}
 
+{% macro author_email(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('author_email', label=_('Author Email'), id='field-author_email', placeholder=_('joe@example.com'), value=data.author_email, error=errors.author_email, short_description=short_description, long_description=long_description) }}
+{% endmacro%}
+
+{% macro maintainer(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('maintainer', label=_('Maintainer'), id='field-maintainer', placeholder=_('Joe Bloggs'), value=data.maintainer, error=errors.maintainer, short_description=short_description, long_description=long_description) }}
+{% endmacro%}
+
+{% macro maintainer_email(data, errors, short_description="", long_description="")%}
+  {{ _simple_text_field('maintainer_email', label=_('Maintainer Email'), id='field-maintainer_email', placeholder=_('joe@example.com'), value=data.maintainer_email, error=errors.maintainer_email, short_description=short_description, long_description=long_description) }}
+{% endmacro%}
+
+{% macro custom_fields(data, errors, short_description, long_description)%}
+  {% block custom_fields %}
+    {% snippet 'snippets/custom_form_fields.html', extras=data.extras, errors=errors, limit=3 %}
+  {% endblock %}
+{% endmacro%}

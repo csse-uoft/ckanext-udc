@@ -19,35 +19,20 @@ then itself be extended to add/remove blocks of functionality. #}
 
   <div>
     <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
-      </li>
-
        {% for level in h.config %}
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+          <button class="nav-link{{" active" if loop.index == 1}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
         </li>
       {% endfor %}
 
     </ul>
     {# CKAN Default fields #}
     <div class="tab-content" style="display:initial;">
-      <div class="tab-pane active" id="basic-information" role="tabpanel">
-        {% block basic_fields %}
-          {% snippet 'package/snippets/package_basic_information.html', data=data, errors=errors %}
-        {% endblock %}
-        {% block metadata_fields %}
-          {% snippet 'package/snippets/package_metadata_fields.html', data=data, errors=errors %}
-        {% endblock %}
-        {% block custom_fields %}
-          {% snippet 'package/snippets/package_custom_fields.html', data=data, errors=errors %}
-        {% endblock %}
-      </div>
       <script type=text/javascript>
         window.packageConfig = {{h.config | tojson}};
       </script>
       {% for level in h.config %}
-        <div class="tab-pane fade" id="{{ level["name"] }}" role="tabpanel">
+        <div class="tab-pane {{"active" if loop.index == 1 else "fade"}}" id="{{ level["name"] }}" role="tabpanel">
           <h2 style="padding-top:12px">{{ level["title"] }}</h1>
           <div class="progress" style="margin-bottom:24px">
             <div class="progress-bar" id="progress-{{loop.index}}" role="progressbar" style="width: 0%;">0%</div>
@@ -56,7 +41,7 @@ then itself be extended to add/remove blocks of functionality. #}
             {# Here we have the field #}
             {% if field.get("ckanField") != none %}
               {# CKAN predefined field #}
-              {{ package_fields[field["ckanField"]](data=data, errors=errors, custom_id=("field-" + field["ckanField"] + "-clone") , is_custom=True) }}
+              {{ package_fields[field["ckanField"]](data=data, errors=errors, short_description=field["short_description"], long_description=field["long_description"]) }}
             {% else %}
               {# Our customized field #}
               {% set id = "field-" + field["name"] %}
@@ -120,7 +105,7 @@ then itself be extended to add/remove blocks of functionality. #}
         {% endif %}
       {% endblock %}
       {% block save_button %}
-        <button class="btn btn-primary" type="submit" name="save">{% block save_button_text %}{{ _('Next: Add Data') }}{% endblock %}</button>
+        <button class="btn btn-primary" type="submit" name="save">{% block save_button_text %}{{ _('Next: Add Datasets') }}{% endblock %}</button>
       {% endblock %}
       {{ form.required_message() }}
     </div>
