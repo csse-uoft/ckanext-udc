@@ -1,0 +1,136 @@
+/*
+	Mapping between met models and CKAN plugin metamodel fields.
+
+ 	CKAN metadata fields shoudl be reused as much as possible. 
+ 	For example, if defining a name for a dataset, use ckanField:name.
+ 	
+	List of possible CKAN field. Prefix with ckanField: (e.g. "ckanField:name")
+		name
+		x title
+		private
+		x author
+		author_email
+		maintainer
+		maintainer_email
+		license_id
+		notes
+		x version
+		state
+		resources
+		tags
+*/
+
+[
+	{
+		"name"			: "maturity_level_1",
+		"mapping"		: 
+		{
+
+
+
+			"ckanField:theme"		: {"dcat:theme"			: "skos:Concept"},
+			"ckanField:title"		: {"dct:title"			: "rdfs:Literal"},
+            // "ckanField::organization_and_visibility"		: {"dct:description"	: "rdfs:Literal"},
+
+			"unique_identifier" 	: {"dct:Identifier"		: "rdfs:Literal"},
+			"ckanField:description"	: {"dct:description"	: "rdfs:Literal"},
+			"ckanField:tags"		: {"dcat:keyword"		: "rdfs:Literal"},
+
+			"access_category"		: {"dct:accessCategory"	: "{open, closed, service}"},
+			"ckanFile:license_id"		: {"dct:license"		: "dct:LicenseDocument"},
+            "location"				: {"dcat:accessURL"		: "rdfs:Resource"},
+
+			"owner"					: {"dct:rightsHolder"	: "foaf:Agent"},
+
+			"published_date"		: {"dct:issued"			: "xsd:datetime"},
+			"ckanField:author"		: {"dct:creator"		: "foaf:Agent"},	// author_email is Property:Email
+
+			"time_span_start"		: {"hasTemporalStart"	: "xsd:datetime"},  
+			"time_span_end"			: {"hasTemporalEnd"		: "xsd:datetime"},
+			"time_span"				: {"dct:temporal"		: "dct:PeriodOfTime"}, // calculated from time_span_start and time_span_end
+			"geo_span"				: {"dct:spatial"		: "dct:Location"},
+		}
+	},
+
+	{
+		"name"			: "maturity_level_2",
+		"mapping"		: 
+		{
+			"description_document"		: {"dcat:landingPage"				: "foaf:Document"},
+			"ckanFile:version"			: {"adms:versionNotes"				: "rdfs:Literal"},
+			"language"					: {"dct:Language"					: "dct:LinguisticSystem"},
+			"persistent_identifier"		: {"fair:rda-f1-01d"				: "xsd:boolean"},
+			"global_unique_identifier"	: {"fair:rda-f1-02d"				: "xsd:boolean"},
+
+			"ckanField:format"			: {"dct:format"						: "dct:MediaTypeOrExtent"},
+			"ckanField:source"				: {"dcat:downloadURL"				: "rdfs:Resource"},
+			"data_service"				: {"dcat:accessService"				: "dcat:DataService"},
+
+			"owner"						: {"dct:publisher"					: "foaf:Agent"},
+
+			"version_info"				: {"owl:versionInfo"				: "rdfs:Literal"},
+			"version_dataset"			: {"dct:isVersionOf"				: "dcat:Dataset"},
+			"dataset_versions"			: {"dct:hasVersion"					: "dcat:Dataset"}.
+
+			"temporal_resolution"		: {"dcat:temporalResolution"		: "xsd:duration"},
+			"geospatial_resolution"		: {"dcat:spatialResolutionInMeters"	: "xsd:decimal"}
+
+		}
+	},
+
+	{
+		"name"			: "maturity_level_3",
+		"mapping"		: 
+		{
+			"contains_individual_data"				: {"containsIndividualData"				: "xsd:boolean"},
+			"contains_identifiable_individual_data"	: {"containsIdentifiableIndividualData"	: "xsd:boolean"},
+			"contains_indigenous_data"				: {"containsIndigenousData"				: "xsd:boolean"},
+
+			"limits_on_use"							: {"odrl:hasPolicy"						: "odrl:Policy"},
+
+			"indigenous_community_permission" 		: {"indigenousRightsHolder"				: "foaf:Agent"},
+			"provenance"							: {"dct:provenance"						: "dct:ProvenanceStatement"},
+
+			"access_steward"						: {"rightsHolder"						: "foaf:Agent"},
+			"indigenous_access_steward"				: {"indigenousRightsHolder"				: "foaf:Agent"},
+
+			"indigenous_span"						: {"spatialIndigenousCommunity"			: "dct:Location"},		// subClassOf(spatialIndigenousCommunity, dct:spatial)
+
+			"quality_annotation"					: {"dqv:hasQualityAnnotation"			: "dqv:QualityAnnotation"},
+			"quality_dimension_metric"				: {"dqv:inDimension"					: "dqv:Dimension"}
+
+		}
+	},
+
+	{
+		"name"			: "maturity_level_4",
+		"mapping"		: 
+		{
+			"fair_rda_r1_3_01d "	: {"fair:rda-r1.3-01d"		: "xsd:boolean"},
+			"fair_rda_i1_01d"		: {"fair:rda-i1-01d"		: "xsd:boolean"},
+			"fair_rda_i1_02d"		: {"fair:rda-i1-02d"		: "xsd:boolean"},
+			"fair_rda_i2_01d"		: {"fair:rda-i2-01d"		: "xsd:boolean"},
+
+			"fair_rda_i3_01d "		: {"fair:rda-i3-01d"		: "xsd:boolean"},
+			"fair_rda_a1_2_01d"		: {"fair:rda-a1.2-01d"		: "xsd:boolean"},
+			"fair_rda_a1_02d "		: {"fair:rda-a1-02d"		: "xsd:boolean"},
+			"fair_rda_a1_03d "		: {"fair:rda-a1-03d"		: "xsd:boolean"},
+			"fair_rda_a1_04d "		: {"fair:rda-a1-04d"		: "xsd:boolean"},
+			"fair_rda_a1_05d "		: {"fair:rda-a1-05d"		: "xsd:boolean"},
+			"fair_rda_a1_1_01d "	: {"fair:rda-a1.1-01d"		: "xsd:boolean"}
+		}
+	},
+	{
+		"name"			: "maturity_level_5",
+		"mapping"		: 
+		{
+			"number_of_triples"		: {"void:triples"			: "xsd:positiveInteger"},
+			"number_of_entities"	: {"void:classes"			: "xsd:positiveInteger"},
+			"number_of_properties"	: {"void:properties"		: "xsd:positiveInteger"}
+		}
+	}
+
+
+]
+
+

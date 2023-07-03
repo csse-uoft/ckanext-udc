@@ -88,8 +88,8 @@
                 "name": "owner",
                 "label": "Owner",
                 "type": "text",
-                "short_description": "Author of the dataset.",
-                "long_description": "Author's name or authoring organization for the dataset.",
+                "short_description": "Onwer of the dataset.",
+                "long_description": "Owner's name or authoring organization for the dataset.",
                 "category": "ownership"
             },
             {
@@ -292,7 +292,7 @@
             {
                 "name": "temporal_resolution",
                 "label": "Temporal resolution",
-                "type": "number",
+                "type": "text",
                 "short_description": "Describes how granular the date/time data in the dataset is.",
                 "long_description": "Describes how granular the date/time data in the dataset is. Usually, this explains the level of aggregation provided by the dataset. For example, time-series data can be by minute, hour, year, or season.",
                 "category": "tempo_geo"
@@ -300,7 +300,7 @@
             {
                 "name": "geospatial_resolution",
                 "label": "GeoSpatial resolution",
-                "type": "number",
+                "type": "text",
                 "short_description": "Describes how granular geospatial data is in the dataset.",
                 "long_description": "Describes how granular geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be at the city, province, region, or country level. It can also be stored as a polygon defined by longitude/latitude coordinates.",
                 "category": "tempo_geo"

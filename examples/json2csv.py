@@ -1,5 +1,8 @@
+import sys
 import json
-with open('examples/maturity_model_v0.3.json') as f:
+infile = sys.argv[1]
+outfile = infile.replace('.json','.csv')
+with open(infile) as f:
     data = json.load(f)
 import pandas as pd
 res = []
@@ -19,4 +22,4 @@ for mm in data:
 
         res.append([title, name, category, flabel, sdesc, ldesc])
 df = pd.DataFrame(res, columns=['mm_title', 'mm_name', 'category', 'flabel', 'sdesc', 'ldesc'])
-df.to_csv('examples/maturity_model_v0.3.csv', index=False)
+df.to_csv(outfile, index=False)
