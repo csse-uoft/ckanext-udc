@@ -19,8 +19,7 @@
 - Prepare environment: 
     ```shell
     sudo apt update
-    sudo apt update
-    sudo apt install build-essentials
+    sudo apt install build-essential
     ```
 - [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
   - follow the guide to install the latest version, don't install it from `apt` nor `snap`
