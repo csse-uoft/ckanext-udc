@@ -4,7 +4,7 @@
 {% block admin_form_help %}
   {{ super() }}
   {% set udc_help = "https://github.com/csse-uoft/ckanext-udc#supported-ckan-fields" %}
-  <p><strong>Maturity Model JSON:</strong> This is the JSON config that defines the maturity model. See <a href="{{ udc_help }}" target="_blank">supported CKAN fields</a>.</p>
+  <p><strong>UDC Config:</strong> This is the JSON config that defines the maturity model and mappings. See <a href="{{ udc_help }}" target="_blank">supported CKAN fields</a>.</p>
   
 {% endblock %}
 
@@ -15,6 +15,6 @@
   {{ super() }}
   
   <h3>UDC configuration options </h3>
-  {{ form.textarea('ckanext.udc.maturity_model', id='field-ckanext.udc.maturity_model', label=_('Maturity Model JSON'), value=data['ckanext.udc.maturity_model'], error=errors['ckanext.udc.maturity_model'], attrs={'class': 'form-control'}) }}
+  {{ form.textarea('ckanext.udc.config', id='field-ckanext.udc.config', label=_('Maturity Model JSON'), value=data['ckanext.udc.config'], rows=data['ckanext.udc.config'].count('\n') + 2, error=errors['ckanext.udc.config'], attrs={'class': 'form-control'}) }}
   
 {% endblock %}

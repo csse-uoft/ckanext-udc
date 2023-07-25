@@ -20,7 +20,9 @@ import logging
 from .cli import udc as cli_udc
 from .validator import udc_config_validor
 from .helpers import config_option_update, get_full_search_facets,\
-      get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages
+      get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages,\
+      package_update, package_delete
+from .graph.sparql_client import SparqlClient
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -47,16 +49,31 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def __init__(self, name=""):
         existing_config = ckan.model.system_info.get_system_info(
-            "ckanext.udc.maturity_model")
-        self.config = []
+            "ckanext.udc.config")
+        self.maturity_model = []
+        self.mappings = {}
+        self.preload_ontologies = {}
         self.all_fields = []
         self.facet_titles = {}
+        print(existing_config)
         if existing_config:
             try:
                 # Call our plugin to update the config
                 self.reload_config(json.loads(existing_config))
             except:
                 log.error
+
+        # Load sparql client
+        endpoint = tk.config.get('udc.sparql.endpoint')
+        username = tk.config.get('udc.sparql.username') or None
+        password = tk.config.get('udc.sparql.password') or None
+
+        self.sparql_client = SparqlClient(endpoint, username=username, password=password)
+        if self.sparql_client.test_connecetion():
+            log.info("GraphDB connected: " + endpoint)
+        else:
+            log.error("UDC cannot connect to the GraphDB")
+
         log.info("UDC Plugin Loaded!")
 
     def reload_config(self, config: list):
@@ -65,7 +82,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             log.info(config)
             all_fields = []
             self.facet_titles.clear()
-            for level in config:
+            for level in config["maturity_model"]:
                 for field in level["fields"]:
                     if field.get("name"):
                         all_fields.append(field["name"])
@@ -76,8 +93,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # Do not mutate the vars
             self.all_fields.clear()
             self.all_fields.extend(all_fields)
-            self.config.clear()
-            self.config.extend(config)
+            self.maturity_model.clear()
+            self.maturity_model.extend(config["maturity_model"])
+            self.mappings.clear()
+            self.mappings.update(config["mappings"])
+            self.preload_ontologies.clear()
+            self.preload_ontologies.update(config["preload_ontologies"])
+
             # self.facet_titles.update(get_default_facet_titles())
 
         except Exception as e:
@@ -121,7 +143,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def get_helpers(self):
         return {
-            "config": self.config,
+            "config": self.maturity_model,
             "facet_titles": self.facet_titles,
             "get_full_search_facets": get_full_search_facets,
             "get_default_facet_titles": get_default_facet_titles,
@@ -148,7 +170,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
         schema.update({
             # This is a custom configuration option
-            'ckanext.udc.maturity_model': [
+            'ckanext.udc.config': [
                 ignore_missing, unicode_safe, udc_config_validor
             ],
         })
@@ -160,7 +182,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         Override CKAN's default actions.
         """
         return {
-            "config_option_update": config_option_update
+            "config_option_update": config_option_update,
+            "package_update": package_update,
+            "package_delete": package_delete,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

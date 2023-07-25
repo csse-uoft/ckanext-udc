@@ -16,6 +16,8 @@ from ckan.plugins.toolkit import (chained_action, side_effect_free, chained_help
 import ckan.lib.helpers as h
 from ckan.common import current_user, _
 
+from .graph.logic import onUpdateCatalogue
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -29,12 +31,25 @@ def config_option_update(original_action, context, data_dict):
         # Call our plugin to update the config
         log.info("config_option_update: Update UDC Config")
         plugins.get_plugin('udc').reload_config(
-            json.loads(data_dict["ckanext.udc.maturity_model"]))
+            json.loads(data_dict["ckanext.udc.config"]))
     except:
         log.error
 
     res = original_action(context, data_dict)
     return res
+
+@side_effect_free
+@chained_action
+def package_update(original_action, context, data_dict):
+    onUpdateCatalogue(context, data_dict)
+    return original_action(context, data_dict)
+
+@side_effect_free
+@chained_action
+def package_delete(original_action, context, data_dict):
+    print(f"Package Delete: ", data_dict)
+    return original_action(context, data_dict)
+
 
 # Register a chained helpers for humanize_entity_type() to change labels.
 @chained_helper
@@ -145,27 +160,26 @@ def get_maturity_percentages(config, pkg_dict):
         num_not_empty = 0
         total_size = 0
         for field in level["fields"]:
-            # Skip custom_fields
-            if field.get("ckanField") in ['custom_fields']:
-                continue
-            # organization_and_visibility is always filled
-            if field.get("ckanField") == 'organization_and_visibility':
-                num_not_empty += 2
-                total_size += 2
-                continue
-            
-            # `description` is stored as `notes`
-            if field.get("ckanField") == 'description' and pkg_dict.get("notes"):
-                num_not_empty += 1
-            # `source` is stored as `url`
-            if field.get("ckanField") == 'source' and pkg_dict.get("url"):
-                num_not_empty += 1
-            elif field.get("label") and pkg_dict.get(field["name"]):
-                num_not_empty += 1
-            elif field.get("ckanField") and pkg_dict.get(field["ckanField"]):
-                num_not_empty += 1
-            # else:
-            #     print(idx, field.get("ckanField") or field.get("name"), pkg_dict.get(field.get("ckanField") or field.get("name")))
+            if field.get("ckanField"):
+                # Skip custom_fields
+                if field.get("ckanField") in ['custom_fields']:
+                    continue
+                # organization_and_visibility is always filled
+                if field.get("ckanField") == 'organization_and_visibility':
+                    num_not_empty += 2
+                    total_size += 1
+                # `description` is stored as `notes`
+                elif field.get("ckanField") == 'description' and pkg_dict.get("notes"):
+                    num_not_empty += 1
+                # `source` is stored as `url`
+                elif field.get("ckanField") == 'source' and pkg_dict.get("url"):
+                    num_not_empty += 1
+                elif pkg_dict.get(field["ckanField"]):
+                    num_not_empty += 1
+            else:
+                if field.get("name") and field.get("label") and pkg_dict.get(field["name"]):
+                    num_not_empty += 1
+
             total_size += 1
         percentages.append(str(round(num_not_empty / total_size * 100)) + "%")
 

@@ -25,9 +25,12 @@ def udc_config_validor(config_str):
         config = json.loads(config_str)
     except:
         raise tk.Invalid("UDC Config: Malformed JSON Format.")
+    
+    if not isinstance(config["maturity_model"], list):
+        raise tk.Invalid(f"UDC Config: Expecting a JSON List but got `{config.__class__.__name__}`")
 
     used_fields = set()
-    for level in config:
+    for level in config["maturity_model"]:
         if not ("title" in level and "name" in level and "fields" in level):
             raise tk.Invalid(
                 f'Malformed UDC Config: "title", "name" and "fields" are required for each level.')
@@ -57,3 +60,18 @@ def udc_config_validor(config_str):
             raise tk.Invalid(
                 f"Malformed UDC Config: Missing the required CKAN field `{field_name}`.")
     return config_str
+
+
+def udc_mapping_validator(mapping_str):
+    try:
+        mapping = json.loads(mapping_str)
+    except:
+        raise tk.Invalid("UDC Mapping: Malformed JSON Format.")
+    if not isinstance(mapping, dict):
+        raise tk.Invalid(f"UDC Mapping: Expecting a JSON Object but got `{mapping.__class__.__name__}`")
+
+    if not mapping.get("namespaces"):
+        raise tk.Invalid("UDC Mapping: Missing namespaces field.")
+    if not mapping.get("mappings"):
+        raise tk.Invalid("UDC Mapping: Missing mappings field.")
+    return mapping_str
