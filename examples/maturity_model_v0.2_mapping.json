@@ -36,7 +36,7 @@
 			"ckanField:description"	: {"dct:description"	: "rdfs:Literal"},
 			"ckanField:tags"		: {"dcat:keyword"		: "rdfs:Literal"},
 
-			"access_category"		: {"dct:accessCategory"	: "{open, closed, service}"},
+			"access_category"		: {"cudr:accessCategory"	: ["open", "closed", "service"],
 			"ckanFile:license_id"		: {"dct:license"		: "dct:LicenseDocument"},
             "location"				: {"dcat:accessURL"		: "rdfs:Resource"},
 
@@ -66,7 +66,7 @@
 			"ckanField:source"				: {"dcat:downloadURL"				: "rdfs:Resource"},
 			"data_service"				: {"dcat:accessService"				: "dcat:DataService"},
 
-			"owner"						: {"dct:publisher"					: "foaf:Agent"},
+			"publisher"						: {"dct:publisher"					: "foaf:Agent"},
 
 			"version_info"				: {"owl:versionInfo"				: "rdfs:Literal"},
 			"version_dataset"			: {"dct:isVersionOf"				: "dcat:Dataset"},
