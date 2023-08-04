@@ -41,7 +41,8 @@ def config_option_update(original_action, context, data_dict):
 @side_effect_free
 @chained_action
 def package_update(original_action, context, data_dict):
-    onUpdateCatalogue(context, data_dict)
+    if not plugins.get_plugin('udc').disable_graphdb:
+        onUpdateCatalogue(context, data_dict)
     return original_action(context, data_dict)
 
 @side_effect_free

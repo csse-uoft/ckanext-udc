@@ -50,6 +50,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def __init__(self, name=""):
         existing_config = ckan.model.system_info.get_system_info(
             "ckanext.udc.config")
+        self.disable_graphdb = False
         self.maturity_model = []
         self.mappings = {}
         self.preload_ontologies = {}
@@ -67,6 +68,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         endpoint = tk.config.get('udc.sparql.endpoint')
         username = tk.config.get('udc.sparql.username') or None
         password = tk.config.get('udc.sparql.password') or None
+
+        if endpoint is None:
+            self.disable_graphdb = True
 
         self.sparql_client = SparqlClient(endpoint, username=username, password=password)
         if self.sparql_client.test_connecetion():
