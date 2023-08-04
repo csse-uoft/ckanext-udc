@@ -11,7 +11,7 @@ from .serializer import *
 from .template import compile_template, compile_with_temp_value
 from .mapping_helpers import all_helpers
 from .ckan_field import CKANField
-from .queries import get_uri_as_object_usage, get_client
+from .queries import get_uri_as_object_usage, get_client, get_num_paths
 
 
 def get_mappings():
@@ -87,6 +87,11 @@ def onUpdateCatalogue(context, data_dict):
     print(f"onUpdateCatalogue Update: ", data_dict)
     ckanField = CKANField(data_dict)
 
+    # Remove empty fields
+    for key in [*data_dict.keys()]:
+        if data_dict[key] == '':
+            del data_dict[key]
+
     uris_to_del = find_existing_instance_uris(data_dict)
 
     compiled_template = compile_template(get_mappings(), all_helpers,
@@ -116,7 +121,12 @@ def onUpdateCatalogue(context, data_dict):
         cnt = 0
         # Find the occurrences of the `s` is used as an object
         for s in subjects:
-            if get_uri_as_object_usage(s) <= 1:
+            # If 's' is not used by the current catalogue, skip it
+            num_paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            if num_paths_used_by_catalogue == 0:
+                continue
+            # Check if 's' is used by any other triples as an object
+            if get_uri_as_object_usage(s) > num_paths_used_by_catalogue:
                 delete_clause.append(f'{normalize_uri(s)} ?p{cnt} ?o{cnt}')
                 cnt += 1
 

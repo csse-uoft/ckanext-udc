@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from rdflib import Literal, XSD
+from .contants import EMPTY_FIELD
 
 uuidMap = {}
 
@@ -31,7 +32,13 @@ def to_float(val: str):
 
 
 def to_date(val: str):
-    return Literal(val + "", datatype=XSD.date)
+    if val == EMPTY_FIELD or val == '':
+        return EMPTY_FIELD
+    converted_xsd_date = Literal(val + "", datatype=XSD.date)
+    if converted_xsd_date:
+        return converted_xsd_date
+    else:
+        return EMPTY_FIELD
 
 def to_bool(val: str):
     if val.lower() == 'yes':

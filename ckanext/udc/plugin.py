@@ -55,7 +55,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         self.preload_ontologies = {}
         self.all_fields = []
         self.facet_titles = {}
-        print(existing_config)
+        # print(existing_config)
         if existing_config:
             try:
                 # Call our plugin to update the config
@@ -78,8 +78,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def reload_config(self, config: list):
         try:
-            log.info("tring to load udc config:")
-            log.info(config)
+            # log.info("tring to load udc config:")
+            # log.info(config)
             all_fields = []
             self.facet_titles.clear()
             for level in config["maturity_model"]:
