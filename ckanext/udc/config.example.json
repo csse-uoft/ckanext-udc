@@ -349,7 +349,7 @@
                     "category": "access"
                 },
                 {
-                    "name": "provenance_text",
+                    "name": "provenance",
                     "label": "Provenance Text",
                     "type": "text",
                     "short_description": "Provenance Text of the data.",
