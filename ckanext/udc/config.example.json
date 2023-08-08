@@ -841,7 +841,7 @@
         "dct:provenance": {
             "@id": "http://data.urbandatacentre.ca/provenance/{generate_uuid()}",
             "@type": "dct:ProvenanceStatement",
-            "prov:value": "{provenance_text}",
+            "prov:value": "{provenance}",
             "prov:wasQuotedFrom": "{provenance_url}"
         },
         "cudr:rightsHolder": {
