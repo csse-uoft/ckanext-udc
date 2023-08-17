@@ -5,7 +5,7 @@
             "name"                  : "theme",
             "label"                 : "Domain / Topic",
             "type"                  : "text",
-            "short_description"     : "Domain or topic of the dataset.",
+            "short_description"     : "Domain or topic of the dataset being cataloged.",
             "long_description"      : "The theme or topic of the package.",
             "category"              : "content"
         },
@@ -80,6 +80,11 @@
             "category": "ownership"
         },
         {
+            "ckanField": "author_email",
+            "short_description"     : "Email of the author",
+            "long_description"      : "Email of the dataset's author. Can be used to contact the author directly."
+        },
+        {
             "name": "time_span_start",
             "label": "Time Span (start date)",
             "type": "date",
@@ -107,17 +112,12 @@
             "name"              : "accessed_date",
             "label"             : "Accessed At",
             "short_description" : "Date the data and metadata was accessed.",
-            "long_description"  : "Date the data and metadata was accessed. This date idenitfies when the dataset and metadata were reviewed fo entry into CUDR. sually this is provided by data curator or the dataowner if provided indirectly from the owner.",
+            "long_description"  : "Date the data and metadata was accessed. This date identifies when the dataset and metadata were reviewed for entry into CUDR. Usually, this is provided by data curator or the data owner if provided indirectly from the owner.",
             "type": "date",
             "category": "content"
 
-        },
-        {
-            "ckanField": "author_email",
-            "short_description"     : "Email of the author",
-            "long_description"      : "Email of the dataset's author. Can be used to contact the author directly.",
-            "category"              : "ownership"
         }
+
     ]
 },
 
@@ -136,7 +136,7 @@
         {
             "ckanField"                 : "version",
             "short_description"         : "Version of the datatset",
-            "long_description"          : "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a data (e.g. Jan 1, 2022) or a textual description (e.g. 'First verison published for public use').",
+            "long_description"          : "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a date (e.g. Jan 1, 2022) or a textual description (e.g. 'First version published for public use').",
             "category"                  : "content"
         },
         {
@@ -144,14 +144,14 @@
             "label": "Language",
             "type": "text",
             "short_description": "Language(s) of the dataset",
-            "long_description": "Language(s) of the dataset capture what language the data is in. It does not reflect the langage o the metadata associated with it.",
+            "long_description": "Language(s) of the dataset capture what language the data is in. It does not reflect the language o the metadata associated with it.",
             "category": "content"
         },
         {
             "name": "persistent_identifier",
             "label": "Persistent Identifier",
             "short_description": "Data is identified by a persistent identifier.",
-            "long_description": "Data is identified by a persistent identifier. A unique identifier can be in any format, as long as it is unique withn some context. Often, this is stored as a unique resource identifier (URI).",
+            "long_description": "Data is identified by a persistent identifier. A unique identifier can be in any format, as long as it is unique within some context. Often, this is stored as a unique resource identifier (URI).",
             "category": "content",
             "type": "single_select",
             "options": [{
@@ -351,7 +351,7 @@
             "label"                     : "Provenance",
             "type"                      : "text",
             "short_description"         : "Provenance of the data.",
-            "long_description"          : "Provenance of the data, identifying who created the previosu versions, who has used them, etc.",
+            "long_description"          : "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
             "category": "access"
         },
         {
@@ -372,7 +372,7 @@
         },
         {
             "name": "indigenous_span",
-            "label": "The Indigenous communities the dataset is about.",
+            "label": "The Indigenous communities the dataset is about",
             "type": "text",
             "short_description": "Indigenous communities from which data is derived.",
             "long_description": "Indigenous communities from which data is derived. this represents the community coverage of the communities that provided the data or are the subject of data stored in the dataset.",

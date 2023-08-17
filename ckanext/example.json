@@ -22,9 +22,6 @@
                     "category": "content"
                 },
                 {
-                    "ckanField": "organization_and_visibility"
-                },
-                {
                     "ckanField": "description",
                     "short_description": "A description of the dataset.",
                     "long_description": "A description of the dataset. Often provided by the creator or publisher.",
@@ -105,6 +102,12 @@
                     "category": "access"
                 },
                 {
+                    "ckanField": "organization_and_visibility",
+                    "short_description": "What organization or community this is visible to.",
+                    "long_description": "What organization or community this is visible to.",
+                    "category": "content"
+                },
+                {
                     "name": "data_service",
                     "label": "Data Service",
                     "short_description": "Data service for accessing a dataset.",
@@ -128,15 +131,13 @@
                     "category": "access"
                 },
                 {
-                    "name": "publisher",
-                    "label": "Publisher",
+                    "ckanField": "publisher",
                     "short_description": "Publisher of the dataset.",
                     "long_description": "Publisher's name or authoring organization for the dataset.",
                     "category": "ownership"
                 },
                 {
-                    "name": "publisher_email",
-                    "label": "Publisher Email",
+                    "ckanField": "publisher_email",
                     "short_description": "Email of the publisher",
                     "long_description": "Email of the dataset's publisher. Can be used to contact the author directly."
                 },
@@ -226,6 +227,7 @@
                     ]
                 },
                 {
+                	// TODO, read from graph
                     "name": "file_format",
                     "label": "Format (CSV, XLS, TXT, PDF, etc)",
                     "short_description": "Format of the dataset.",
@@ -300,7 +302,7 @@
                     "short_description": "Describes how granular (in meters) geospatial data is in the dataset.",
                     "long_description": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
                     "category": "tempo_geo"
-                },
+                }
                 {
                     "name": "geospatial_resolution",
                     "label": "GeoSpatial resolution (in regions)",
@@ -745,13 +747,10 @@
             "iocn": "http://www.w3.org/ns/locn#",
             "odrl": "http://www.w3.org/ns/odrl/2/",
             "prov": "http://www.w3.org/ns/prov#",
-            "oa": "http://www.w3.org/ns/oa#",
-            "vcard": "http://www.w3.org/2006/vcard/ns#"
+            "oa": "http://www.w3.org/ns/oa#"
         },
         "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.id}",
         "@type": "http://data.urbandatacentre.ca/catalogue",
-
-
         "dcat:theme": {
             "@type": "skos:Concept",
             "@id": "http://data.urbandatacentre.ca/theme/{theme.lower()}",
@@ -761,11 +760,33 @@
             "@type": "xsd:string",
             "@value": "{ckanField.title}"
         },
+        "dct:Identifier": "{ckanField.id}",
         "dct:description": "{ckanField.description}",
         "dcat:keyword": "{ckanField.tags}",
+        "cudr:accessCategory": "{access_category}",
+        "dct:license_id": "TODO",
+
+        "dcat:accessURL": {
+            "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.name}"
+        },
+        "dct:rightsHolder": {
+            "@id": "http://data.urbandatacentre.ca/owner/{generate_uuid()}",
+            "@type": [
+                "foaf:Agent"
+            ],
+            "foaf:name": "{owner}"
+        },
         "dct:issued": {
             "@type": "xsd:date",
             "@value": "{to_date(published_date)}"
+        },
+        "dct:creator": {
+            "@id": "http://data.urbandatacentre.ca/creator/{generate_uuid()}",
+            "@type": [
+                "foaf:Agent"
+            ],
+            "foaf:mbox": "{ckanField.author_email}",
+            "foaf:name": "{ckanField.author}"
         },
         "cudr:hasTemporalStart": {
             "@type": "xsd:date",
@@ -784,56 +805,13 @@
 
 
 
-        "dct:identifier": "{ckanField.id}",
-        "cudr:accessCategory": "{access_category}",
-        "dct:license": "TODO",
-        "dcat:accessURL": {
-            "@id": "{location}"
-        },
-        "dcat:accessService": {
-            "@type": "dcat:DataService",
-            "dcat:endpointURL": "{data_service}"
-        },
-        "dct:rightsHolder": {
-            "@id": "http://data.urbandatacentre.ca/owner/{generate_uuid()}",
-            "@type": [
-                "foaf:Agent"
-            ],
-            "foaf:name": "{owner}"
-        },
-        "dcat:contactPoint": {
-            "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
-            "@type":"vcard:Individual",
-            "vcard:fn": "{access_steward}"
-        },
-        "dct:publisher": {
-            "@id": "http://data.urbandatacentre.ca/publisher/{generate_uuid()}",
-            "@type": [
-                "foaf:Agent"
-            ],
-            "foaf:name": "{publisher}",
-            "foaf:mbox": "{publisher_email}"
-        },
-        "dct:creator": {
-            "@id": "http://data.urbandatacentre.ca/creator/{generate_uuid()}",
-            "@type": [
-                "foaf:Agent"
-            ],
-            "foaf:mbox": "{ckanField.author_email}",
-            "foaf:name": "{ckanField.author}"
-        },
-        "cudr:accessedAt": {
-            "@type": "xsd:date",
-            "@value": "{to_date(accessed_date)}"
-        },
-
-
-
-
         "dcat:landingPage": {
             "@id": "{description_document}"
         },
+        "adms:versionNotes": "{ckanField.version}",
+
         "dct:Language": "TODO",
+
         "fair:rda-f1-01d": {
             "@type": "xsd:boolean",
             "@value": "{to_bool(persistent_identifier)}"
@@ -846,16 +824,21 @@
         "dcat:downloadURL": {
             "@id": "{ckanField.source}"
         },
+        "dcat:accessService": {
+            "@type": "dcat:DataService",
+            "dcat:endpointURL": "{data_service}"
+        },
+        "dct:publisher": {
+            "@id": "http://data.urbandatacentre.ca/publisher/{generate_uuid()}",
+            "@type": [
+                "foaf:Agent"
+            ],
+            "foaf:name": "{publisher}",
+            "foaf:mbox": "{ckanField.publisher_email}",
+        },
         "owl:versionInfo": "{version_info}",
-        "adms:versionNotes": "{ckanField.version}",
         "dct:isVersionOf": "{version_dataset}",
         "dct:hasVersion": "{dataset_versions}",
-        "dct:provenance": {
-            "@id": "http://data.urbandatacentre.ca/provenance/{generate_uuid()}",
-            "@type": "dct:ProvenanceStatement",
-            "prov:value": "{provenance}",
-            "prov:wasQuotedFrom": "{provenance_url}"
-        },
         "dcat:temporalResolution": "{temporal_resolution}",
         "dcat:spatialResolutionInMeters": {
             "@type": "xsd:decimal",
@@ -864,11 +847,8 @@
         },
         "dcat:spatialResolutionInRegion": {
         	"@type" : "sc:AdminstrativeArea",
-        	"sc:name": "{geospatial_resolution}"
+        	"sc:name" "{geospatial_resolution}"
     	},
-
-
-
 
         "cudr:containsIndividualData": {
             "@type": "xsd:boolean",
@@ -882,10 +862,12 @@
             "@type": "xsd:boolean",
             "@value": "{to_bool(contains_indigenous_data)}"
         },
+
         "odrl:hasPolicy": {
         	"@type"		: "odrl:Policy",
         	"@value"	: "{limits_on_use}"
         },
+
         "cudr:indigenousRightsHolder": {
             "@id": "http://data.urbandatacentre.ca/indigenousRightsHolder/{generate_uuid()}",
             "@type": [
@@ -893,11 +875,47 @@
             ],
             "foaf:name": "{indigenous_community_permission}"
         },
+        "dct:provenance": {
+            "@id": "http://data.urbandatacentre.ca/provenance/{generate_uuid()}",
+            "@type": "dct:ProvenanceStatement",
+            "prov:value": "{provenance}",
+            "prov:wasQuotedFrom": "{provenance_url}"
+        },
+        // "cudr:rightsHolder": {
+        //     "@id": "http://data.urbandatacentre.ca/rightsHolder/{generate_uuid()}",
+        //     "@type": [
+        //         "foaf:Agent"
+        //     ],
+        //     "foaf:name": "{access_steward}"
+        // },
+
+        "dcat:contactPoint": {
+            "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
+            "@type":"vcard:Kind",
+            "@value": "{access_steward}"
+        },
+
+
         "cudr:spatialIndigenousCommunity": {
             "@type": "dct:Location",
             "@id": "http://data.urbandatacentre.ca/geo/{indigenous_span.lower()}",
             "locn:geometry": "{indigenous_span}"
         },
+        "dqv:hasQualityAnnotation": {
+            "@id": "http://data.urbandatacentre.ca/qualityAnnotation/{generate_uuid()}",
+            "@type": "dqv:QualityAnnotation",
+            "oa:motivatedBy": {
+                "@id": "oa:assessing"
+            },
+            "oa:hasBody": {
+                "@id": "http://data.urbandatacentre.ca/qualityAnnotation/body/{generate_uuid()}",
+                "@type": "oa:TextualBody",
+                "rdf:value": "{quality_annotation}"
+            }
+        },
+        "dqv:inDimension": "TODO",
+
+
 
 
 
@@ -946,47 +964,18 @@
             "@type": "xsd:boolean",
             "@value": "{to_bool(fair_rda_a1_1_01d)}"
         },
-
-
-
-        "cudr:rows": {
-            "@type": "xsd:integer",
-            "@value": "{number_of_rows}"
-        },
-        "cudr:columns": {
-            "@type": "xsd:integer",
-            "@value": "{number_of_columns}"
-        },
-        "cudr:cells": {
-            "@type": "xsd:integer",
-            "@value": "{number_of_cells}"
-        },
+        
         "cudr:triples": {
             "@type": "xsd:integer",
             "@value": "{number_of_triples}"
         },
-        "cudr:entities": {
+        "cudr:classes": {
             "@type": "xsd:integer",
             "@value": "{number_of_entities}"
         },
         "cudr:properties": {
             "@type": "xsd:integer",
             "@value": "{number_of_properties}"
-        },
-
-        "dqv:hasQualityAnnotation": {
-            "@id": "http://data.urbandatacentre.ca/qualityAnnotation/{generate_uuid()}",
-            "@type": "dqv:QualityAnnotation",
-            "oa:motivatedBy": {
-                "@id": "oa:assessing"
-            },
-            "oa:hasBody": {
-                "@id": "http://data.urbandatacentre.ca/qualityAnnotation/body/{generate_uuid()}",
-                "@type": "oa:TextualBody",
-                "rdf:value": "{quality_annotation}"
-            }
-        },
-        "dqv:inDimension": "TODO"
-
+        }
     }
 }
