@@ -393,17 +393,9 @@
                     "name": "indigenous_community_permission",
                     "label": "Indigenous Community Permission",
                     "type": "text",
-                    "short_description": "Who holds the Indigenous Community Permission.",
-                    "long_description": "Who holds the Indigenous Community Permission.",
+                    "short_description": "Who holds the Indigenous Community Permission. Who to contact regarding access to a dataset that has data about Indigenous communities.",
+                    "long_description": "Who holds the Indigenous Community Permission. The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
                     "category": "access"
-                },
-                {
-                    "name": "indigenous_access_steward",
-                    "label": "Who gave permission (for Indigenous data)",
-                    "type": "text",
-                    "short_description": "Who to contact regarding access to a dataset that has data about Indigenous communities.",
-                    "long_description": "The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
-                    "category": "ownership"
                 },
                 {
                     "name": "indigenous_span",
@@ -742,7 +734,7 @@
             "cudrc": "http://data.urbandatacentre.ca/catalogue/",
             "fair": "http://ontology.eil.utoronto.ca/fair#",
             "adms": "http://www.w3.org/ns/adms#",
-            "iocn": "http://www.w3.org/ns/locn#",
+            "locn": "http://www.w3.org/ns/locn#",
             "odrl": "http://www.w3.org/ns/odrl/2/",
             "prov": "http://www.w3.org/ns/prov#",
             "oa": "http://www.w3.org/ns/oa#",
@@ -859,8 +851,7 @@
         "dcat:temporalResolution": "{temporal_resolution}",
         "dcat:spatialResolutionInMeters": {
             "@type": "xsd:decimal",
-            "@id": "http://data.urbandatacentre.ca/geo_span_in_meters/{geo_span_in_meters.lower()}",
-            "locn:geometry": "{geospatial_resolution_in_meters}"
+            "@value": "{geospatial_resolution_in_meters}"
         },
         "cudr:spatialResolutionInRegion": {
         	"@type" : "sc:AdministrativeArea",
