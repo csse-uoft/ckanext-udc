@@ -833,7 +833,7 @@
         "dcat:landingPage": {
             "@id": "{description_document}"
         },
-        "dct:Language": "TODO",
+        "dct:language": "TODO",
         "fair:rda-f1-01d": {
             "@type": "xsd:boolean",
             "@value": "{to_bool(persistent_identifier)}"
@@ -862,8 +862,8 @@
             "@id": "http://data.urbandatacentre.ca/geo_span_in_meters/{geo_span_in_meters.lower()}",
             "locn:geometry": "{geospatial_resolution_in_meters}"
         },
-        "dcat:spatialResolutionInRegion": {
-        	"@type" : "sc:AdminstrativeArea",
+        "cudr:spatialResolutionInRegion": {
+        	"@type" : "sc:AdministrativeArea",
         	"sc:name": "{geospatial_resolution}"
     	},
 
