@@ -79,6 +79,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 log.info("GraphDB connected: " + endpoint)
             else:
                 log.error("UDC cannot connect to the GraphDB")
+                self.disable_graphdb = True
 
         log.info("UDC Plugin Loaded!")
 
