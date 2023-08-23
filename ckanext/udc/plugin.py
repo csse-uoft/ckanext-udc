@@ -71,12 +71,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
         if endpoint is None:
             self.disable_graphdb = True
+            log.info("No GraphDB Endpoint is provided.")
 
-        self.sparql_client = SparqlClient(endpoint, username=username, password=password)
-        if self.sparql_client.test_connecetion():
-            log.info("GraphDB connected: " + endpoint)
         else:
-            log.error("UDC cannot connect to the GraphDB")
+            self.sparql_client = SparqlClient(endpoint, username=username, password=password)
+            if self.sparql_client.test_connecetion():
+                log.info("GraphDB connected: " + endpoint)
+            else:
+                log.error("UDC cannot connect to the GraphDB")
 
         log.info("UDC Plugin Loaded!")
 
