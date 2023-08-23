@@ -1,52 +1,66 @@
 {% import 'macros/form.html' as form %}
 
-{% macro _text_multiple_input(name, id, label) %}
+{% macro _text_multiple_input(name, id, label, short_description, long_description) %}
   <div class="form-group control-full">
     <label class="form-label" for="{{id}}">{{ label }}</label>
     <div class="controls">
       <input id="{{id}}" name="{{name}}" data-module="filter-multiple-select"></input>
     </div>
+    {{ field_descriptions(short_description, long_description) }}
   </div>
 {% endmacro %}
 
-{% macro title() %}
-  {{ _text_multiple_input("title", "filter-title", _("Title")) }}
+{% macro field_descriptions(short_description="", long_description="") %}
+  <span class="form-text">
+    {{ short_description }}
+    {% if long_description %}
+      <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{long_description}}">
+        <i class="fa-regular fa-circle-question"></i>
+      </button>
+    {% endif %}
+  </span>
+
 {% endmacro %}
 
-{% macro description() %}
-  {{ _text_multiple_input("notes", "filter-notes", _("Description")) }}
+{% macro title(short_description, long_description) %}
+  {{ _text_multiple_input("title", "filter-title", _("Title"), short_description, long_description) }}
 {% endmacro %}
 
-{% macro organization_and_visibility() %}
+{% macro description(short_description, long_description) %}
+  {{ _text_multiple_input("notes", "filter-notes", _("Description"), short_description, long_description) }}
+{% endmacro %}
+
+{% macro organization_and_visibility(short_description, long_description) %}
   <div class="form-group control-full">
     <label class="form-label" for="filter-organization">{{ _("Organization") }}</label>
     <div class="controls">
       <input id="filter-organization" name="organization" data-module="filter-multiple-select"></input>
     </div>
+    {{ field_descriptions(short_description, long_description) }}
   </div>
 {% endmacro %}
 
-{% macro source() %}
-  {{ _text_multiple_input("url", "filter-url", _("Source")) }}
+{% macro source(short_description, long_description) %}
+  {{ _text_multiple_input("url", "filter-url", _("Source"), short_description, long_description) }}
 {% endmacro %}
 
-{% macro version() %}
-  {{ _text_multiple_input("version", "filter-version", _("Version")) }}
+{% macro version(short_description, long_description) %}
+  {{ _text_multiple_input("version", "filter-version", _("Version"), short_description, long_description) }}
 {% endmacro %}
 
-{% macro author() %}
-  {{ _text_multiple_input("author", "filter-author", _("Author")) }}
+{% macro author(short_description, long_description) %}
+  {{ _text_multiple_input("author", "filter-author", _("Author"), short_description, long_description) }}
 {% endmacro %}
-{% macro author_email() %}
-  {{ _text_multiple_input("author_email", "filter-author_email", _("Author Email")) }}
+{% macro author_email(short_description, long_description) %}
+  {{ _text_multiple_input("author_email", "filter-author_email", _("Author Email"), short_description, long_description) }}
 {% endmacro %}
-{% macro maintainer() %}
-  {{ _text_multiple_input("maintainer", "filter-maintainer", _("Maintainer")) }}
+{% macro maintainer(short_description, long_description) %}
+  {{ _text_multiple_input("maintainer", "filter-maintainer", _("Maintainer"), short_description, long_description) }}
 {% endmacro %}
-{% macro maintainer_email() %}
-  {{ _text_multiple_input("maintainer_email", "filter-maintainer_email", _("Maintainer Email")) }}
+{% macro maintainer_email(short_description, long_description) %}
+  {{ _text_multiple_input("maintainer_email", "filter-maintainer_email", _("Maintainer Email"), short_description, long_description) }}
 {% endmacro %}
 
-{% macro custom_fields() %}
+{% macro custom_fields(short_description, long_description) %}
 {% endmacro %}
 

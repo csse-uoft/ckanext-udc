@@ -51,6 +51,7 @@
                       <div class="controls">
                         <input id="filter-{{field["name"]}}" name="{{field["name"]}}" data-module="filter-multiple-select"></input>
                       </div>
+                      {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                     </div>
                   {% endif %}
 
@@ -63,9 +64,10 @@
                       <div class="controls">
                         <input id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select"></input>
                       </div>
+                      {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                     </div>
                   {% else %}
-                    {{ ckan_filter[field["ckanField"]]() }}
+                    {{ ckan_filter[field["ckanField"]](field['short_description'], field['long_description']) }}
                    
                   {% endif %}
                 {% endif %}
