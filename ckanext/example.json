@@ -22,6 +22,12 @@
                     "category": "content"
                 },
                 {
+                    "ckanField": "organization_and_visibility",
+                    "short_description": "What organization or community this is visible to.",
+                    "long_description": "What organization or community this is visible to.",
+                    "category": "content"
+                },
+                {
                     "ckanField": "description",
                     "short_description": "A description of the dataset.",
                     "long_description": "A description of the dataset. Often provided by the creator or publisher.",
@@ -102,12 +108,6 @@
                     "category": "access"
                 },
                 {
-                    "ckanField": "organization_and_visibility",
-                    "short_description": "What organization or community this is visible to.",
-                    "long_description": "What organization or community this is visible to.",
-                    "category": "content"
-                },
-                {
                     "name": "data_service",
                     "label": "Data Service",
                     "short_description": "Data service for accessing a dataset.",
@@ -131,15 +131,18 @@
                     "category": "access"
                 },
                 {
-                    "ckanField": "publisher",
+                    "name": "publisher",
+                    "label": "Publisher",
                     "short_description": "Publisher of the dataset.",
                     "long_description": "Publisher's name or authoring organization for the dataset.",
                     "category": "ownership"
                 },
                 {
-                    "ckanField": "publisher_email",
+                    "name": "publisher_email",
+                    "label": "Publisher Email",
                     "short_description": "Email of the publisher",
-                    "long_description": "Email of the dataset's publisher. Can be used to contact the author directly."
+                    "long_description": "Email of the dataset's publisher. Can be used to contact the author directly.",
+                    "category": "ownership"
                 },
                 {
                     "ckanField": "author",
@@ -150,7 +153,8 @@
                 {
                     "ckanField": "author_email",
                     "short_description": "Email of the author",
-                    "long_description": "Email of the dataset's author. Can be used to contact the author directly."
+                    "long_description": "Email of the dataset's author. Can be used to contact the author directly.",
+                    "category": "ownership"
                 },
                 {
                     "name": "accessed_date",
@@ -227,7 +231,6 @@
                     ]
                 },
                 {
-                	// TODO, read from graph
                     "name": "file_format",
                     "label": "Format (CSV, XLS, TXT, PDF, etc)",
                     "short_description": "Format of the dataset.",
@@ -277,7 +280,7 @@
                     "type": "text",
                     "short_description": "Provenance Text of the data.",
                     "long_description": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
-                    "category": "Provenance"
+                    "category": "provenance"
                 },
                 {
                     "name": "provenance_url",
@@ -285,7 +288,7 @@
                     "type": "text",
                     "short_description": "Provenance URL of the data.",
                     "long_description": "The source URL for the provenance of the data",
-                    "category": "Provenance"
+                    "category": "provenance"
                 },
                 {
                     "name": "temporal_resolution",
@@ -302,7 +305,7 @@
                     "short_description": "Describes how granular (in meters) geospatial data is in the dataset.",
                     "long_description": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
                     "category": "tempo_geo"
-                }
+                },
                 {
                     "name": "geospatial_resolution",
                     "label": "GeoSpatial resolution (in regions)",
@@ -395,17 +398,9 @@
                     "name": "indigenous_community_permission",
                     "label": "Indigenous Community Permission",
                     "type": "text",
-                    "short_description": "Who holds the Indigenous Community Permission.",
-                    "long_description": "Who holds the Indigenous Community Permission.",
+                    "short_description": "Who holds the Indigenous Community Permission. Who to contact regarding access to a dataset that has data about Indigenous communities.",
+                    "long_description": "Who holds the Indigenous Community Permission. The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
                     "category": "access"
-                },
-                {
-                    "name": "indigenous_access_steward",
-                    "label": "Who gave permission (for Indigenous data)",
-                    "type": "text",
-                    "short_description": "Who to contact regarding access to a dataset that has data about Indigenous communities.",
-                    "long_description": "The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
-                    "category": "ownership"
                 },
                 {
                     "name": "indigenous_span",
@@ -674,42 +669,42 @@
                     "label": "Number of data rows",
                     "short_description": "If tabular dataset, total number of rows.",
                     "long_description": "If tabular dataset, total number of data rows. Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_columns",
                     "label": "Number of data columns",
                     "short_description": "If tabular dataset, total number of unique columns.",
                     "long_description": "If tabular dataset, total number of unique columns, across all sheets (if an Excel type file). Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_cells",
                     "label": "Number of data cells",
                     "short_description": "If tabular dataset, total number of cells with data.",
                     "long_description": "If tabular dataset, total number of data cells with data, i.e. not empty cells. Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_triples",
                     "label": "Number of data relations",
                     "short_description": "If RDF dataset, total number of triples.",
                     "long_description": "If RDF dataset, total number of triples.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_entities",
                     "label": "Number of entities",
                     "short_description": "If RDF dataset, total number of entities.",
                     "long_description": "If RDF dataset, total number of entities (i.e. concepts used in the dataset).",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_properties",
                     "label": "Number of data properties",
                     "short_description": "If RDF dataset, total number of unique properties used by the triples.",
                     "long_description": "If RDF dataset, total number of unique properties used in this dataset.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "quality_annotation",
@@ -834,7 +829,7 @@
                 "foaf:Agent"
             ],
             "foaf:name": "{publisher}",
-            "foaf:mbox": "{ckanField.publisher_email}",
+            "foaf:mbox": "{ckanField.publisher_email}"
         },
         "owl:versionInfo": "{version_info}",
         "dct:isVersionOf": "{version_dataset}",
@@ -846,9 +841,9 @@
             "locn:geometry": "{geospatial_resolution_in_meters}"
         },
         "dcat:spatialResolutionInRegion": {
-        	"@type" : "sc:AdminstrativeArea",
-        	"sc:name" "{geospatial_resolution}"
-    	},
+            "@type" : "sc:AdminstrativeArea",
+            "sc:name": "{geospatial_resolution}"
+        },
 
         "cudr:containsIndividualData": {
             "@type": "xsd:boolean",
@@ -864,8 +859,8 @@
         },
 
         "odrl:hasPolicy": {
-        	"@type"		: "odrl:Policy",
-        	"@value"	: "{limits_on_use}"
+            "@type"     : "odrl:Policy",
+            "@value"    : "{limits_on_use}"
         },
 
         "cudr:indigenousRightsHolder": {
@@ -881,14 +876,6 @@
             "prov:value": "{provenance}",
             "prov:wasQuotedFrom": "{provenance_url}"
         },
-        // "cudr:rightsHolder": {
-        //     "@id": "http://data.urbandatacentre.ca/rightsHolder/{generate_uuid()}",
-        //     "@type": [
-        //         "foaf:Agent"
-        //     ],
-        //     "foaf:name": "{access_steward}"
-        // },
-
         "dcat:contactPoint": {
             "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
             "@type":"vcard:Kind",
