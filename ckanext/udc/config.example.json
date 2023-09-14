@@ -138,7 +138,8 @@
                     "name": "publisher_email",
                     "label": "Publisher Email",
                     "short_description": "Email of the publisher",
-                    "long_description": "Email of the dataset's publisher. Can be used to contact the author directly."
+                    "long_description": "Email of the dataset's publisher. Can be used to contact the author directly.",
+                    "category": "ownership"
                 },
                 {
                     "ckanField": "author",
@@ -149,7 +150,8 @@
                 {
                     "ckanField": "author_email",
                     "short_description": "Email of the author",
-                    "long_description": "Email of the dataset's author. Can be used to contact the author directly."
+                    "long_description": "Email of the dataset's author. Can be used to contact the author directly.",
+                    "category": "ownership"
                 },
                 {
                     "name": "accessed_date",
@@ -275,7 +277,7 @@
                     "type": "text",
                     "short_description": "Provenance Text of the data.",
                     "long_description": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
-                    "category": "Provenance"
+                    "category": "provenance"
                 },
                 {
                     "name": "provenance_url",
@@ -283,7 +285,7 @@
                     "type": "text",
                     "short_description": "Provenance URL of the data.",
                     "long_description": "The source URL for the provenance of the data",
-                    "category": "Provenance"
+                    "category": "provenance"
                 },
                 {
                     "name": "temporal_resolution",
@@ -664,49 +666,49 @@
                     "label": "Number of data rows",
                     "short_description": "If tabular dataset, total number of rows.",
                     "long_description": "If tabular dataset, total number of data rows. Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_columns",
                     "label": "Number of data columns",
                     "short_description": "If tabular dataset, total number of unique columns.",
                     "long_description": "If tabular dataset, total number of unique columns, across all sheets (if an Excel type file). Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_cells",
                     "label": "Number of data cells",
                     "short_description": "If tabular dataset, total number of cells with data.",
                     "long_description": "If tabular dataset, total number of data cells with data, i.e. not empty cells. Tabular could be a CSV file, an Excel file, a relational database, etc.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_triples",
                     "label": "Number of data relations",
                     "short_description": "If RDF dataset, total number of triples.",
                     "long_description": "If RDF dataset, total number of triples.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_entities",
                     "label": "Number of entities",
                     "short_description": "If RDF dataset, total number of entities.",
                     "long_description": "If RDF dataset, total number of entities (i.e. concepts used in the dataset).",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "number_of_properties",
                     "label": "Number of data properties",
                     "short_description": "If RDF dataset, total number of unique properties used by the triples.",
                     "long_description": "If RDF dataset, total number of unique properties used in this dataset.",
-                    "category": "quality"
+                    "category": "statistical"
                 },
                 {
                     "name": "quality_annotation",
                     "label": "Data quality",
                     "short_description": "Describes the quality of the data in the dataset.",
                     "long_description": "Quality of the data can be a simple description (e.g. \"high quality for 80%\"), a simple scale (e.g. \"3 out of 4\") or specific values and metrics (e.g. \"80% of cells re missing\").",
-                    "category": "quality",
+                    "category": "statistical",
                     "type": "text"
                 },
                 {
@@ -714,7 +716,7 @@
                     "label": "Metric for data quality",
                     "short_description": "A metric used to measure the quality of the data, such as missing values or invalid formats.",
                     "long_description": "Quality metrics can be any metrics used to measure the quality of the dataset as a whole. For example, the VIMO metrics are used to measure how many cells are valid, invalid, missing, or outliers.",
-                    "category": "quality",
+                    "category": "statistical",
                     "type": "text"
                 }
             ]
