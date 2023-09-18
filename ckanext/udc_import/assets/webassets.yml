@@ -1,0 +1,14 @@
+# udc_import-js:
+#   filter: rjsmin
+#   output: ckanext-udc_import/%(version)s-udc_import.js
+#   contents:
+#     - js/udc_import.js
+#   extra:
+#     preload:
+#       - base/main
+
+# udc_import-css:
+#   filter: cssrewrite
+#   output: ckanext-udc_import/%(version)s-udc_import.css
+#   contents:
+#     - css/udc_import.css
