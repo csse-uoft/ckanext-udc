@@ -92,7 +92,23 @@
                 {% endif %}
               </th>
               <td class="dataset-details">
-              {{ pkg_dict[field["name"]] }}
+              {% set valToText = {} %}
+              {% if field["options"] %}
+                  {% for option in field["options"] %}
+                    {% do valToText.update({option["value"]: option["text"]}) %}
+                  {% endfor %}
+              {% endif %}
+              {% if field["type"] == "multiple_select" %}
+                {% set values = [] %}
+                {% for selected in (pkg_dict[field["name"]] or '').split(',') %}
+                  {% do values.append(valToText[selected]) %}
+                {% endfor %}
+                {{ ', '.join(values) }}
+              {% elif field["type"] == "single_select" %}
+                {{ valToText[pkg_dict[field["name"]]] }}
+              {% else %}
+                {{ pkg_dict[field["name"]] }}
+              {% endif %}
               </td>
             </tr>
           {% elif field.get("ckanField")%}

@@ -16,7 +16,7 @@ from ckan.plugins.toolkit import (chained_action, side_effect_free, chained_help
 import ckan.lib.helpers as h
 from ckan.common import current_user, _
 
-from .graph.logic import onUpdateCatalogue
+from .graph.logic import onUpdateCatalogue, onDeleteCatalogue
 
 import logging
 
@@ -49,6 +49,8 @@ def package_update(original_action, context, data_dict):
 @chained_action
 def package_delete(original_action, context, data_dict):
     print(f"Package Delete: ", data_dict)
+    if not plugins.get_plugin('udc').disable_graphdb:
+        onDeleteCatalogue(context, data_dict)
     return original_action(context, data_dict)
 
 
@@ -152,7 +154,6 @@ def process_facets_fields(facets_fields):
                     "ori_value": item,
                     "value": item
                 })
-    # print(results)
     return results
 
 def get_maturity_percentages(config, pkg_dict):

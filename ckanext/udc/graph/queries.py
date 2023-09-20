@@ -9,7 +9,7 @@ from .sparql_client import SparqlClient
 log = logging.getLogger(__name__)
 
 
-def get_client():
+def get_client() -> SparqlClient:
     return plugins.get_plugin('udc').sparql_client
 
 
@@ -23,7 +23,7 @@ def get_uri_as_object_usage(object_uri):
     client = get_client()
     result = client.execute_sparql(query)
     
-    return len(result["results"]["bindings"])
+    return int(result["results"]["bindings"][0]["cnt"]["value"])
 
 def get_o_by_sp(s, p):
     query = f"""
@@ -45,16 +45,13 @@ def get_num_paths(uri_a: str, uri_b: str):
     PREFIX path: <http://www.ontotext.com/path#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-    SELECT ?pathIndex ?edgeIndex ?edge
+    SELECT DISTINCT ?pathIndex
     WHERE {{
         SERVICE path:search {{
             [] path:findPath path:allPaths ;
             path:sourceNode <{uri_a}> ;
             path:destinationNode <{uri_b}> ;
-            path:pathIndex ?pathIndex ;
-            path:resultBindingIndex ?edgeIndex ;
-            path:resultBinding ?edge ;
-            .
+            path:pathIndex ?pathIndex.
         }}
     }}
     """

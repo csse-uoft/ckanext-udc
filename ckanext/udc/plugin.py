@@ -23,6 +23,7 @@ from .helpers import config_option_update, get_full_search_facets,\
       get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages,\
       package_update, package_delete
 from .graph.sparql_client import SparqlClient
+from .graph.preload import preload_ontologies
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -57,12 +58,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         self.all_fields = []
         self.facet_titles = {}
         # print(existing_config)
-        if existing_config:
-            try:
-                # Call our plugin to update the config
-                self.reload_config(json.loads(existing_config))
-            except:
-                log.error
 
         # Load sparql client
         endpoint = tk.config.get('udc.sparql.endpoint')
@@ -81,6 +76,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 log.error("UDC cannot connect to the GraphDB")
                 self.disable_graphdb = True
 
+        # Load config
+        if existing_config:
+            try:
+                # Call our plugin to update the config
+                self.reload_config(json.loads(existing_config))
+            except:
+                log.error
+
         log.info("UDC Plugin Loaded!")
 
     def reload_config(self, config: list):
@@ -94,8 +97,17 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     if field.get("name"):
                         all_fields.append(field["name"])
                     type = field.get("type")
-                    if field.get("name") and (type == '' or type is None or type == 'text' or type == 'single_select'):
+                    if field.get("name") and (type == '' or type is None or type == 'text' or type == 'single_select' or type == 'multiple_select'):
                         self.facet_titles[field["name"]] = tk._(field["label"])
+
+            # Preload ontologies
+            if not self.disable_graphdb:
+                endpoint = tk.config.get('udc.sparql.endpoint')
+                username = tk.config.get('udc.sparql.username') or None
+                password = tk.config.get('udc.sparql.password') or None
+                # This will preload ontologies and
+                # populate options to the fields that uses 'optionsFromQuery'
+                preload_ontologies(config, endpoint, username, password, self.sparql_client)
 
             # Do not mutate the vars
             self.all_fields.clear()
@@ -107,7 +119,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             self.preload_ontologies.clear()
             self.preload_ontologies.update(config["preload_ontologies"])
 
-            # self.facet_titles.update(get_default_facet_titles())
 
         except Exception as e:
             log.error("UDC Plugin Error:")

@@ -77,7 +77,7 @@ def find_existing_instance_uris(data_dict) -> list:
     s2uri = {}
     results = result["results"]["bindings"][0]
     for s, var in s2var.items():
-        if results.get(var):
+        if results.get(var) and results[var]["type"] != "bnode": # Skip blank nodes
             s2uri[s] = results[var]["value"]
     print("s2uri", s2uri)
     return [*s2uri.values()]
@@ -118,7 +118,6 @@ def onUpdateCatalogue(context, data_dict):
         #     print(s, p, o)
 
         delete_clause = []
-        cnt = 0
         # Find the occurrences of the `s` is used as an object
         for s in subjects:
             # If 's' is not used by the current catalogue, skip it
@@ -126,19 +125,79 @@ def onUpdateCatalogue(context, data_dict):
             if num_paths_used_by_catalogue == 0:
                 continue
             # Check if 's' is used by any other triples as an object
-            if get_uri_as_object_usage(s) > num_paths_used_by_catalogue:
-                delete_clause.append(f'{normalize_uri(s)} ?p{cnt} ?o{cnt}')
-                cnt += 1
+            uri_as_object_usage = get_uri_as_object_usage(s)
+            print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
+            if uri_as_object_usage == num_paths_used_by_catalogue:
+                delete_clause.append(f'{normalize_uri(s)} ?p ?o')
+                delete_clause.append(f'?s ?p {normalize_uri(s)}')
 
         return '\n'.join([f"PREFIX {prefix}: <{ns}>" for prefix, ns in prefixes.items()]) + '\n' \
             + '\n'.join([f"DELETE WHERE {{\n\t{triple}.\n}};" for triple in delete_clause])
 
-    
-    print(generate_delete_sparql())
+    delete_query = generate_delete_sparql()
+    print('delete_query')
+    print(delete_query)
     print(g.serialize(format="sparql-insert"))
 
     client = get_client()
-    client.execute_sparql(generate_delete_sparql())
+    client.execute_sparql(delete_query)
     client.execute_sparql(g.serialize(format="sparql-insert"))
+
+
+def onDeleteCatalogue(context, data_dict):
+    print(f"onDeleteCatalogue: ", data_dict)
+    ckanField = CKANField(data_dict)
+
+    uris_to_del = find_existing_instance_uris(data_dict)
+
+    compiled_template = compile_with_temp_value(get_mappings(), all_helpers,
+                                                {**data_dict, "ckanField": ckanField})
+    print("compiled_template", compiled_template)
+    catalogue_uri = compiled_template["@id"]
+
+    g = Graph()
+    g.parse(data=compiled_template, format='json-ld')
+
+    prefixes = {}
+
+    def normalize_uri(uri):
+        """Normalize a URI into a QName(short name) and store the prefix."""
+        prefix, uri, val = g.compute_qname(uri)
+        prefixes[prefix] = str(uri)
+        return f"{prefix}:{val}"
+
+    def generate_delete_sparql():
+        subjects = set(uris_to_del)
+        subjects.add(catalogue_uri)
+        # for s, p, o in g:
+        #     subjects.add(s)
+        #     print(s, p, o)
+
+        delete_clause = []
+        # Find the occurrences of the `s` is used as an object
+        for s in subjects:
+            # If 's' is not used by the current catalogue, skip it
+            num_paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            if num_paths_used_by_catalogue == 0:
+                continue
+            # Check if 's' is used by any other triples as an object
+            uri_as_object_usage = get_uri_as_object_usage(s)
+            print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
+            if uri_as_object_usage == num_paths_used_by_catalogue:
+                delete_clause.append(f'{normalize_uri(s)} ?p ?o')
+                delete_clause.append(f'?s ?p {normalize_uri(s)}')
+        
+        # Remove all triples direcly linked to the catalogue
+        delete_clause.append(f'{normalize_uri(catalogue_uri)} ?p ?o')
+
+        return '\n'.join([f"PREFIX {prefix}: <{ns}>" for prefix, ns in prefixes.items()]) + '\n' \
+            + '\n'.join([f"DELETE WHERE {{\n\t{triple}.\n}};" for triple in delete_clause])
+
+    delete_query = generate_delete_sparql()
+    print('delete_query')
+    print(delete_query)
+
+    client = get_client()
+    client.execute_sparql(delete_query)
 
 

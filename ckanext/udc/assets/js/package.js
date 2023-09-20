@@ -28,6 +28,27 @@ this.ckan.module('package-form', function ($) {
                             const fieldElement = document.querySelector(`#field-${field.name}`);
                             fieldElement.addEventListener('change', () => this._onFieldChange());
                             this.levels[i].fieldElements.push(fieldElement);
+
+                            // setup select2
+                            if (field.type === "multiple_select") {
+                                const options = [];
+                                const selectedOptions = [];
+                                const curr_str = fieldElement.value;
+                                const curr = curr_str.split(",");
+                                for (const option of field.options) {
+                                    const select2Option = {
+                                        id: option.value,
+                                        text: option.text
+                                    }
+                                    options.push(select2Option);
+                                    if (curr.includes(option.value)) {
+                                        selectedOptions.push(select2Option);
+                                    }
+                                }
+                                $(`#field-${field.name}`).select2({
+                                    multiple: true, width: 'resolve', data: options, selected: selectedOptions
+                                });
+                            }
                         } else if (field.ckanField) {
                             if (field.ckanField === "custom_fields") continue;
                             else if (field.ckanField === "organization_and_visibility") {
