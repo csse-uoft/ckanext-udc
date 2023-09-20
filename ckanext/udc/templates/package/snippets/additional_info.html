@@ -101,7 +101,9 @@
               {% if field["type"] == "multiple_select" %}
                 {% set values = [] %}
                 {% for selected in (pkg_dict[field["name"]] or '').split(',') %}
-                  {% do values.append(valToText[selected]) %}
+                  {% if valToText[selected] %}
+                    {% do values.append(valToText[selected]) %}
+                  {% endif %}
                 {% endfor %}
                 {{ ', '.join(values) }}
               {% elif field["type"] == "single_select" %}

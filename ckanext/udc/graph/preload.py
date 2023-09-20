@@ -20,8 +20,11 @@ def preload_ontologies(config, graphdb_endpoint: str, username: str, password: s
         r = requests.get(item["ontology_url"], allow_redirects=True)
         with open(path, 'wb') as f:
             f.write(r.content)
-
-        import_and_wait(path, replace_graph=True, named_graph=item["graph"])
+        try:
+            import_and_wait(path, replace_graph=True, named_graph=item["graph"])
+        except Exception as e:
+            if 'already scheduled for import' not in str(e):
+                raise e
 
     # Preload options for dropdowns
     for level in config["maturity_model"]:
