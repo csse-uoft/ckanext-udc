@@ -1,7 +1,10 @@
 {
-    "preload_ontologies": {
-        "http://id.loc.gov/vocabulary/iso639-1": "http://id.loc.gov/vocabulary/iso639-1.json"
-    },
+    "preload_ontologies": [
+        {
+            "graph": "http://id.loc.gov/vocabulary/iso639-1",
+            "ontology_url": "https://csse-uoft.github.io/ontologies/iso639-1.rdf"
+        }
+    ],
     "maturity_model": [
         {
             "title": "Maturity Level 1 (Basic Information)",
@@ -178,7 +181,12 @@
                 {
                     "name": "language",
                     "label": "Language",
-                    "type": "text",
+                    "type": "multiple_select",
+                    "optionsFromQuery": {
+                        "text": "label",
+                        "value": "s",
+                        "query": "select * from <http://id.loc.gov/vocabulary/iso639-1> where {?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label. FILTER (lang(?label) = 'en')}"
+                    },
                     "short_description": "Language(s) of the dataset",
                     "long_description": "Language(s) of the dataset capture what language the data is in. It does not reflect the language o the metadata associated with it.",
                     "category": "content"
@@ -856,6 +864,7 @@
             "@value": "{geospatial_resolution_in_meters}"
         },
         "cudr:spatialResolutionInRegion": {
+            "@id": "http://data.urbandatacentre.ca/administrativeArea/{generate_uuid()}",
         	"@type" : "sc:AdministrativeArea",
         	"sc:name": "{geospatial_resolution}"
     	},
