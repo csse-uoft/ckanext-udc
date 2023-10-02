@@ -14,7 +14,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as tk
 from ckan.plugins.toolkit import (chained_action, side_effect_free)
 import ckan.lib.helpers as h
-from ckan.common import current_user
+from ckan.common import current_user, CKANConfig
 
 import logging
 from .cli import udc as cli_udc
@@ -32,7 +32,6 @@ See https://docs.ckan.org/en/2.10/extensions/remote-config-update.html
 See https://docs.ckan.org/en/2.10/extensions/custom-config-settings.html?highlight=config%20declaration
 See https://docs.ckan.org/en/2.10/theming/webassets.html
 """
-
 log = logging.getLogger(__name__)
 
 # Add UDC CLI
@@ -43,20 +42,28 @@ if hasattr(ckan, 'cli') and hasattr(ckan.cli, 'cli'):
 
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IFacets)
 
-    def __init__(self, name=""):
+    disable_graphdb = False
+    maturity_model = []
+    mappings = {}
+    preload_ontologies = {}
+    all_fields = []
+    facet_titles = {}
+
+    
+    def update_config(self, config_):
+        tk.add_template_directory(config_, 'templates')
+        tk.add_public_directory(config_, 'public')
+        tk.add_resource('assets', 'udc')
+
+    def configure(self, config: CKANConfig):
         existing_config = ckan.model.system_info.get_system_info(
             "ckanext.udc.config")
-        self.disable_graphdb = False
-        self.maturity_model = []
-        self.mappings = {}
-        self.preload_ontologies = {}
-        self.all_fields = []
-        self.facet_titles = {}
         # print(existing_config)
 
         # Load sparql client
@@ -85,6 +92,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 log.error
 
         log.info("UDC Plugin Loaded!")
+
 
     def reload_config(self, config: list):
         try:
@@ -123,11 +131,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         except Exception as e:
             log.error("UDC Plugin Error:")
             traceback.print_exc()
-
-    def update_config(self, config_):
-        tk.add_template_directory(config_, 'templates')
-        tk.add_public_directory(config_, 'public')
-        tk.add_resource('assets', 'udc')
 
     def _modify_package_schema(self, schema: Schema) -> Schema:
         # our custom field
