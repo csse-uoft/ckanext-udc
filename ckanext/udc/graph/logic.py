@@ -55,20 +55,47 @@ def find_existing_instance_uris(data_dict) -> list:
 
     print('s2var', s2var)
 
+    # o -> (s, sparql part)
+    query_parts = {}
+
     # Generate select query
     triples = ''
     for spos in s2spo.values():
         for s, p, o in spos:
+            # First level
             if s == rdflib.term.URIRef(catalogue_uri):
-                triples += f"\tOPTIONAL {{ <{s}> <{p}> ?{s2var[str(o)]} }}\n"
+                query_parts[str(o)] = (str(s), f"<{s}> <{p}> ?{s2var[str(o)]}")
+                # triples += f"\tOPTIONAL {{ <{s}> <{p}> ?{s2var[str(o)]} }}\n"
             else:
-                triples += f"\tOPTIONAL {{ ?{s2var[str(s)]} <{p}> ?{s2var[str(o)]} }}\n"
+                query_parts[str(o)] = (str(s), f"?{s2var[str(s)]} <{p}> ?{s2var[str(o)]}")
+                # triples += f"\tOPTIONAL {{ ?{s2var[str(s)]} <{p}> ?{s2var[str(o)]} }}\n"
+    for o, (s, part) in query_parts.items():
+        if s == catalogue_uri:
+            triples += f"\tOPTIONAL {{ {part} }}\n"
+        else:
+            path = [part]
+            curr = s
+            max_iteration = 100
+            i = 0
+            while curr != catalogue_uri:
+                upper_level = query_parts.get(curr)
+                if not upper_level: 
+                    raise ValueError("Cannot find path to the catalogue entry")
+                path.append(upper_level[1])
+                curr = upper_level[0]
+                i += 1
+                if max_iteration < i:
+                    raise ValueError("Reached max iteration to find the path to the catalogue entry")
+            inner_query = ''
+            for step in path:
+                inner_query = f"\tOPTIONAL {{ {step} {inner_query} }}\n"
+            triples += inner_query
+
 
     query = f'SELECT DISTINCT * WHERE {{\n{triples}}}'
     print('select-query', query)
     client = get_client()
     result = client.execute_sparql(query)
-    print(result)
     if len(result["results"]["bindings"]) == 0:
         return {}
     elif len(result["results"]["bindings"]) > 1:
