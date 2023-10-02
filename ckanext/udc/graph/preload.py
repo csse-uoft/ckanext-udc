@@ -7,8 +7,8 @@ from .sparql_client import SparqlClient
 
 def preload_ontologies(config, graphdb_endpoint: str, username: str, password: str, sparql_client: SparqlClient):
     # Download and import ontologies
-    download_path = os.path.join(tk.config.get(
-        'ckan.storage_path'), 'preload_ontologies')
+    storage_path = tk.config.get('ckan.storage_path') or './'
+    download_path = os.path.join(storage_path, 'preload_ontologies')
     os.makedirs(download_path, exist_ok=True)
 
     base_api, repo = graphdb_endpoint.split('/repositories/')
