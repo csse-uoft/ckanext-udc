@@ -835,7 +835,7 @@
         "dcat:landingPage": {
             "@id": "{description_document}"
         },
-        "dct:language": "TODO",
+        "dct:language": "eval(split_to_uris(language))",
         "fair:rda-f1-01d": {
             "@type": "xsd:boolean",
             "@value": "{to_bool(persistent_identifier)}"

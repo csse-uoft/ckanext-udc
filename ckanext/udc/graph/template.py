@@ -54,8 +54,20 @@ def compile_template(template, global_vars, local_vars, nested=False):
                     
                 else:
                     try:
-                        # Literals
-                        val = eval(f'f"{item[attr]}"', global_vars, local_vars)
+                        should_eval = item[attr].startswith('eval(') and item[attr].endswith(')')
+                        if should_eval:
+                            # eval() syntax
+                            val = eval(item[attr][5:-1], global_vars, local_vars)
+                           
+                            # Remove [{ "@value": '....' }] wrapping
+                            if len(result) == 1 and len(item) == 1 and attr == '@value':
+                                if val is None or isinstance(val, str) and len(val) == 0:
+                                    return []
+                                return val
+                            
+                        else:
+                            # Literals
+                            val = eval(f'f"{item[attr]}"', global_vars, local_vars)
                         if val == '' or val is None:
                             item[attr] = EMPTY_FIELD
                         else:
@@ -64,7 +76,7 @@ def compile_template(template, global_vars, local_vars, nested=False):
                         if EMPTY_FIELD in item[attr]:
                             attrs_to_del.append(attr)
                     except Exception as e:
-                        print(f'Unable to evaluate; {str(e)}', file=sys.stderr)
+                        print(f'Unable to evaluate: {item[attr]}; {str(e)}', file=sys.stderr)
                         attrs_to_del.append(attr)
             for attr in attrs_to_del:
                 del item[attr]

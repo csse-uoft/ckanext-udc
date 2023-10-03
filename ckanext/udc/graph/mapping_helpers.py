@@ -51,11 +51,15 @@ def to_bool(val: str):
 #     return Literal(val, datatype=XSD.datetTime)
 
 
+def split_to_uris(val: str, separator=","):
+    return [{"@id": uri} for uri in val.split(separator)]
+
 
 all_helpers = {
     "generate_uuid": generate_uuid,
     "to_integer": to_integer,
     "to_float": to_float,
     "to_date": to_date,
-    "to_bool": to_bool
+    "to_bool": to_bool,
+    "split_to_uris": split_to_uris,
 }
