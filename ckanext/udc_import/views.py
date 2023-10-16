@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask.views import MethodView
-from typing import Any, cast, Optional, Union
+from typing import Any, cast, Optional, Union, Dict
 
 import ckan.plugins.toolkit as toolkit
 import ckan.logic as logic
@@ -55,8 +55,8 @@ class ImportView(MethodView):
         )
 
     def get(self, 
-            errors: Optional[dict[str, Any]] = None,
-            error_summary: Optional[dict[str, Any]] = None):
+            errors: Optional[Dict[str, Any]] = None,
+            error_summary: Optional[Dict[str, Any]] = None):
         try:
             # Check permission
             toolkit.get_action(u'udc_import_check_permission')()

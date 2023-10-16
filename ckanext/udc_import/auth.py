@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict
 from ckan.types import AuthResult, Context
 import ckan.plugins as p
 
 
 def udc_import_auth(
-        context: Context, data_dict: dict[str, Any]) -> AuthResult:
+        context: Context, data_dict: Dict[str, Any]) -> AuthResult:
     user = context.get('user')
     authorized = p.toolkit.check_access("package_update", context, data_dict)
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from ckan.types import Context
 import logging
 import os
@@ -8,7 +6,7 @@ import zipfile
 import uuid
 import json
 import pandas as pd
-from typing import Any, cast
+from typing import Any, cast, Dict
 
 from urllib.parse import urljoin
 from dateutil.parser import parse as parse_date
@@ -25,7 +23,7 @@ from .import_data import load_data_to_ckan
 log = logging.getLogger(__name__)
 
 
-def udc_import_submit(context: Context, data_dict: dict[str, Any]):
+def udc_import_submit(context: Context, data_dict: Dict[str, Any]):
 
     p.toolkit.check_access('udc_import_submit', context, data_dict)
 
@@ -87,5 +85,5 @@ def udc_import_submit(context: Context, data_dict: dict[str, Any]):
         
 
 
-def check_permission(context: Context, data_dict: dict[str, Any]):
+def check_permission(context: Context, data_dict: Dict[str, Any]):
     p.toolkit.check_access('udc_import_view', context, data_dict)
