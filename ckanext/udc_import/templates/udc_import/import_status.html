@@ -1,0 +1,10 @@
+{% extends "udc_import/base.html" %}
+
+{% block content_primary_nav %}
+  <li class="active"><a href="#"><i class="fa fa-cloud-upload"></i> {{ _('Bulk Upload Status') }}</a></li>
+{% endblock %}
+
+{% block primary_content_inner %}
+  <div style="white-space: pre;">{{result}}</div>
+    
+{% endblock %}

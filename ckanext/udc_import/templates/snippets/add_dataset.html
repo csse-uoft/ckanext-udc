@@ -1,0 +1,12 @@
+{# Adds 'Add Dataset' and 'Bulk Import' button #}
+
+{% set dataset_type = dataset_type if dataset_type else h.default_package_type() %}
+{% set link_label = h.humanize_entity_type('package', dataset_type, 'add link') or _("Add Dataset") %}
+{% set route_name = dataset_type ~ '.new' %}
+
+{% if group %}
+    {% link_for link_label, named_route=route_name, group=group, class_='btn btn-primary', icon='plus-square' %}
+{% else %}
+    {% link_for link_label, named_route=route_name, class_='btn btn-primary', icon='plus-square' %}
+    <a style="margin-left: 5px" class="btn btn-secondary" href="/udc/import"><i class="fa fa-plus-square"></i> Bulk Import</a>
+{% endif %}

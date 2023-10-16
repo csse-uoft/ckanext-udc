@@ -2,3 +2,5 @@ requests==2.29.0
 PyLD==2.0.3
 rdflib==6.3.2
 graphdb-importer @ git+https://github.com/csse-uoft/graphdb-importer@f1cf9597833e909bd0e71aca9024877e73ac523b
+numpy=1.26.1
+pandas=2.1.1
