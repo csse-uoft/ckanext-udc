@@ -73,6 +73,7 @@ class DataPreprocessor:
 
 
 def load_data_to_ckan(data_dicts: Dict[str, pd.DataFrame], mappings_df, default_values: dict):
+    logs = []
 
     # file_name -> [ [data_file_field_name, cudr_field_name], ... ]
     data_df = pd.DataFrame()
@@ -86,7 +87,11 @@ def load_data_to_ckan(data_dicts: Dict[str, pd.DataFrame], mappings_df, default_
         for _, row in file_mapping.iterrows():
             data_file_field = row['data_file_field_names']
             cudr_field = row['cudr_field_names']
-            data_df[cudr_field] = current_data[data_file_field]
+
+            if data_file_field not in current_data:
+                raise logic.ValidationError([f'Cannot find field `{data_file_field}` in `{file_name}`'])
+            else:
+                data_df[cudr_field] = current_data[data_file_field]
 
             data_df['accessed_date'] = pd.Timestamp.today().strftime('%Y-%m-%d')
 
@@ -118,7 +123,6 @@ def load_data_to_ckan(data_dicts: Dict[str, pd.DataFrame], mappings_df, default_
             if key not in d:
                 d[key] = value
 
-    logs = []
     # loading datasets into CKAN iteratively
     for i, data in enumerate(result_list):
         try:
