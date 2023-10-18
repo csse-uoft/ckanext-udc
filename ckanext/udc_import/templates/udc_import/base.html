@@ -5,16 +5,20 @@
     <section class="module module-narrow module-shallow">
       <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('How to import?') }}</h2>
       <div class="module-content">
-        <p>
-          {% trans %}
-          Instruction for CUDR Import:<br/><br/>
-          <b>'data_files.csv':</b> Each line represents a data file name that you want to load.<br/><br/>
-          <b>'mapping.csv':</b> Contains one-to-one mapping between data file field name and CKAN field names<br/><br/>
-          <b>'default.json':</b> Default values for all imports, using CKAN field names.<br/><br/>
+        {% if side_panel_text %}
+          {{ h.render_markdown(side_panel_text) }}
+        {% else %}
+          <p>
+            {% trans %}
+            Instruction for CUDR Import:<br/><br/>
+            <b>'data_files.csv':</b> Each line represents a data file name that you want to load.<br/><br/>
+            <b>'mapping.csv':</b> Contains one-to-one mapping between data file field name and CKAN field names<br/><br/>
+            <b>'default.json':</b> Default values for all imports, using CKAN field names.<br/><br/>
 
-          Download <a href="/udc-import/example.zip"> example.zip</a>
-          {% endtrans %}
-        </p>
+            Download <a href="/udc-import/example.zip"> example.zip</a>
+            {% endtrans %}
+          </p>
+        {% endif %}
       </div>
     </section>
   {% endblock %}

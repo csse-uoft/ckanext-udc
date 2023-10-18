@@ -48,10 +48,13 @@ class ImportView(MethodView):
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(errors, error_summary)
-
+        
+        side_panel_text = model.system_info.get_system_info(
+            "ckanext.udc_import.side_panel_text")
+        
         return base.render(
             u'udc_import/import_status.html',
-            extra_vars={"result": '\n'.join(result)}
+            extra_vars={"result": '\n'.join(result), "side_panel_text": side_panel_text}
         )
 
     def get(self, 
@@ -63,9 +66,12 @@ class ImportView(MethodView):
         except logic.NotAuthorized:
             base.abort(403, _(u'Not authorized to see this page'))
 
+        side_panel_text = model.system_info.get_system_info(
+            "ckanext.udc_import.side_panel_text")
+
         return base.render(
             u'udc_import/import_view.html',
-            extra_vars={'errors': errors, 'error_summary': error_summary}
+            extra_vars={'errors': errors, 'error_summary': error_summary, "side_panel_text": side_panel_text}
         )
 
 
