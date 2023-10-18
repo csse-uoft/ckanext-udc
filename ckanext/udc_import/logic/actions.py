@@ -54,19 +54,19 @@ def udc_import_submit(context: Context, data_dict: Dict[str, Any]):
                 with zip_ref.open('mapping.csv') as f:
                     mappings_df = pd.read_csv(f)
             except:
-                raise logic.ValidationError("Missing `mapping.csv`")
+                raise logic.ValidationError(["Missing `mapping.csv`"])
             
             try:
                 with zip_ref.open('default.json') as f:
                     default_values = json.load(f)
             except:
-                raise logic.ValidationError("Missing `default.json`")
+                raise logic.ValidationError(["Missing `default.json`"])
             
             try:
                 with zip_ref.open('data_files.txt') as f:
                     data_file_names = [line.decode('UTF-8').strip() for line in f.readlines()]
             except:
-                raise logic.ValidationError("Missing `data_files.txt`")
+                raise logic.ValidationError(["Missing `data_files.txt`"])
 
             for data_file_name in data_file_names:
                 with zip_ref.open(data_file_name) as f:
