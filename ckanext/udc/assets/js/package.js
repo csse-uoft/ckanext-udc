@@ -45,6 +45,8 @@ this.ckan.module('package-form', function ($) {
                                         selectedOptions.push(select2Option);
                                     }
                                 }
+                                // Remove non-existed option
+                                $(`#field-${field.name}`).val(selectedOptions.map(option => option.id).join(','));
                                 $(`#field-${field.name}`).select2({
                                     multiple: true, width: 'resolve', data: options, selected: selectedOptions
                                 });
