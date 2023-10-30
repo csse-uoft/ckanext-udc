@@ -145,6 +145,7 @@ def onUpdateCatalogue(context, data_dict):
         #     print(s, p, o)
 
         delete_clause = []
+
         # Find the occurrences of the `s` is used as an object
         for s in subjects:
             # If 's' is not used by the current catalogue, skip it
@@ -163,8 +164,13 @@ def onUpdateCatalogue(context, data_dict):
             elif uri_as_object_usage > num_paths_used_by_catalogue:
                 # Remove this instance in this catalogue only
                 for spos in paths_used_by_catalogue.values():
-                    for s, p, o in spos:
-                        delete_clause.append(f'{normalize_uri(s)} {normalize_uri(p)} {normalize_uri(o)}')
+                    for _s, p, o in spos:
+                        # Remove the last link only
+                        if o == rdflib.term.URIRef(s):
+                            delete_clause.append(f'{normalize_uri(_s)} {normalize_uri(p)} {normalize_uri(o)}')
+        
+        # Remove all triples direcly linked to the catalogue
+        delete_clause.append(f'{normalize_uri(catalogue_uri)} ?p ?o')
 
 
         return '\n'.join([f"PREFIX {prefix}: <{ns}>" for prefix, ns in prefixes.items()]) + '\n' \
