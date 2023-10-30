@@ -148,15 +148,24 @@ def onUpdateCatalogue(context, data_dict):
         # Find the occurrences of the `s` is used as an object
         for s in subjects:
             # If 's' is not used by the current catalogue, skip it
-            num_paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            num_paths_used_by_catalogue = len(paths_used_by_catalogue)
             if num_paths_used_by_catalogue == 0:
                 continue
             # Check if 's' is used by any other triples as an object
             uri_as_object_usage = get_uri_as_object_usage(s)
             print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
+
             if uri_as_object_usage == num_paths_used_by_catalogue:
+                # Remove this instance if it is only used by this catalogue
                 delete_clause.append(f'{normalize_uri(s)} ?p ?o')
                 delete_clause.append(f'?s ?p {normalize_uri(s)}')
+            elif uri_as_object_usage > num_paths_used_by_catalogue:
+                # Remove this instance in this catalogue only
+                for spos in paths_used_by_catalogue.values():
+                    for s, p, o in spos:
+                        delete_clause.append(f'{normalize_uri(s)} {normalize_uri(p)} {normalize_uri(o)}')
+
 
         return '\n'.join([f"PREFIX {prefix}: <{ns}>" for prefix, ns in prefixes.items()]) + '\n' \
             + '\n'.join([f"DELETE WHERE {{\n\t{triple}.\n}};" for triple in delete_clause])
@@ -204,7 +213,8 @@ def onDeleteCatalogue(context, data_dict):
         # Find the occurrences of the `s` is used as an object
         for s in subjects:
             # If 's' is not used by the current catalogue, skip it
-            num_paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            paths_used_by_catalogue = get_num_paths(catalogue_uri, s)
+            num_paths_used_by_catalogue = len(paths_used_by_catalogue)
             if num_paths_used_by_catalogue == 0:
                 continue
             # Check if 's' is used by any other triples as an object
@@ -213,6 +223,11 @@ def onDeleteCatalogue(context, data_dict):
             if uri_as_object_usage == num_paths_used_by_catalogue:
                 delete_clause.append(f'{normalize_uri(s)} ?p ?o')
                 delete_clause.append(f'?s ?p {normalize_uri(s)}')
+            elif uri_as_object_usage > num_paths_used_by_catalogue:
+                # Remove this instance in this catalogue only
+                for spos in paths_used_by_catalogue.values():
+                    for s, p, o in spos:
+                        delete_clause.append(f'{normalize_uri(s)} {normalize_uri(p)} {normalize_uri(o)}')
         
         # Remove all triples direcly linked to the catalogue
         delete_clause.append(f'{normalize_uri(catalogue_uri)} ?p ?o')

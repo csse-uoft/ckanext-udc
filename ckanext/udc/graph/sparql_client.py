@@ -100,7 +100,7 @@ class SPARQLWrapper:
                 response = self.session.request(self.method, self.endpoint,
                                                 data=f'query={urllib.parse.quote(self._query)}&infer={"true" if infer else "false"}',
                                                 headers={
-                                                    'Accept': 'application/sparql-results+json',
+                                                    'Accept': 'application/x-sparqlstar-results+json, application/sparql-results+json',
                                                     'Content-Type': 'application/x-www-form-urlencoded'
                                                 })
         elif self.method == GET:
@@ -110,7 +110,7 @@ class SPARQLWrapper:
             response = self.session.request(self.method, self.endpoint,
                                             params={'query': urllib.parse.quote(self._query), 'infer': "true" if infer else "false"},
                                             headers={
-                                                'Accept': 'application/sparql-results+json'
+                                                'Accept': 'application/x-sparqlstar-results+json,application/sparql-results+json'
                                             })
         else:
             raise ValueError('Illegal method:', self.method)
