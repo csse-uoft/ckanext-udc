@@ -748,7 +748,8 @@
             "odrl": "http://www.w3.org/ns/odrl/2/",
             "prov": "http://www.w3.org/ns/prov#",
             "oa": "http://www.w3.org/ns/oa#",
-            "vcard": "http://www.w3.org/2006/vcard/ns#"
+            "vcard": "http://www.w3.org/2006/vcard/ns#",
+            "dqv": "http://www.w3.org/ns/dqv#"
         },
         "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.id}",
         "@type": "http://data.urbandatacentre.ca/catalogue",
