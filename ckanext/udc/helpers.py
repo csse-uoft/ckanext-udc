@@ -42,8 +42,12 @@ def config_option_update(original_action, context, data_dict):
 @chained_action
 def package_update(original_action, context, data_dict):
     result = original_action(context, data_dict)
-    if not plugins.get_plugin('udc').disable_graphdb:
-        onUpdateCatalogue(context, data_dict)
+    try:
+        if not plugins.get_plugin('udc').disable_graphdb:
+            onUpdateCatalogue(context, data_dict)
+    except Exception as e:
+        log.error(e)
+        raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
     return result
 
 @side_effect_free
@@ -51,8 +55,12 @@ def package_update(original_action, context, data_dict):
 def package_delete(original_action, context, data_dict):
     print(f"Package Delete: ", data_dict)
     result = original_action(context, data_dict)
-    if not plugins.get_plugin('udc').disable_graphdb:
-        onDeleteCatalogue(context, data_dict)
+    try:
+        if not plugins.get_plugin('udc').disable_graphdb:
+            onDeleteCatalogue(context, data_dict)
+    except Exception as e:
+        log.error(e)
+        raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
     return result
 
 
