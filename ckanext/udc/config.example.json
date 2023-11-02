@@ -787,9 +787,9 @@
 
 
 
-        "dct:identifier": "{ckanField.id}",
+        "dct:identifier": "{unique_identifier}",
         "cudr:accessCategory": "{access_category}",
-        "dct:license": "TODO",
+        "dct:license": "eval(mapFromCKANLicense(license_id))",
         "dcat:accessURL": {
             "@id": "{location}"
         },
