@@ -1,0 +1,32 @@
+{#
+  Displays a sidebard module with information about group.
+
+  group_type    - The type of group.
+
+  Example:
+
+  {% snippet "group/snippets/helper.html", group_type=group_type %}
+
+  #}
+
+<div class="module module-narrow module-shallow">
+  <h2 class="module-heading">
+    <i class="fa fa-info-circle"></i>
+    {{ _('What are Groups?') }}
+  </h2>
+  <div class="module-content">
+    {% set side_panel_text = h.get_system_info("ckanext.udc.group_side_panel_text") %}
+    {% if side_panel_text %}
+      {{ h.render_markdown(side_panel_text) }}
+    {% else %}
+      <p>
+        {% trans %}
+          You can use CKAN Groups to create and manage collections of datasets.
+          This could be to catalogue datasets for a particular project or team,
+          or on a particular theme, or as a very simple way to help people find
+          and search your own published datasets.
+        {% endtrans %}
+      </p>
+    {% endif %}
+  </div>
+</div>

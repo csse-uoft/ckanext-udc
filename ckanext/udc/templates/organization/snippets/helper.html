@@ -16,13 +16,18 @@
     {{ _('What are Organizations?') }}
   </h2>
   <div class="module-content">
-    <p>
-      {% trans %}
-        In CUDR, Organizations are the key to efficient data management and collaboration.
-        Users with different roles, like creators, editors, and publishers, work together to curate datasets of value.
-        With transparency and accessibility as the driving force, CUDR Organizations empower users to unlock the potential of data,
-        fostering a spirit of innovation and discovery. Join us in this data-driven journey, where knowledge knows no bounds!
-      {% endtrans %}
-    </p>
+    {% set side_panel_text = h.get_system_info("ckanext.udc.organization_side_panel_text") %}
+    {% if side_panel_text %}
+      {{ h.render_markdown(side_panel_text) }}
+    {% else %}
+      <p>
+        {% trans %}
+          In CUDR, Organizations are the key to efficient data management and collaboration.
+          Users with different roles, like creators, editors, and publishers, work together to curate datasets of value.
+          With transparency and accessibility as the driving force, CUDR Organizations empower users to unlock the potential of data,
+          fostering a spirit of innovation and discovery. Join us in this data-driven journey, where knowledge knows no bounds!
+        {% endtrans %}
+      </p>
+    {% endif %}
   </div>
 </div>

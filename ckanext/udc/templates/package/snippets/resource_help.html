@@ -1,6 +1,11 @@
 <section class="module module-narrow module-shallow">
   <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('What\'s a dataset?') }}</h2>
   <div class="module-content">
-    <p>{{ _('A dataset can be any file or link to a file containing useful data.') }}</p>
+    {% set side_panel_text = h.get_system_info("ckanext.udc.dataset_side_panel_text") %}
+    {% if side_panel_text %}
+      {{ h.render_markdown(side_panel_text) }}
+    {% else %}
+      <p>{{ _('A dataset can be any file or link to a file containing useful data.') }}</p>
+    {% endif %}
   </div>
 </section>

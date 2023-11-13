@@ -196,3 +196,7 @@ def get_maturity_percentages(config, pkg_dict):
         percentages.append(str(round(num_not_empty / total_size * 100)) + "%")
 
     return percentages
+
+
+def get_system_info(name: str):
+    return model.system_info.get_system_info(name)

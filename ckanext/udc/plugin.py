@@ -21,7 +21,7 @@ from .cli import udc as cli_udc
 from .validator import udc_config_validor
 from .helpers import config_option_update, get_full_search_facets,\
       get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages,\
-      package_update, package_delete
+      package_update, package_delete, get_system_info
 from .graph.sparql_client import SparqlClient
 from .graph.preload import preload_ontologies
 
@@ -171,6 +171,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "process_facets_fields": process_facets_fields,
             "humanize_entity_type": humanize_entity_type,
             "get_maturity_percentages": get_maturity_percentages,
+            "get_system_info": get_system_info,
         }
 
     def is_fallback(self):
@@ -193,6 +194,15 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # This is a custom configuration option
             'ckanext.udc.config': [
                 ignore_missing, unicode_safe, udc_config_validor
+            ],
+            'ckanext.udc.group_side_panel_text': [
+                ignore_missing, unicode_safe
+            ],
+            'ckanext.udc.organization_side_panel_text': [
+                ignore_missing, unicode_safe
+            ],
+            'ckanext.udc.dataset_side_panel_text': [
+                ignore_missing, unicode_safe
             ],
         })
 
