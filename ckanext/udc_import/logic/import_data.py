@@ -136,7 +136,6 @@ def load_data_to_ckan(data_dicts: Dict[str, pd.DataFrame], mappings_df, default_
                 'auth_user_obj': current_user
             })
             created_package = toolkit.get_action("package_create")(context, data)
-            logs.append(f'Catalogue entry created: {created_package["name"]}')
 
             # loading the associated resource for the metadata
             resource = {
@@ -147,7 +146,7 @@ def load_data_to_ckan(data_dicts: Dict[str, pd.DataFrame], mappings_df, default_
                 'format': data.get('format', '')
             }
             resource = toolkit.get_action("resource_create")(context, resource)
-            logs.append(f'Dataset {resource["id"]} added to the Catalogue entry {created_package["name"]}')
+            logs.append([data.get('title'), created_package["name"], resource["id"]])
         except logic.ValidationError as e:
             e.error_dict['Error when importing'] = [
                 f'title="{data.get("title", "")}", index={i}']

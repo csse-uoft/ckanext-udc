@@ -54,7 +54,7 @@ class ImportView(MethodView):
         
         return base.render(
             u'udc_import/import_status.html',
-            extra_vars={"result": '\n'.join(result), "side_panel_text": side_panel_text}
+            extra_vars={"result": result, "side_panel_text": side_panel_text}
         )
 
     def get(self, 
