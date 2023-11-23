@@ -12,8 +12,9 @@ def move_to_catalogues():
     Make all packages have type=catalogue.
     This is used when we want to rename 'dataset' to 'catalogue'.
     """
-    datasets = model.Session.query(model.Package)
+    datasets = model.Session.query(model.Package).filter(model.Package.type == "dataset")
     nothing_to_do = True
+    
     for dataset in datasets:
         if dataset.type == 'dataset':
             click.echo(f'Update Dataset {dataset.id}: dataset.type: "{dataset.type}" -> "catalogue"')
