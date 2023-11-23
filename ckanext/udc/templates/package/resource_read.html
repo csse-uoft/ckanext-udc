@@ -91,3 +91,11 @@
     {% endblock %}
     </ul>
 {% endblock %}
+
+{% block resource_read_url %}
+    {% if res.url and h.is_url(res.url) %}
+        <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}" target="_blank">{{ res.url }}</a></p>
+    {% elif res.url %}
+        <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+    {% endif %}
+{% endblock %}
