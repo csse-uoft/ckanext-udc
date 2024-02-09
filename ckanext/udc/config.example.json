@@ -3,6 +3,10 @@
         {
             "graph": "http://id.loc.gov/vocabulary/iso639-1",
             "ontology_url": "https://csse-uoft.github.io/ontologies/iso639-1.rdf"
+        },
+        {
+            "graph": "https://www.iana.org/assignments/media-types",
+            "ontology_url": "https://csse-uoft.github.io/ontologies/iana-media-types.owl"
         }
     ],
     "maturity_model": [
@@ -240,7 +244,12 @@
                     "label": "Format (CSV, XLS, TXT, PDF, etc)",
                     "short_description": "Format of the dataset.",
                     "long_description": "Format of the dataset can indicate its file type (e.g. csv, pdf, ttl).",
-                    "type": "text",
+                    "type": "multiple_select",
+                    "optionsFromQuery": {
+                        "text": "label",
+                        "value": "s",
+                        "query": "select * from <https://www.iana.org/assignments/media-types> where {?s a <http://purl.org/dc/terms/MediaType>. ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label.}"
+                    },
                     "category": "access"
                 },
                 {
