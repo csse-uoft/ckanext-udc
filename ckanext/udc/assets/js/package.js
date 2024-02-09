@@ -29,27 +29,35 @@ this.ckan.module('package-form', function ($) {
                             fieldElement.addEventListener('change', () => this._onFieldChange());
                             this.levels[i].fieldElements.push(fieldElement);
 
-                            // setup select2
+                            // setup multiple select
                             if (field.type === "multiple_select") {
                                 const options = [];
                                 const selectedOptions = [];
-                                const curr_str = fieldElement.value;
+                                const curr_str = fieldElement.getAttribute('value') || "";
                                 const curr = curr_str.split(",");
+                                
                                 for (const option of field.options) {
-                                    const select2Option = {
-                                        id: option.value,
-                                        text: option.text
+                                    const selectOption = {
+                                        value: option.value,
+                                        label: option.text
                                     }
-                                    options.push(select2Option);
+                                    options.push(selectOption);
                                     if (curr.includes(option.value)) {
-                                        selectedOptions.push(select2Option);
+                                        selectedOptions.push(selectOption.value);
                                     }
                                 }
-                                // Remove non-existed option
-                                $(`#field-${field.name}`).val(selectedOptions.map(option => option.id).join(','));
-                                $(`#field-${field.name}`).select2({
-                                    multiple: true, width: 'resolve', data: options, selected: selectedOptions
-                                });
+                                
+                                // https://sa-si-dev.github.io/virtual-select/#/properties
+                                VirtualSelect.init({
+                                    ele: `#field-${field.name}`,
+                                    options,
+                                    search: true,
+                                    multiple: true,
+                                    showValueAsTags: true,
+                                    selectedValue: selectedOptions,
+                                    maxWidth: "100%"
+                                })
+                               
                             }
                         } else if (field.ckanField) {
                             if (field.ckanField === "custom_fields") continue;
