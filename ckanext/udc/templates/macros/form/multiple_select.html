@@ -7,7 +7,6 @@
     <div class="controls">
         <div id="{{ id or name }}" name="{{ name }}" value="{{ selected }}"></div>
     </div>
-    <br/>
     {% if error and error is iterable %}<span class="error-block">{{ error|join(', ') }}</span>{% endif %}
     {{ extra_html }}
     <div style="margin-bottom: 30px"></div>
