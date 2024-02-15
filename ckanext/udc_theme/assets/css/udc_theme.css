@@ -1,0 +1,63 @@
+.sr-only-focusable:not(:focus), .fa-sr-only-focusable:not(:focus) {
+    display: none;
+}
+
+.homepage .hero {
+    background: url(https://urbandatacentre.ca/x/cdn/?https://storage.googleapis.com/production-sitey-v1-0-4/454/329454/ZrrDgfKl/460c864e01604449a85fe8861be49d36);
+    padding: 50px 0;
+}
+.masthead {
+    background: #0d4279 url(../../base/images/bg.png);
+    min-height: 92px;
+}
+.account-masthead {
+    min-height: 30px;
+    color: #fff;
+    background: #0b2555 url(../../base/images/bg.png);
+}
+.account-masthead .account ul li a:hover {
+  color: #d9e7eb;
+  background-color: #051e3a;
+  text-decoration: none;
+}
+.site-footer {
+    background: #002a5c url(../../base/images/bg.png);
+    padding: 20px 0 0 0;
+}
+.homepage .module-search .search-form {
+    border-radius: 0.25rem;
+    background-color: #2a4f75;
+    padding: 30px 20px;
+}
+.homepage .module-search .tags {
+    margin-top: -5px;
+    padding: 5px 10px 10px 10px;
+    background-color: #264173;
+}
+
+.masthead .main-navbar ul li:hover a, .masthead .main-navbar ul li:focus a, .masthead .main-navbar ul li.active a {
+  border-radius: 0.3rem;
+  background-color: #002a56;
+}
+
+.media-overlay {
+  position: relative;
+  display: none;
+}
+
+/* Home Button */
+.toolbar ol {
+    display: flex;
+    align-items: center;
+}
+
+.toolbar .home i.fa.fa-home {
+    font-size: 1.5rem;
+}
+
+.toolbar .home span {
+    display: initial;
+    font-weight: bold;
+    padding-left: 2px;
+}
+

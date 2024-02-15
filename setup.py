@@ -86,6 +86,7 @@ setup(
         [ckan.plugins]
         udc=ckanext.udc.plugin:UdcPlugin
         udc_import=ckanext.udc_import.plugin:UdcImportPlugin
+        udc_theme=ckanext.udc_theme.plugin:UdcThemePlugin
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan

@@ -1,0 +1,5 @@
+udc-css:
+  filter: cssrewrite
+  output: ckanext-udc_theme/%(version)s-udc_theme.css
+  contents:
+    - css/udc_theme.css
