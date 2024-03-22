@@ -120,7 +120,8 @@ def init_licenses():
                 # Create License Class dynamically
                 license_register.licenses.append(create_custom_license(custom_license.id, custom_license.url, custom_license.title))
     except Exception as e:
+        # In CLI
         if 'UndefinedTable' in str(repr(e)):
-            init_tables()
+            pass
         else:
             raise
