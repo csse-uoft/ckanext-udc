@@ -3,8 +3,9 @@ from ckan.model.license import DefaultLicense, License as CKANLicense
 from ckan.common import _
 import logging
 
-from ckanext.udc.licenses.model import CustomLicense
+from ckanext.udc.licenses.model import CustomLicense, init_tables
 from ckanext.udc.licenses.utils import create_custom_license
+from psycopg2.errors import UndefinedTable
 
 log = logging.getLogger(__name__)
 
@@ -111,9 +112,14 @@ def init_licenses():
     license_register = model.Package.get_license_register()
     registered_ids = set([license.id for license in license_register.licenses])
     
-    custom_licenses = model.Session.query(CustomLicense)
-    for custom_license in custom_licenses:
-        if custom_license.id not in registered_ids:
-            # Add to registered license
-            # Create License Class dynamically
-            license_register.licenses.append(create_custom_license(custom_license.id, custom_license.url, custom_license.title))
+    try:
+        custom_licenses = model.Session.query(CustomLicense)
+        for custom_license in custom_licenses:
+            if custom_license.id not in registered_ids:
+                # Add to registered license
+                # Create License Class dynamically
+                license_register.licenses.append(create_custom_license(custom_license.id, custom_license.url, custom_license.title))
+    except UndefinedTable:
+        init_tables()
+    except:
+        raise

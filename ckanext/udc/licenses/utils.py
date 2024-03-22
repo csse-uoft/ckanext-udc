@@ -1,3 +1,4 @@
+from __future__ import annotations
 from ckan.common import _
 from ckan.model.license import License as CKANLicense, DefaultLicense
 from ckan import model
