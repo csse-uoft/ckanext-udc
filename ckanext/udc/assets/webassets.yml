@@ -16,6 +16,14 @@ package-filter:
     preload:
       - base/main
 
+package-view:
+  filter: rjsmin
+  output: ckanext-udc/%(version)s-package-view.js
+  contents:
+    - js/package-view.js
+  extra:
+    preload:
+      - base/main
 
 udc-css:
   filter: cssrewrite

@@ -4,8 +4,10 @@
 
 {% asset 'udc/package-js'%}
 
-<link rel="stylesheet" href="/base/css/virtual-select.min.css">
-<script src="/base/javascript/modules/virtual-select.min.js" type="text/javascript"></script>
+<link rel="stylesheet" href="{{ h.url_for_static('/base/css/virtual-select.min.css') }}">
+<script src="{{ h.url_for_static('/base/javascript/modules/virtual-select.min.js') }}" type="text/javascript"></script>
+
+<form id="create-license-form"></form>
 
 {# This provides a full page that renders a form for adding a dataset. It can
 then itself be extended to add/remove blocks of functionality. #}

@@ -108,7 +108,7 @@ this.ckan.module('filter-apply-button', function ($) {
                         params.add(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
                 }
                 // Redirect
-                window.location.href = "/catalogue/?" + [...params].join('&');
+                window.location.href = window.facets.bsaeURL + "?" + [...params].join('&');
             }
         }
     }

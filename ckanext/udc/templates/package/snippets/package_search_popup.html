@@ -8,6 +8,7 @@
   window.facets = {
     data: {{facets_data | tojson}},
     titles: {{facet_titles | tojson}},
+    bsaeURL: {{h.url_for('catalogue.search') | tojson}}
   };
   window.maturityModel = {{h.config | tojson}};
   
