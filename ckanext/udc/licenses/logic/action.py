@@ -112,16 +112,11 @@ def init_licenses():
     license_register = model.Package.get_license_register()
     registered_ids = set([license.id for license in license_register.licenses])
     
-    try:
+    if model.meta.engine.dialect.has_table(model.meta.engine.connect(), 'custom_license'):
         custom_licenses = model.Session.query(CustomLicense)
         for custom_license in custom_licenses:
             if custom_license.id not in registered_ids:
                 # Add to registered license
                 # Create License Class dynamically
                 license_register.licenses.append(create_custom_license(custom_license.id, custom_license.url, custom_license.title))
-    except Exception as e:
-        # In CLI
-        if 'UndefinedTable' in str(repr(e)):
-            pass
-        else:
-            raise
+        log.info("Loaded custom licenses")
