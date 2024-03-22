@@ -1,6 +1,7 @@
 .homepage .module-search .tab-pane {
     color: #333333;
 }
+
 .homepage .module-search .modal-title {
     color: #333333;
 }
@@ -15,4 +16,49 @@
     padding: 0;
     cursor: pointer;
     color: white
+}
+
+/* Licenses */
+
+.add-license-container {
+    transition: 0.3s;
+    -webkit-transition: 0.3s;
+    margin-top: 10px;
+    padding-right: 12px;
+    padding-left: 12px;
+    padding-top: 12px;
+    margin-left: 12px;
+    margin-right: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+
+.add-license-container.hidden {
+    visibility: hidden;
+    height: 0px;
+    opacity: 0%;
+    padding-left: 0px;
+    padding-top: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.add-license-container.visible {
+    visibility: visible;
+    height: 100%;
+    opacity: 100%;
+    margin-bottom: 12px !important;
+}
+
+span.error-text {
+    margin: 0.25rem;
+    font-size: 14px;
+    color: #dc3545;
+}
+
+span.success-text {
+    margin: 0.25rem;
+    font-size: 14px;
+    color: #00a32c;
 }

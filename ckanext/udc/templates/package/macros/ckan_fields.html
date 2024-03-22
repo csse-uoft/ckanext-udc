@@ -59,15 +59,47 @@
     {% set error = errors.license_id %}
     <label class="form-label" for="field-license">{{ _("License") }}</label>
     <div class="controls">
-      <select id="field-license_id" name="license_id" data-module="autocomplete">
-        {% set existing_license_id = data.get('license_id') %}
-        {% set empty_license = _('Please select the license') %}
-        <option value="">{{ empty_license }}</option>
-        {% for license_id, license_desc in h.license_options(existing_license_id) %}
-          <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
-        {% endfor %}
-      </select>
+      <div id="field-license_id" name="license_id" value="{{ data.get('license_id') }}">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
       {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+
+      <button type="button" id="add-license-popover-btn" class="btn btn-outline-secondary mt-2"><i class="fa-solid fa-plus"></i> <span class="ms-1">Add Custom License</span></button>
+      <div class="add-license-container hidden">
+        <input type="hidden" id="license-create-api" name="license-create-api" form="create-license-form" value="{{ h.url_for('api.action', ver=3, logic_function='license_create') }}"/>
+        {# Nested Form #}
+        <div class="row g-3">
+          <div class="col-6">
+            <label for="new-license-title" class="form-label">License Title</label>
+            <input class="form-control" id="new-license-title" name="title" form="create-license-form" required/>
+          </div>
+          <div class="col-6">
+            <label for="new-license-id" class="form-label">License ID</label>
+            <input class="form-control" id="new-license-id" name="id" form="create-license-form" required/>
+            <span class="info-block">
+              A Unique ID for the license.
+            </span>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label for="new-license-url" class="form-label">License URL</label>
+          <input class="form-control" id="new-license-url" name="url" form="create-license-form" required/>
+          <span class="info-block">
+            The link to the license.
+          </span>
+        </div>
+
+        <div class="row m-1">
+          <button type="submit" class="btn btn-primary col-sm-auto" form="create-license-form">Add and Select</button>
+
+          <span id="new-license-error" class="error-text d-none col-sm-auto"></span>
+          <span id="new-license-success" class="success-text d-none col-sm-auto"> <i class="fa-solid fa-check"></i> Success</span>
+        </div>
+      </div>
+
       <span class="info-block">
         <i class="fa fa-info-circle"></i>
         {% trans %}
@@ -75,6 +107,7 @@
         at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
         {% endtrans %}
       </span>
+
     </div>
   </div>
 {% endmacro%}

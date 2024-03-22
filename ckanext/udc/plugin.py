@@ -25,6 +25,9 @@ from .helpers import config_option_update, get_full_search_facets,\
 from .graph.sparql_client import SparqlClient
 from .graph.preload import preload_ontologies
 
+from .licenses.logic.action import license_create, license_delete, licenses_get, init_licenses
+from .licenses.utils import license_options_details
+
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
 See https://docs.ckan.org/en/latest/extensions/adding-custom-fields.html
@@ -90,6 +93,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 self.reload_config(json.loads(existing_config))
             except:
                 log.error
+        
+        # Load custom licenses
+        init_licenses()
 
         log.info("UDC Plugin Loaded!")
 
@@ -172,6 +178,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "humanize_entity_type": humanize_entity_type,
             "get_maturity_percentages": get_maturity_percentages,
             "get_system_info": get_system_info,
+            
+            "license_options_details": license_options_details,
         }
 
     def is_fallback(self):
@@ -216,6 +224,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "config_option_update": config_option_update,
             "package_update": package_update,
             "package_delete": package_delete,
+            
+            # Custom Licenses
+            "license_create": license_create,
+            "license_delete": license_delete,
+            "licenses_get": licenses_get,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

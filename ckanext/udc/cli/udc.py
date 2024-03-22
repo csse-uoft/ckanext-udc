@@ -1,5 +1,6 @@
 import click
 import ckan.model as model
+import logging
 
 
 @click.group(short_help=u"UDC commands.")
@@ -26,3 +27,19 @@ def move_to_catalogues():
     else:
         model.repo.commit_and_remove()
         click.echo("Done. Please restart the CKAN instance!")
+
+@udc.command()
+def initdb():
+    """
+    Initialises the database with the required tables.
+    """
+    log = logging.getLogger(__name__)
+    
+    model.Session.remove()
+    model.Session.configure(bind=model.meta.engine)
+
+    log.info("Initializing tables")
+    
+    from ..licenses.model import init_tables
+    init_tables()
+    log.info("DB tables are setup")

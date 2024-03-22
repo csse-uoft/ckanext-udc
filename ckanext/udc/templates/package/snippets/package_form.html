@@ -35,6 +35,7 @@ then itself be extended to add/remove blocks of functionality. #}
     <div class="tab-content" style="display:initial;">
       <script type=text/javascript>
         window.packageConfig = {{h.config | tojson}};
+        window.packageLicenses = {{h.license_options_details(existing_license_id) | tojson}};
       </script>
       {% for level in h.config %}
         <div class="tab-pane {{"active" if loop.index == 1 else "fade"}}" id="{{ level["name"] }}" role="tabpanel">
