@@ -17,12 +17,11 @@ ckanFieldMapping = {
     "author_email": "author_email",
     "name": "name",
     "version": "version",
-    "format": "file_format",
     "source": "url"
 }
 ckanFieldKeys = [
     "name", "title", "notes", "tags", "id", "pkg_name", "author", "author_email",
-    "file_format", "url", "version"
+    "url", "version"
 ]
 
 class CKANField(dict):

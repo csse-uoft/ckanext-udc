@@ -854,7 +854,7 @@
             "@type": "xsd:boolean",
             "@value": "{to_bool(global_unique_identifier)}"
         },
-        "dct:format": "{ckanField.format}",
+        "dct:format": "eval(split_to_uris(file_format))",
         "dcat:downloadURL": {
             "@id": "{ckanField.source}"
         },
