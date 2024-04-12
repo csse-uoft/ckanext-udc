@@ -859,7 +859,7 @@
         },
         "dct:format": "eval(split_to_uris(file_format))",
         "dcat:downloadURL": {
-            "@id": "{urllib.parse.quote(ckanField.source))"
+            "@id": "{urllib.parse.quote(ckanField.source)}"
         },
         "owl:versionInfo": "{version_info}",
         "adms:versionNotes": "{ckanField.version}",
