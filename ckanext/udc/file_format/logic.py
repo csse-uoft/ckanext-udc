@@ -35,7 +35,7 @@ def file_format_create(context, data_dict):
         # Replace whitespaces
         id = re.sub('\s', '-', label)
         # Remove unsafe characters in URL
-        id = re.sub(r'[<>#%\{\}|\^~\[\]]', '', id)
+        id = re.sub(r'[<>#%\{\}|\^~\[\]]/', '', id)
         
     query = f"""
     PREFIX cff: <{PREFIX}>
