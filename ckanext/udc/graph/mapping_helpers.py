@@ -2,6 +2,7 @@
 
 import uuid
 import urllib
+import urllib.parse
 from datetime import datetime
 from rdflib import Literal, XSD
 from .contants import EMPTY_FIELD
@@ -73,6 +74,25 @@ def split_to_uris(val: str, separator=","):
     return [{"@id": uri} for uri in val.split(separator)]
 
 
+def quote_url(url: str):
+    """Encode URL but not encode the prefix http(s):// """
+    vals = []
+    for item in url.strip().split("://"):
+        vals.append(urllib.parse.quote(item, safe="/"))
+    return "://".join(vals)
+
+
+def mapFromCKANTags(tags_str: str):
+    tags = []
+    
+    for tag in tags_str.split(","):
+        tags.append({
+            "@value": tag.strip()
+        })
+        
+    return tags
+
+
 all_helpers = {
     "generate_uuid": generate_uuid,
     "to_integer": to_integer,
@@ -81,5 +101,6 @@ all_helpers = {
     "to_bool": to_bool,
     "split_to_uris": split_to_uris,
     "mapFromCKANLicense": mapFromCKANLicense,
-    "urllib": urllib
+    "mapFromCKANTags": mapFromCKANTags,
+    "quote_url": quote_url
 }

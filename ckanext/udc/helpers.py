@@ -51,6 +51,7 @@ def package_update(original_action, context, data_dict):
             onUpdateCatalogue(context, data_dict)
     except Exception as e:
         log.error(e)
+        print(e)
         raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
     return result
 
@@ -64,6 +65,7 @@ def package_delete(original_action, context, data_dict):
             onDeleteCatalogue(context, data_dict)
     except Exception as e:
         log.error(e)
+        print(e)
         raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
     return result
 
