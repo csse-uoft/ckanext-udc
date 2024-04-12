@@ -1,5 +1,6 @@
 from graphdb_importer import import_and_wait, set_config
 import ckan.plugins.toolkit as tk
+import ckan.plugins as plugins
 import requests
 import os
 from .sparql_client import SparqlClient
@@ -27,8 +28,26 @@ def preload_ontologies(config, graphdb_endpoint: str, username: str, password: s
                 raise e
 
     # Preload options for dropdowns
-    for level in config["maturity_model"]:
+    dropdown_reload(maturity_model=config["maturity_model"])
+
+
+def dropdown_reload(name=None, maturity_model=None):
+    """
+    Reload dropdown options "optionsFromQuery".
+    Set `name` to None to reload all dropdown options.
+    """
+    if plugins.get_plugin('udc').disable_graphdb:
+        return
+    
+    client = plugins.get_plugin('udc').sparql_client
+    
+    if maturity_model is None:
+        maturity_model = plugins.get_plugin('udc').maturity_model
+    
+    for level in maturity_model:
         for field in level["fields"]:
+            if name is not None and field.get("name") != name:
+                continue
             if field.get("optionsFromQuery"):
                 options = []
                 if field["type"] == "single_select":
@@ -38,10 +57,11 @@ def preload_ontologies(config, graphdb_endpoint: str, username: str, password: s
                     })
                 textVar = field["optionsFromQuery"]["text"]
                 valueVar = field["optionsFromQuery"]["value"]
-                result = sparql_client.execute_sparql(field["optionsFromQuery"]["query"])
+                result = client.execute_sparql(field["optionsFromQuery"]["query"])
                 for item in result["results"]["bindings"]:
                     options.append({
                         "text": item[textVar]["value"],
                         "value": item[valueVar]["value"],
                     })
                 field["options"] = options
+                

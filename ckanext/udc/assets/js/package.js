@@ -128,7 +128,8 @@ this.ckan.module('package-form', function ($) {
                                     multiple: true,
                                     showValueAsTags: true,
                                     selectedValue: selectedOptions,
-                                    maxWidth: "100%"
+                                    maxWidth: "100%",
+                                    allowNewOption: field.allowNewOption,
                                 })
 
                             }

@@ -248,8 +248,9 @@
                     "optionsFromQuery": {
                         "text": "label",
                         "value": "s",
-                        "query": "select * from <https://www.iana.org/assignments/media-types> where {?s a <http://purl.org/dc/terms/MediaType>. ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label.}"
+                        "query": "select * where {?s a <http://purl.org/dc/terms/MediaType>. ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label.}"
                     },
+                    "allowNewOption": false,
                     "category": "access"
                 },
                 {

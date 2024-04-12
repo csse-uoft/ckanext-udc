@@ -17,16 +17,17 @@ import ckan.lib.helpers as h
 from ckan.common import current_user, CKANConfig
 
 import logging
-from .cli import udc as cli_udc
-from .validator import udc_config_validor
-from .helpers import config_option_update, get_full_search_facets,\
+from ckanext.udc.cli import udc as cli_udc
+from ckanext.udc.validator import udc_config_validor
+from ckanext.udc.helpers import config_option_update, get_full_search_facets,\
       get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages,\
       package_update, package_delete, get_system_info
-from .graph.sparql_client import SparqlClient
-from .graph.preload import preload_ontologies
+from ckanext.udc.graph.sparql_client import SparqlClient
+from ckanext.udc.graph.preload import preload_ontologies
 
-from .licenses.logic.action import license_create, license_delete, licenses_get, init_licenses
-from .licenses.utils import license_options_details
+from ckanext.udc.licenses.logic.action import license_create, license_delete, licenses_get, init_licenses
+from ckanext.udc.licenses.utils import license_options_details
+from ckanext.udc.file_format.logic import file_format_create, file_format_delete, file_formats_get
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -229,6 +230,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "license_create": license_create,
             "license_delete": license_delete,
             "licenses_get": licenses_get,
+            
+            # Custom file format
+            "file_format_create": file_format_create,
+            "file_format_delete": file_format_delete,
+            "file_formats_get": file_formats_get
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

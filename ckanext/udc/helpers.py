@@ -17,6 +17,7 @@ import ckan.lib.helpers as h
 from ckan.common import current_user, _
 
 from .graph.logic import onUpdateCatalogue, onDeleteCatalogue
+from ckanext.udc.file_format.logic import before_package_update as before_package_update_for_file_format
 
 import logging
 
@@ -41,6 +42,9 @@ def config_option_update(original_action, context, data_dict):
 @side_effect_free
 @chained_action
 def package_update(original_action, context, data_dict):
+    # Pre-process custom file format
+    before_package_update_for_file_format(context, data_dict)
+    
     result = original_action(context, data_dict)
     try:
         if not plugins.get_plugin('udc').disable_graphdb:
