@@ -140,7 +140,13 @@ To install ckanext-udc:
    config file (by default the config file is located at
    `/etc/ckan/default/ckan.ini`).
 
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+4. Init DB
+     ```shell
+     # Use your own path to the ckan.ini
+     ckan -c /etc/ckan/default/ckan.ini udc initdb
+     ```
+
+5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
      ```shell
      sudo supervisorctl reload
