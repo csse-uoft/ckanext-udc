@@ -59,14 +59,14 @@ def get_num_paths(uri_a: str, uri_b: str):
     """
     client = get_client()
     result = client.execute_sparql(query)
-    print('num_paths=', len(result["results"]["bindings"]), uri_a, uri_b)
+    # print('num_paths=', len(result["results"]["bindings"]), uri_a, uri_b)
     # {pathIndex: {edgeIndex: str[]}} 
     results = {}
     for row in result["results"]["bindings"]:
         pathIndex = row['pathIndex']['value']
         edgeIndex = row['edgeIndex']['value']
         edge = row['edge']['value']
-        print(edge)
+        # print(edge)
         s = edge['s']['value']
         p = edge['p']['value']
         o = edge['o']['value']

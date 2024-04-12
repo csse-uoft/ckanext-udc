@@ -76,7 +76,8 @@ def compile_template(template, global_vars, local_vars, nested=False):
                         if EMPTY_FIELD in item[attr]:
                             attrs_to_del.append(attr)
                     except Exception as e:
-                        print(f'Unable to evaluate: {item[attr]}; {str(e)}', file=sys.stderr)
+                        if not "is not defined" in str(e):
+                            print(f'Unable to evaluate: {item[attr]}; {str(e)}', file=sys.stderr)
                         attrs_to_del.append(attr)
             for attr in attrs_to_del:
                 del item[attr]

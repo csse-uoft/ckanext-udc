@@ -15,7 +15,7 @@ from .queries import get_uri_as_object_usage, get_client, get_num_paths
 
 
 def get_mappings():
-    print("mappings: ", plugins.get_plugin('udc').mappings)
+    # print("mappings: ", plugins.get_plugin('udc').mappings)
     return pyld.jsonld.expand(plugins.get_plugin('udc').mappings)
 
 
@@ -26,7 +26,7 @@ def find_existing_instance_uris(data_dict) -> list:
     compiled_template = compile_with_temp_value(get_mappings(), all_helpers,
                                                 {**data_dict, "ckanField": ckanField})
     catalogue_uri = compiled_template["@id"]
-    print("compiled_template", compiled_template)
+    # print("compiled_template", compiled_template)
     g.parse(data=compiled_template, format='json-ld')
 
     # Get all uris that is used as subject (s, any, any)
@@ -43,7 +43,7 @@ def find_existing_instance_uris(data_dict) -> list:
                     s2spo[s1].append((s1, p, s2))
                 else:
                     s2spo[s1] = [(s1, p, s2)]
-    print("s2spo", s2spo)
+    # print("s2spo", s2spo)
 
     # Generate s -> vars mappings
     s2var = {}
@@ -53,7 +53,7 @@ def find_existing_instance_uris(data_dict) -> list:
             s2var[str(s)] = f'var{cnt}'
             cnt += 1
 
-    print('s2var', s2var)
+    # print('s2var', s2var)
 
     # o -> (s, sparql part)
     query_parts = {}
@@ -93,7 +93,7 @@ def find_existing_instance_uris(data_dict) -> list:
 
 
     query = f'SELECT DISTINCT * WHERE {{\n{triples}}}'
-    print('select-query', query)
+    # print('select-query', query)
     client = get_client()
     result = client.execute_sparql(query)
     if len(result["results"]["bindings"]) == 0:
@@ -106,12 +106,12 @@ def find_existing_instance_uris(data_dict) -> list:
     for s, var in s2var.items():
         if results.get(var) and results[var]["type"] != "bnode": # Skip blank nodes
             s2uri[s] = results[var]["value"]
-    print("s2uri", s2uri)
+    # print("s2uri", s2uri)
     return [*s2uri.values()]
 
 
 def onUpdateCatalogue(context, data_dict):
-    print(f"onUpdateCatalogue Update: ", data_dict)
+    # print(f"onUpdateCatalogue Update: ", data_dict)
     ckanField = CKANField(data_dict)
 
     # Remove empty fields
@@ -123,7 +123,7 @@ def onUpdateCatalogue(context, data_dict):
 
     compiled_template = compile_template(get_mappings(), all_helpers,
                                          {**data_dict, "ckanField": ckanField, })
-    print("compiled_template", compiled_template)
+    # print("compiled_template", compiled_template)
     catalogue_uri = compiled_template["@id"]
 
     g = Graph()
@@ -155,7 +155,7 @@ def onUpdateCatalogue(context, data_dict):
                 continue
             # Check if 's' is used by any other triples as an object
             uri_as_object_usage = get_uri_as_object_usage(s)
-            print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
+            # print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
 
             if uri_as_object_usage == num_paths_used_by_catalogue:
                 # Remove this instance if it is only used by this catalogue
@@ -187,14 +187,14 @@ def onUpdateCatalogue(context, data_dict):
 
 
 def onDeleteCatalogue(context, data_dict):
-    print(f"onDeleteCatalogue: ", data_dict)
+    # print(f"onDeleteCatalogue: ", data_dict)
     ckanField = CKANField(data_dict)
 
     uris_to_del = find_existing_instance_uris(data_dict)
 
     compiled_template = compile_with_temp_value(get_mappings(), all_helpers,
                                                 {**data_dict, "ckanField": ckanField})
-    print("compiled_template", compiled_template)
+    # print("compiled_template", compiled_template)
     catalogue_uri = compiled_template["@id"]
 
     g = Graph()
@@ -225,7 +225,7 @@ def onDeleteCatalogue(context, data_dict):
                 continue
             # Check if 's' is used by any other triples as an object
             uri_as_object_usage = get_uri_as_object_usage(s)
-            print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
+            # print('uri_as_object_usage', uri_as_object_usage, num_paths_used_by_catalogue)
             if uri_as_object_usage == num_paths_used_by_catalogue:
                 delete_clause.append(f'{normalize_uri(s)} ?p ?o')
                 delete_clause.append(f'?s ?p {normalize_uri(s)}')
