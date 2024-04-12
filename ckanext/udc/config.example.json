@@ -759,7 +759,8 @@
             "prov": "http://www.w3.org/ns/prov#",
             "oa": "http://www.w3.org/ns/oa#",
             "vcard": "http://www.w3.org/2006/vcard/ns#",
-            "dqv": "http://www.w3.org/ns/dqv#"
+            "dqv": "http://www.w3.org/ns/dqv#",
+            "sc": "http://schema.org/"
         },
         "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.id}",
         "@type": "http://data.urbandatacentre.ca/catalogue",
@@ -767,7 +768,7 @@
 
         "dcat:theme": {
             "@type": "skos:Concept",
-            "@id": "http://data.urbandatacentre.ca/theme/{theme.lower()}",
+            "@id": "http://data.urbandatacentre.ca/theme/{urllib.parse.quote(theme.lower())}",
             "skos:prefLabel": "{theme}"
         },
         "dct:title": {
@@ -790,7 +791,7 @@
         },
         "dct:spatial": {
             "@type": "dct:Location",
-            "@id": "http://data.urbandatacentre.ca/geo/{geo_span.lower()}",
+            "@id": "http://data.urbandatacentre.ca/geo/{urllib.parse.quote(geo_span.lower())}",
             "locn:geometry": "{geo_span}"
         },
 
@@ -801,7 +802,7 @@
         "cudr:accessCategory": "{access_category}",
         "dct:license": "eval(mapFromCKANLicense(license_id))",
         "dcat:accessURL": {
-            "@id": "{location}"
+            "@id": "{urllib.parse.quote(location)}"
         },
         "dcat:accessService": {
             "@id": "http://data.urbandatacentre.ca/data_service/{generate_uuid()}",
@@ -845,7 +846,7 @@
 
 
         "dcat:landingPage": {
-            "@id": "{description_document}"
+            "@id": "{urllib.parse.quote(description_document)}"
         },
         "dct:language": "eval(split_to_uris(language))",
         "fair:rda-f1-01d": {
@@ -858,7 +859,7 @@
         },
         "dct:format": "eval(split_to_uris(file_format))",
         "dcat:downloadURL": {
-            "@id": "{ckanField.source}"
+            "@id": "{urllib.parse.quote(ckanField.source))"
         },
         "owl:versionInfo": "{version_info}",
         "adms:versionNotes": "{ckanField.version}",
@@ -909,7 +910,7 @@
         },
         "cudr:spatialIndigenousCommunity": {
             "@type": "dct:Location",
-            "@id": "http://data.urbandatacentre.ca/geo/{indigenous_span.lower()}",
+            "@id": "http://data.urbandatacentre.ca/geo/{urllib.parse.quote(indigenous_span.lower())}",
             "locn:geometry": "{indigenous_span}"
         },
 

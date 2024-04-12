@@ -1,6 +1,7 @@
 # This file contains the helper functions/variables that are available to the UDC mapping config.
 
 import uuid
+import urllib
 from datetime import datetime
 from rdflib import Literal, XSD
 from .contants import EMPTY_FIELD
@@ -80,4 +81,5 @@ all_helpers = {
     "to_bool": to_bool,
     "split_to_uris": split_to_uris,
     "mapFromCKANLicense": mapFromCKANLicense,
+    "urllib": urllib
 }
