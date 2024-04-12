@@ -804,6 +804,7 @@
             "@id": "{location}"
         },
         "dcat:accessService": {
+            "@id": "http://data.urbandatacentre.ca/data_service/{generate_uuid()}",
             "@type": "dcat:DataService",
             "dcat:endpointURL": "{data_service}"
         },
