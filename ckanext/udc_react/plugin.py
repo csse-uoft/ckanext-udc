@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import request, Response
+from flask import request, Response, abort
 import ckan.lib.base as base
 from ckan.lib.helpers import url_for
 import ckan.plugins as plugins
@@ -111,31 +111,37 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     return Response(download_file(resp), resp.status_code, headers)
 
         else:
-            # Production builds
-            @app.route(f"/{UDC_REACT_PATH}", defaults={"path": "index.html"})
-            @app.route(f"/{UDC_REACT_PATH}/<path:path>")
-            def catch_udc_react_request(path):
-                if path != "" and os.path.exists(
-                    self.project_path / f"public/{UDC_REACT_PATH}/" / path
-                ):
-                    base_url = url_for("/")
+            # Production build
+            @app.before_request
+            def before_request_func():
+                if request.path.startswith(f"/{UDC_REACT_PATH}"):
+                    path = request.path[len(f"/{UDC_REACT_PATH}"):]
+                    print("request.path", request.path, path)
+                    
+                    # If the path does not exist, go to index.html
+                    if request.path != "" and not os.path.exists(
+                        str(self.project_path / 'public' / UDC_REACT_PATH)  + path
+                    ):
+                        base_url = url_for("/")
 
-                    def prod_asset(file_path):
-                        try:
-                            return f"{base_url}{UDC_REACT_PATH}/{self.manifest[file_path]['file']}"
-                        except Exception as e:
-                            print(repr(e))
-                            return "asset-not-found"
+                        def prod_asset(file_path):
+                            try:
+                                return f"{base_url}{UDC_REACT_PATH}/{self.manifest[file_path]['file']}"
+                            except Exception as e:
+                                print(repr(e))
+                                return "asset-not-found"
 
-                    return base.render(
-                        "udc_react/homepage.html",
-                        extra_vars={
-                            "react_asset": prod_asset,
-                            "VITE_ORIGIN": self.VITE_ORIGIN,
-                            "manifest": self.manifest,
-                            "is_production": True,
-                        },
-                    )
+                        return base.render(
+                            "udc_react/homepage.html",
+                            extra_vars={
+                                "react_asset": prod_asset,
+                                "VITE_ORIGIN": self.VITE_ORIGIN,
+                                "manifest": self.manifest,
+                                "is_production": True,
+                            },
+                        )
+                    
+
 
         return app
 
