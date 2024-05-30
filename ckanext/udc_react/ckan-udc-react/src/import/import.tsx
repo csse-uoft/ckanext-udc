@@ -6,8 +6,8 @@ import CodeMirror from "@uiw/react-codemirror";
 import { python } from '@codemirror/lang-python';
 import { BootstrapTextField } from './inputs';
 import { useEffect, useState } from 'react';
-import { deleteImportConfig, getImportConfigs, updateImportConfig, runImport } from '../api';
-import { Add, SaveOutlined, PlayArrowOutlined, DeleteForeverOutlined } from '@mui/icons-material';
+import { SaveOutlined, PlayArrowOutlined, DeleteForeverOutlined } from '@mui/icons-material';
+import { useApi } from '../api/useApi';
 
 export type IImportConfig = { uuid?: string, code: string, name: string }[];
 
@@ -19,6 +19,7 @@ export interface ImportPanelProps {
 }
 
 function ImportPanel(props: ImportPanelProps) {
+  const {api, executeApiCall} = useApi();
 
   const [importConfig, setImportConfig] = useState({
     uuid: props.defaultUUID,
@@ -42,7 +43,7 @@ function ImportPanel(props: ImportPanelProps) {
 
   const handleSave = async () => {
     try {
-      await updateImportConfig(importConfig);
+      await executeApiCall(() => api.updateImportConfig(importConfig));
       props.onUpdate();
     } catch (e) {
       console.error(e)
@@ -51,9 +52,9 @@ function ImportPanel(props: ImportPanelProps) {
 
   const handleSaveAndRun = async () => {
     try {
-      const { result } = await updateImportConfig(importConfig);
+      const { result } = await executeApiCall(() => api.updateImportConfig(importConfig));
       if (result?.id) {
-        await runImport(result.id)
+        await executeApiCall(() => api.runImport(result.id))
         // show import status
         props.onUpdate('show-status');
       }
@@ -66,7 +67,7 @@ function ImportPanel(props: ImportPanelProps) {
   const handleDelete = async () => {
     try {
       if (importConfig.uuid)
-        await deleteImportConfig(importConfig.uuid)
+        await executeApiCall(() => api.deleteImportConfig(importConfig.uuid))
       props.onUpdate();
     } catch (e) {
       console.error(e)
@@ -129,11 +130,11 @@ function ImportPanel(props: ImportPanelProps) {
 }
 
 export default function ImportDashboard() {
-
+  const {api, executeApiCall} = useApi();
   const [tabs, setTabs] = useState<IDynamicTab[]>([]);
 
   const load = async (option?: string) => {
-    const importConfigs: IImportConfig = await getImportConfigs();
+    const importConfigs: IImportConfig = await executeApiCall(api.getImportConfigs);
     const newTabs = [];
     for (const [uuid, { code, name }] of Object.entries(importConfigs)) {
       newTabs.push({

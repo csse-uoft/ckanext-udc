@@ -1,13 +1,12 @@
-import { Container, Paper, Card, CardContent, Alert, Typography, Box, IconButton, } from '@mui/material';
+import { Container, Card, CardContent, Alert, Typography, Box, IconButton, } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
 import DynamicTabs, { IDynamicTab } from './tabs';
 
 import CodeMirror from "@uiw/react-codemirror";
 import { useEffect, useState } from 'react';
-import { deleteImportLog, getImportConfigs, getImportLogsByConfigId } from '../api';
-import { LinearProgressWithLabel } from './progess';
 import { IImportConfig } from './import';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useApi } from '../api/useApi';
 
 
 export interface ImportPanelProps {
@@ -82,11 +81,11 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
 
 
 function ImportLogsPanel(props: ImportPanelProps) {
-
+  const {api, executeApiCall} = useApi();
   const [importLogs, setImportLogs] = useState([]);
 
   useEffect(() => {
-    getImportLogsByConfigId(props.uuid).then((logs: any) => {
+    executeApiCall(() => api.getImportLogsByConfigId(props.uuid)).then((logs: any) => {
       setImportLogs(logs);
       console.log(logs)
     })
@@ -94,7 +93,7 @@ function ImportLogsPanel(props: ImportPanelProps) {
   }, [props.uuid]);
 
   const handleDeleteOne = async (id: string) => {
-    await deleteImportLog(id);
+    await executeApiCall(() => api.deleteImportLog(id));
     setImportLogs(logs => {
       logs.splice(logs.findIndex((log: LogData) => log.id === id), 1)
       return [...logs]
@@ -114,11 +113,12 @@ function ImportLogsPanel(props: ImportPanelProps) {
 
 
 export function ImportStatus() {
+  const {api, executeApiCall} = useApi();
 
   const [tabs, setTabs] = useState<IDynamicTab[]>([]);
 
   const load = async (option?: string) => {
-    const importConfigs: IImportConfig = await getImportConfigs();
+    const importConfigs: IImportConfig = await executeApiCall(api.getImportConfigs);
     const newTabs = [];
     for (const [uuid, { code, name }] of Object.entries(importConfigs)) {
       newTabs.push({

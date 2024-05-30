@@ -4,7 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccordionComponent from './AccordionComponent';
 import { highlightText } from './utils';
-import { getMaturityLevels } from '../api';
+import { getMaturityLevels } from '../api/api';
 import { qaPageConfig, PageConfig, Detail, MaturityLevel } from './maturityLevels';
 
 

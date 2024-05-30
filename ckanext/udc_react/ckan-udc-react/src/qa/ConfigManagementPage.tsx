@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, Container, CircularProgress, Alert } from '@mui/material';
 import { useCodeMirror } from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { getConfig, updateConfig } from '../api';
 import { validateConfig } from './utils';
 import { qaPageConfig } from './maturityLevels';
+import { useApi } from '../api/useApi';
 
 const ConfigManagementPage: React.FC = () => {
+  const {api, executeApiCall} = useApi();
+
   const [config, setConfigState] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ const ConfigManagementPage: React.FC = () => {
     const fetchConfig = async () => {
       setLoading(true);
       try {
-        const configData = await getConfig('ckanext.udc_react.qa_maturity_levels');
+        const configData = await executeApiCall(() => api.getConfig('ckanext.udc_react.qa_maturity_levels'));
         JSON.parse(configData); // Ensure the fetched data is valid JSON
         setConfigState(configData);
       } catch (error) {
@@ -58,7 +60,7 @@ const ConfigManagementPage: React.FC = () => {
       if (!validation.valid) {
         throw new Error(validation.message);
       }
-      await updateConfig('ckanext.udc_react.qa_maturity_levels', config); // Save the JSON string directly
+      await executeApiCall(() => api.updateConfig('ckanext.udc_react.qa_maturity_levels', config)); // Save the JSON string directly
       setSuccess('Configuration saved successfully!');
     } catch (error) {
       console.error('Failed to save config', error);

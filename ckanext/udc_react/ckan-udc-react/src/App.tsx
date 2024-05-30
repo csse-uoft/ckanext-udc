@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import DrawerDashboard from './dashboard/drawer'
 import QAPage from './qa/QAPage'
 import Footer from './base/footer'
+import { AuthProvider } from './api/authContext';
 
 export default function App() {
 
@@ -15,7 +16,7 @@ export default function App() {
     {
       path: "/*",
       Component() {
-        return <DrawerDashboard />;
+        return <AuthProvider><DrawerDashboard /></AuthProvider>;
       },
     },
   ]);
