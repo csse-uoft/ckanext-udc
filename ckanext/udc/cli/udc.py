@@ -1,6 +1,7 @@
 import click
 import ckan.model as model
 import logging
+from importlib import import_module
 
 
 @click.group(short_help=u"UDC commands.")
@@ -42,4 +43,12 @@ def initdb():
     
     from ..licenses.model import init_tables
     init_tables()
+    
+    # Try import "import_other_portals" models
+    try:
+        lib = import_module("ckanext.udc_import_other_portals.model")
+        lib.init_tables()
+    except:
+        log.warning("Cannot init DB in import_other_portals plugin")
+        
     log.info("DB tables are setup")

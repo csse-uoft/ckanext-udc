@@ -7,3 +7,6 @@ recursive-include ckanext/udc_import *.html *.json *.js *.less *.css *.mo *.yml
 recursive-include ckanext/udc_import/migration *.ini *.py *.mako
 recursive-include ckanext/udc_theme *.html *.json *.js *.less *.css *.mo *.yml
 recursive-include ckanext/udc_theme/migration *.ini *.py *.mako
+recursive-include ckanext/udc_import_other_portals *.html *.json *.js *.less *.css *.mo *.yml
+recursive-include ckanext/udc_import_other_portals/migration *.ini *.py *.mako
+recursive-include ckanext/udc_react *.html *.json *.js *.less *.css *.mo *.yml

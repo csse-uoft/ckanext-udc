@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUDC Consoles</title>
+
+    {% if not is_production %}
+
+        <script type="module">
+            import RefreshRuntime from '{{ react_asset("@react-refresh") }}'
+            RefreshRuntime.injectIntoGlobalHook(window)
+            window.$RefreshReg$ = () => {}
+            window.$RefreshSig$ = () => (type) => type
+            window.__vite_plugin_react_preamble_installed__ = true
+        </script>
+        <script type="module" src="{{ react_asset('@vite/client') }}"></script>
+        {# <link rel="stylesheet" href="{{ react_asset('src/index.css') }}" /> #}
+        <script type="module" src="{{ react_asset('src/main.tsx') }}"></script>
+
+    {% else %}
+    
+        {% set entryPoint = manifest["index.html"] %}
+
+        <script type="module" src="{{ react_asset('index.html') }}"></script>
+        {# Iterate all css files #}
+        {% for css in manifest["index.html"]["css"] %}
+            <link rel="stylesheet" crossorigin href="/udc-react/{{ css }}">
+        {% endfor %}
+
+    {% endif %}
+
+    {# CKAN Stuffs #}
+    <meta name="csrf_field_name" content="{{ g.csrf_field_name }}" />
+    <meta name="{{ g.csrf_field_name }}" content="{{ csrf_token() }}" />
+
+    <link href="/base/vendor/fontawesome-free/css/all.css" rel="stylesheet"/>
+    <link rel="shortcut icon" href="{{ g.favicon }}" />
+    {% set theme = h.get_rtl_theme() if h.is_rtl_language() else g.theme %}
+    {% asset theme %}
+    {{ h.render_assets('style') }}
+    {%- if g.site_custom_css -%}
+      <style>
+        {{ g.site_custom_css | safe }}
+      </style>
+    {%- endif %}
+    
+
+  </head>
+  <body>
+    {# CKAN Header #}
+    {% include "header.html" %}
+    <div id="root"></div>
+    {# {% include "footer.html" %} #}
+
+  </body>
+</html>
