@@ -1,9 +1,5 @@
 import logging
-import json
 from typing import Any, List, Dict
-import traceback
-import asyncio
-import uuid
 
 from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportLog
 from ckanext.udc_import_other_portals.jobs import job_run_import
@@ -14,7 +10,6 @@ import ckan.authz as authz
 import ckan.lib.jobs as jobs
 
 from .base import BaseImport
-from .utils import with_exit_stack
 
 
 log = logging.getLogger(__name__)
@@ -182,17 +177,6 @@ def cudc_import_run(context: Context, data: Dict[str, Any]):
 
     return {"success": True, "message": "Job submitted."}
 
-
-@logic.side_effect_free
-def cudc_import_status_get(context: Context, data: Dict[str, Any]):
-    """
-    Get the previous or current import status.
-    """
-    global import_instance
-    if import_instance:
-        return import_instance.get_status()
-    else:
-        return {"running": False, "message": "There is no previous import."}
 
 @logic.side_effect_free
 def cudc_import_logs_get(context: Context, data_dict):
