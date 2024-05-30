@@ -1,4 +1,4 @@
-import { Box, Container, Link, Typography } from "@mui/material";
+import { Box, Container, Link } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 
 export default function Footer() {

@@ -62,7 +62,7 @@ const ConfigManagementPage: React.FC = () => {
       }
       await executeApiCall(() => api.updateConfig('ckanext.udc_react.qa_maturity_levels', config)); // Save the JSON string directly
       setSuccess('Configuration saved successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save config', error);
       setError(`Failed to save configuration: ${error.message}`);
     }

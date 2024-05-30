@@ -1,5 +1,6 @@
 import React from 'react';
 import Ajv from 'ajv';
+// @ts-ignore
 import { parse } from 'json-source-map';
 import { configSchema } from './maturityLevels';
 

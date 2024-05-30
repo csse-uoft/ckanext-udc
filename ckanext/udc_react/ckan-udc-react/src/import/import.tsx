@@ -67,7 +67,7 @@ function ImportPanel(props: ImportPanelProps) {
   const handleDelete = async () => {
     try {
       if (importConfig.uuid)
-        await executeApiCall(() => api.deleteImportConfig(importConfig.uuid))
+        await executeApiCall(() => api.deleteImportConfig(importConfig.uuid!))
       props.onUpdate();
     } catch (e) {
       console.error(e)
