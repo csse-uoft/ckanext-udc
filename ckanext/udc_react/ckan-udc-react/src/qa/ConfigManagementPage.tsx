@@ -7,7 +7,7 @@ import { qaPageConfig } from './maturityLevels';
 import { useApi } from '../api/useApi';
 
 const ConfigManagementPage: React.FC = () => {
-  const {api, executeApiCall} = useApi();
+  const { api, executeApiCall } = useApi();
 
   const [config, setConfigState] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);

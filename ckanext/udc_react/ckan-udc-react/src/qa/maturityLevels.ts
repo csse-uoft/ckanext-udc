@@ -3,6 +3,7 @@ export interface Detail {
   label: string;
   shortDescription: string;
   longDescription: string;
+  additionalInfo?: { [key: string]: string };
 }
 
 export interface MaturityLevel {
@@ -25,7 +26,7 @@ const maturityLevels: MaturityLevel[] = [
     title: 'Maturity Level 1 (Basic Information)',
     description: 'Focus on descriptions of what the dataset is about supplemented with temporal and geospatial information.',
     details: [
-      { category: 'content', label: 'Domain / Topic', shortDescription: 'Domain or topic of the dataset being cataloged.', longDescription: 'The theme or topic of the package.' },
+      { category: 'content', label: 'Domain / Topic', shortDescription: 'Domain or topic of the dataset being cataloged.', longDescription: 'The theme or topic of the package.', additionalInfo: { 'Info 1': 'Additional information 1', 'Info 2': 'Additional information 2' } },
       { category: 'content', label: 'Title', shortDescription: 'Title for the Dataset.', longDescription: 'Title for the dataset. Often assigned by the creator or publisher.' },
       { category: 'content', label: 'Description', shortDescription: 'A description of the dataset.', longDescription: 'A description of the dataset. Often provided by the creator or publisher.' },
       { category: 'content', label: 'Tags', shortDescription: 'Keywords/tags categorizing the dataset.', longDescription: 'Keywords/tags categorizing the dataset. Often provided by the creator or publisher.' },
@@ -153,6 +154,10 @@ export const configSchema = {
                 label: { type: "string" },
                 shortDescription: { type: "string" },
                 longDescription: { type: "string" },
+                additionalInfo: {
+                  type: "object",
+                  additionalProperties: { type: "string" },
+                },
               },
               required: ["category", "label", "shortDescription", "longDescription"]
             },

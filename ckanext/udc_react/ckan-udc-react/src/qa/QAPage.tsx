@@ -7,7 +7,6 @@ import { highlightText } from './utils';
 import { getMaturityLevels } from '../api/api';
 import { qaPageConfig, PageConfig, Detail, MaturityLevel } from './maturityLevels';
 
-
 const QAPage: React.FC = () => {
   const [expandedPanels, setExpandedPanels] = useState<string[]>([]);
   const [visibleLevels, setVisibleLevels] = useState<{ [key: number]: boolean }>({});
@@ -19,7 +18,7 @@ const QAPage: React.FC = () => {
     const fetchConfig = async () => {
       setLoading(true);
       let config;
-      
+
       try {
         config = await getMaturityLevels();
       } catch (error) {
@@ -28,7 +27,7 @@ const QAPage: React.FC = () => {
       if (!config) {
         config = qaPageConfig;
       }
-      
+
       const initialVisibility = config.maturityLevels.reduce((acc: any, level: MaturityLevel) => {
         acc[level.level] = true;
         return acc;
@@ -94,9 +93,9 @@ const QAPage: React.FC = () => {
 
   const filteredMaturityLevels = pageConfig.maturityLevels.filter(level => {
     const levelMatches = level.title.toLowerCase().includes(searchQuery) || level.description.toLowerCase().includes(searchQuery);
-    const detailsMatch = level.details.some(detail => 
-      detail.label.toLowerCase().includes(searchQuery) || 
-      detail.shortDescription.toLowerCase().includes(searchQuery) || 
+    const detailsMatch = level.details.some(detail =>
+      detail.label.toLowerCase().includes(searchQuery) ||
+      detail.shortDescription.toLowerCase().includes(searchQuery) ||
       detail.longDescription.toLowerCase().includes(searchQuery) ||
       detail.category.toLowerCase().includes(searchQuery)
     );
@@ -141,9 +140,9 @@ const QAPage: React.FC = () => {
       />
       {filteredMaturityLevels.map((level: MaturityLevel) => {
         const levelMatches = level.title.toLowerCase().includes(searchQuery) || level.description.toLowerCase().includes(searchQuery);
-        const filteredDetails = level.details.filter(detail => 
-          detail.label.toLowerCase().includes(searchQuery) || 
-          detail.shortDescription.toLowerCase().includes(searchQuery) || 
+        const filteredDetails = level.details.filter(detail =>
+          detail.label.toLowerCase().includes(searchQuery) ||
+          detail.shortDescription.toLowerCase().includes(searchQuery) ||
           detail.longDescription.toLowerCase().includes(searchQuery) ||
           detail.category.toLowerCase().includes(searchQuery)
         );

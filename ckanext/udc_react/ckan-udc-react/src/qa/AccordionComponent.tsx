@@ -55,15 +55,20 @@ const AccordionComponent: React.FC<AccordionComponentProps> = ({ detail, expande
         <Typography variant="subtitle1">{highlightText(detail.label, query)}</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
           <strong>Category:</strong> {highlightText(detail.category, query)}
         </Typography>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
           <strong>Short Description:</strong> {highlightText(detail.shortDescription, query)}
         </Typography>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
           <strong>Long Description:</strong> {highlightText(detail.longDescription, query)}
         </Typography>
+        {detail.additionalInfo && Object.entries(detail.additionalInfo).map(([key, value]) => (
+          <Typography key={key} variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+            <strong>{key}:</strong> {highlightText(value, query)}
+          </Typography>
+        ))}
       </AccordionDetails>
     </Accordion>
   );
