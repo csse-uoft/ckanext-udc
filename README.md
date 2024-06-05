@@ -117,6 +117,15 @@ Suggested values:
 **TODO:** Add any additional install steps to the list below.
    For example installing any non-Python dependencies or adding any required
    config settings.
+   
+To Install NodeJS 20:
+```shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# Reopen terminal or following the guide in the output to add 'nvm'
+
+# Install NodeJS 20
+nvm install 20
+```
 
 To install ckanext-udc:
 
@@ -136,17 +145,23 @@ To install ckanext-udc:
     pip install -r requirements.txt
     ```
 
-3. Add `udc` to the `ckan.plugins` setting in your CKAN
+3. Add `udc udc_theme udc_import udc_import_other_portals udc_react` to the `ckan.plugins` setting in your CKAN
    config file (by default the config file is located at
    `/etc/ckan/default/ckan.ini`).
+4. Install UDC-React Dependencies & Build
+   ```
+   cd /usr/lib/ckan/default/src/ckanext-udc/ckanext/udc_react/ckan-udc-react
+   npm install
+   npm run build
+   ```
 
-4. Init DB
+6. Init DB
      ```shell
      # Use your own path to the ckan.ini
      ckan -c /etc/ckan/default/ckan.ini udc initdb
      ```
 
-5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
      ```shell
      sudo supervisorctl reload
