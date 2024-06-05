@@ -10,12 +10,13 @@ export interface MaturityLevel {
   level: number;
   title: string;
   description: string;
+  afterDescriptionMarkdown?: string;
   details: Detail[];
+  afterDetailsMarkdown?: string;
 }
 
 export interface PageConfig {
-  title: string;
-  description: string;
+  markdown: string;
   maturityLevels: MaturityLevel[];
 }
 
@@ -25,6 +26,8 @@ const maturityLevels: MaturityLevel[] = [
     level: 1,
     title: 'Maturity Level 1 (Basic Information)',
     description: 'Focus on descriptions of what the dataset is about supplemented with temporal and geospatial information.',
+    afterDescriptionMarkdown: "### Additional Information\n\n* Info 1: Additional information 1\n* Info 2: Additional information 2",
+    afterDetailsMarkdown: "### Additional Information\n\n* Info 1: Additional information 1\n*",
     details: [
       { category: 'content', label: 'Domain / Topic', shortDescription: 'Domain or topic of the dataset being cataloged.', longDescription: 'The theme or topic of the package.', additionalInfo: { 'Info 1': 'Additional information 1', 'Info 2': 'Additional information 2' } },
       { category: 'content', label: 'Title', shortDescription: 'Title for the Dataset.', longDescription: 'Title for the dataset. Often assigned by the creator or publisher.' },
@@ -126,8 +129,7 @@ const maturityLevels: MaturityLevel[] = [
 ];
 
 export const qaPageConfig = {
-  title: 'Maturity Levels',
-  description: 'This page provides information on different maturity levels, each with specific details and criteria to help evaluate datasets.',
+  markdown: '## Maturity Levels\nThis page provides information on different maturity levels, each with specific details and criteria to help evaluate datasets.',
   maturityLevels,
 };
 
@@ -145,6 +147,7 @@ export const configSchema = {
           level: { type: "number" },
           title: { type: "string" },
           description: { type: "string" },
+          afterDescriptionMarkdown: { type: "string" },
           details: {
             type: "array",
             items: {
@@ -162,10 +165,11 @@ export const configSchema = {
               required: ["category", "label", "shortDescription", "longDescription"]
             },
           },
+          afterDetailsMarkdown: { type: "string" },
         },
         required: ["level", "title", "description", "details"]
       },
     },
   },
-  required: ["title", "description", "maturityLevels"]
+  required: ["markdown", "maturityLevels"]
 };

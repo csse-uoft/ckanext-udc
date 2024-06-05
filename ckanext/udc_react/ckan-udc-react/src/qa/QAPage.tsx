@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Container, Collapse, TextField, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Container, Collapse, TextField, CircularProgress, CssBaseline } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccordionComponent from './AccordionComponent';
 import { highlightText } from './utils';
 import { getMaturityLevels } from '../api/api';
 import { qaPageConfig, PageConfig, Detail, MaturityLevel } from './maturityLevels';
+import { Markdown } from './Markdown';
 
 const QAPage: React.FC = () => {
   const [expandedPanels, setExpandedPanels] = useState<string[]>([]);
@@ -104,12 +105,12 @@ const QAPage: React.FC = () => {
 
   return (
     <Container sx={{ padding: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-        <Typography variant="h4">{pageConfig.title}</Typography>
+      <CssBaseline />
+      <Box sx={{ pt: 1 }}>
+        <Markdown>
+          {pageConfig.markdown}
+        </Markdown>
       </Box>
-      <Typography variant="body1" gutterBottom sx={{ whiteSpace: "pre-line" }}>
-        {pageConfig.description}
-      </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
         <Box>
           <Button
@@ -167,6 +168,13 @@ const QAPage: React.FC = () => {
               {highlightText(level.description, searchQuery)}
             </Typography>
             <Collapse in={visibleLevels[level.level]} timeout="auto" unmountOnExit>
+              {level.afterDescriptionMarkdown && (
+                <Box sx={{ pt: 1 }}>
+                  <Markdown>
+                    {level.afterDescriptionMarkdown}
+                  </Markdown>
+                </Box>
+              )}
               {levelMatches || filteredDetails.length > 0 ? (
                 filteredDetails.map((detail: Detail, index: number) => (
                   <AccordionComponent
@@ -179,6 +187,13 @@ const QAPage: React.FC = () => {
                 ))
               ) : (
                 <Typography variant="body2" sx={{ padding: 2 }}>No matching details found.</Typography>
+              )}
+              {level.afterDetailsMarkdown && (
+                <Box sx={{ pt: 1, mb: -1.5 }}>
+                  <Markdown>
+                    {level.afterDetailsMarkdown}
+                  </Markdown>
+                </Box>
               )}
             </Collapse>
           </Box>
