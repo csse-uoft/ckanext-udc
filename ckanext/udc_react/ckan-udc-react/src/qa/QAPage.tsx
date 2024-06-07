@@ -98,7 +98,8 @@ const QAPage: React.FC = () => {
       detail.label.toLowerCase().includes(searchQuery) ||
       detail.shortDescription.toLowerCase().includes(searchQuery) ||
       detail.longDescription.toLowerCase().includes(searchQuery) ||
-      detail.category.toLowerCase().includes(searchQuery)
+      detail.category.toLowerCase().includes(searchQuery) ||
+      Object.values(detail.additionalInfo || {}).some(info => info.toLowerCase().includes(searchQuery))
     );
     return levelMatches || detailsMatch;
   });
@@ -145,7 +146,8 @@ const QAPage: React.FC = () => {
           detail.label.toLowerCase().includes(searchQuery) ||
           detail.shortDescription.toLowerCase().includes(searchQuery) ||
           detail.longDescription.toLowerCase().includes(searchQuery) ||
-          detail.category.toLowerCase().includes(searchQuery)
+          detail.category.toLowerCase().includes(searchQuery) ||
+          Object.values(detail.additionalInfo || {}).some(info => info.toLowerCase().includes(searchQuery))
         );
 
         return (
