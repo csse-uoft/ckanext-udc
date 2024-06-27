@@ -11,8 +11,11 @@ export default function Footer() {
       <Grid container>
         <Grid xs={8}>
           <Grid container direction={"column"}>
-            <Link href="https://data.urbandatacentre.ca/about" color="inherit" underline="hover">
+            <Link href="/about" color="inherit" underline="hover">
               About Canadian Urban Data Catalogue (CUDC)
+            </Link>
+            <Link href="/udc-react/qa" color="inherit" underline="hover">
+              Maturity Model FAQ
             </Link>
             <Link href="https://urbandatacentre.ca" color="inherit" underline="hover">
               About Urban Data Centre
