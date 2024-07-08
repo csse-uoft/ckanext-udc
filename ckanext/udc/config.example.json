@@ -19,13 +19,13 @@
                     "label": "Domain / Topic",
                     "type": "text",
                     "short_description": "Domain or topic of the dataset being cataloged.",
-                    "long_description": "The theme or topic of the package.",
+                    "long_description": "The theme or topic of the catalogue entry. Please select from an existing topic, such as Transportation, Housing, etc. Please refer to the taxonomy of topics available.",
                     "category": "content"
                 },
                 {
                     "ckanField": "title",
                     "short_description": "Title for the Dataset.",
-                    "long_description": "Title for the dataset. Often assigned by the creator or publisher.",
+                    "long_description": "Title for the dataset. The value should be descriptive of the dataset. Vague or general terms should be avoided. Duplicate titles in a series should be postfixed with a counter. Often assigned by the creator or publisher.",
                     "category": "content"
                 },
                 {
@@ -34,13 +34,43 @@
                 {
                     "ckanField": "description",
                     "short_description": "A description of the dataset.",
-                    "long_description": "A description of the dataset. Often provided by the creator or publisher.",
+                    "long_description": "This property holds a descriptive text introducing the dataset, context, and if applicable, stakeholders. Often provided by the creator or publisher.",
                     "category": "content"
                 },
                 {
                     "ckanField": "tags",
                     "short_description": "Keywords/tags categorizing the dataset.",
-                    "long_description": "Keywords/tags categorizing the dataset. Often provided by the creator or publisher.",
+                    "long_description": "Keywords/tags categorizing the dataset. Often provided by the creator or publisher. The keywords can be added, but suitable keywords should be selected from existing values, if possible. A controlled vocabulary of keywords, organized as a taxonomy, is created for each domain/topic.",
+                    "category": "content"
+                },
+                {
+                    "name": "file_format",
+                    "label": "Format (CSV, XLS, TXT, PDF, etc)",
+                    "short_description": "Format of the dataset.",
+                    "long_description": "Format of the dataset can indicate its file type (e.g. csv, pdf, ttl). If multiple types are available, the types are separated by commas (“csv, ttl, pdf”).",
+                    "type": "multiple_select",
+                    "optionsFromQuery": {
+                        "text": "label",
+                        "value": "s",
+                        "query": "select * where {?s a <http://purl.org/dc/terms/MediaType>. ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label.}"
+                    },
+                    "allowNewOption": false,
+                    "category": "content"
+                },
+                {
+                    "name": "file_size",
+                    "label": "Dataset Size",
+                    "type": "number",
+                    "short_description": "Dataset size in megabytes.",
+                    "long_description": "Total size of the datasets in this catalogue entry Saved as an integer of megabtyes (MB).Dataset size in megabytes.",
+                    "category": "content"
+                },
+                {
+                    "name": "unique_metadata_identifier",
+                    "label": "Metadata Identifier",
+                    "short_description": "Metadata identifier – can be used as the unique identifier for catalogue entry",
+                    "long_description": "Unique identifier for the metadata catalogue. Often assigned by the creator or publisher.",
+                    "type": "text",
                     "category": "content"
                 },
                 {
@@ -48,7 +78,7 @@
                     "label": "Published Date",
                     "type": "date",
                     "short_description": "Published date of the dataset.",
-                    "long_description": "Published date of the dataset. Often provided by the creator or publisher.",
+                    "long_description": "Published date of the dataset is the data when the dataset was first made accessible to the public. Often provided by the creator or publisher.",
                     "category": "provenance"
                 },
                 {
@@ -83,14 +113,6 @@
             "name": "maturity_level_2",
             "fields": [
                 {
-                    "name": "unique_identifier",
-                    "label": "Identifier",
-                    "short_description": "Unique identifier for the dataset.",
-                    "long_description": "Unique identifier for the dataset. Often assigned by the creator or publisher.",
-                    "type": "text",
-                    "category": "content"
-                },
-                {
                     "name": "access_category",
                     "label": "Access category",
                     "short_description": "Type of access granted for the dataset (open, closed, etc).",
@@ -101,7 +123,15 @@
                 {
                     "ckanField": "license_id",
                     "short_description": "License used to access the dataset.",
-                    "long_description": "License used to access the dataset. Often provided by the creator or publisher.",
+                    "long_description": "License used to access the dataset. Often provided by the creator or publisher. A license should be selected from existing licenses.  A custom license can be added if an applicable license is not available. The licenses must be defined externally, meaning, a temporary or placeholder license or  should not be added. ",
+                    "category": "access"
+                },
+                {
+                    "name": "limits_on_use",
+                    "label": "Limits on use",
+                    "type": "text",
+                    "short_description": "Limits on use of data.",
+                    "long_description": "Limits on use (e.g., academic purposes). Information provided generally provides more detail on the terms and access rights beyond the license. Usually provided by the rights owner, creator, or publisher.",
                     "category": "access"
                 },
                 {
@@ -115,7 +145,7 @@
                     "name": "data_service",
                     "label": "Data Service",
                     "short_description": "Data service for accessing a dataset.",
-                    "long_description": "Data service for accessing a dataset.",
+                    "long_description": "Data service for accessing a dataset. This references the architecture being used to host and manage access to the datasets, such as CKAN, Dataverse, etc.",
                     "category": "ownership"
                 },
                 {
@@ -144,7 +174,7 @@
                 {
                     "name": "publisher_email",
                     "label": "Publisher Email",
-                    "short_description": "Email of the publisher",
+                    "short_description": "Email of the publisher.",
                     "long_description": "Email of the dataset's publisher. Can be used to contact the author directly.",
                     "category": "ownership"
                 },
@@ -156,7 +186,7 @@
                 },
                 {
                     "ckanField": "author_email",
-                    "short_description": "Email of the author",
+                    "short_description": "Email of the author.",
                     "long_description": "Email of the dataset's author. Can be used to contact the author directly.",
                     "category": "ownership"
                 },
@@ -164,7 +194,7 @@
                     "name": "accessed_date",
                     "label": "Accessed At",
                     "short_description": "Date the data and metadata was accessed.",
-                    "long_description": "Date the data and metadata was accessed. This date identifies when the dataset and metadata were reviewed for entry into CUDR. Usually, this is provided by data curator or the data owner if provided indirectly from the owner.",
+                    "long_description": "Date the data and metadata was accessed. This date identifies when the dataset and metadata were reviewed for entry into CUDC. Usually, this is provided by data curator or the data owner if provided indirectly from the owner.",
                     "type": "date",
                     "category": "content"
                 }
@@ -175,11 +205,11 @@
             "name": "maturity_level_3",
             "fields": [
                 {
-                    "name": "description_document",
-                    "label": "Link to dataset description",
+                    "name": "unique_identifier",
+                    "label": "Identifier",
+                    "short_description": "Unique identifier for the dataset.",
+                    "long_description": "Unique identifier for the dataset.  Often assigned by the creator or publisher.",
                     "type": "text",
-                    "short_description": "A URL to an external document describing the dataset.",
-                    "long_description": "A URL to an external document describing the dataset. Often this would be a website that provides additional details about the dataset. It can also link to a document (e.g. PDF) or a resource of some sort (e.g. LinkedData object).",
                     "category": "content"
                 },
                 {
@@ -193,6 +223,14 @@
                     },
                     "short_description": "Language(s) of the dataset",
                     "long_description": "Language(s) of the dataset capture what language the data is in. It does not reflect the language o the metadata associated with it.",
+                    "category": "content"
+                },
+                {
+                    "name": "description_document",
+                    "label": "Link to dataset description",
+                    "type": "text",
+                    "short_description": "A URL to an external document describing the dataset.",
+                    "long_description": "A URL to an external document describing the dataset. Often this would be a website that provides additional details about the dataset. It can also link to a document (e.g. PDF) or a resource of some sort (e.g. LinkedData object).",
                     "category": "content"
                 },
                 {
@@ -240,106 +278,10 @@
                     ]
                 },
                 {
-                    "name": "file_format",
-                    "label": "Format (CSV, XLS, TXT, PDF, etc)",
-                    "short_description": "Format of the dataset.",
-                    "long_description": "Format of the dataset can indicate its file type (e.g. csv, pdf, ttl).",
-                    "type": "multiple_select",
-                    "optionsFromQuery": {
-                        "text": "label",
-                        "value": "s",
-                        "query": "select * where {?s a <http://purl.org/dc/terms/MediaType>. ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label.}"
-                    },
-                    "allowNewOption": false,
-                    "category": "access"
-                },
-                {
-                    "ckanField": "source",
-                    "short_description": "Source of the dataset.",
-                    "long_description": "Source where the dataset can be accessed, such as a URL.",
-                    "category": "access"
-                },
-                {
-                    "ckanField": "version",
-                    "short_description": "Version of the datatset",
-                    "long_description": "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a date (e.g. Jan 1, 2022) or a textual description (e.g. 'First version published for public use').",
-                    "category": "content"
-                },
-                {
-                    "name": "version_info",
-                    "label": "Version notes",
-                    "type": "text",
-                    "short_description": "Version notes about the dataset.",
-                    "long_description": "Additional information about the version, such as date it was published, reasons for publishing, etc.",
-                    "category": "provenance"
-                },
-                {
-                    "name": "version_dataset",
-                    "label": "Is version of another dataset",
-                    "type": "text",
-                    "short_description": "Link to dataset that it is a version of.",
-                    "long_description": "Link to dataset that it is a version of.",
-                    "category": "provenance"
-                },
-                {
-                    "name": "dataset_versions",
-                    "label": "Other versions",
-                    "type": "text",
-                    "short_description": "Link to datasets that are versions of it.",
-                    "long_description": "Link to datasets that are versions of it.",
-                    "category": "provenance"
-                },
-                {
-                    "name": "provenance",
-                    "label": "Provenance Text",
-                    "type": "text",
-                    "short_description": "Provenance Text of the data.",
-                    "long_description": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
-                    "category": "provenance"
-                },
-                {
-                    "name": "provenance_url",
-                    "label": "Provenance URL",
-                    "type": "text",
-                    "short_description": "Provenance URL of the data.",
-                    "long_description": "The source URL for the provenance of the data",
-                    "category": "provenance"
-                },
-                {
-                    "name": "temporal_resolution",
-                    "label": "Temporal resolution",
-                    "type": "text",
-                    "short_description": "Describes how granular the date/time data in the dataset is.",
-                    "long_description": "Describes how granular the date/time data in the dataset is. Usually, this explains the level of aggregation provided by the dataset. For example, time-series data can be by minute, hour, year, or season.",
-                    "category": "tempo_geo"
-                },
-                {
-                    "name": "geospatial_resolution_in_meters",
-                    "label": "GeoSpatial resolution in meters",
-                    "type": "text",
-                    "short_description": "Describes how granular (in meters) geospatial data is in the dataset.",
-                    "long_description": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
-                    "category": "tempo_geo"
-                },
-                {
-                    "name": "geospatial_resolution",
-                    "label": "GeoSpatial resolution (in regions)",
-                    "type": "text",
-                    "short_description": "Describes how granular (in regions) geospatial data is in the dataset.",
-                    "long_description": "Describes how granular (in regions) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be at the city, province, region, or country level. It can also be stored as a polygon defined by longitude/latitude coordinates.",
-                    "category": "tempo_geo"
-                }
-            ]
-        },
-        {
-            "title": "Maturity Level 4 (Privacy, including Indigenous data)",
-            "name": "maturity_level_4",
-            "fields": [
-                {
                     "name": "contains_individual_data",
                     "label": "Contains Individual Data",
                     "short_description": "Does the data hold individualized data?",
-                    "long_description": "Does the data hold individualized data? If yes, the dataset is aggregated at the individual level.",
+                    "long_description": "Captures whether the dataset holds data about individuals in a population? If yes, the dataset is aggregated at the individual level. If not, the data is aggerated. This does not mean the individuals cannot be inferred from the dataset. Other metadata properties are required to indicate whether individuals can be inferred from the dataset or not.",
                     "category": "content",
                     "type": "single_select",
                     "options": [
@@ -400,15 +342,95 @@
                             "value": "No"
                         }
                     ]
+                }
+            ]
+        },
+        {
+            "title": "Maturity Level 4 (Privacy)",
+            "name": "maturity_level_4",
+            "fields": [
+                {
+                    "ckanField": "version",
+                    "short_description": "Version of the datatset",
+                    "long_description": "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a date (e.g. Jan 1, 2022) or a textual description (e.g. 'First version published for public use').",
+                    "category": "content"
                 },
                 {
-                    "name": "limits_on_use",
-                    "label": "Limits on use",
-                    "type": "text",
-                    "short_description": "Limits on use of data.",
-                    "long_description": "Limits on use (e.g., academic purposes). Information provided generally provides more detail on the terms and access rights beyond the license. Usually provided by the rights owner, creator, or publisher.",
+                    "ckanField": "source",
+                    "short_description": "Source of the dataset.",
+                    "long_description": "Source where the dataset can be accessed, such as a URL.",
                     "category": "access"
                 },
+                {
+                    "name": "version_info",
+                    "label": "Version notes",
+                    "type": "text",
+                    "short_description": "Version notes about the dataset.",
+                    "long_description": "Additional information about the version, such as date the dataset was published, reasons for publishing, changes from previous version, etc.",
+                    "category": "provenance"
+                },
+                {
+                    "name": "version_dataset",
+                    "label": "Is version of another dataset",
+                    "type": "text",
+                    "short_description": "Link to dataset that it is a version of.",
+                    "long_description": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is an updated version of.",
+                    "category": "provenance"
+                },
+                {
+                    "name": "dataset_versions",
+                    "label": "Other versions",
+                    "type": "text",
+                    "short_description": "Link to datasets that are versions of it.",
+                    "long_description": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is the original version of.",
+                    "category": "provenance"
+                },
+                {
+                    "name": "provenance",
+                    "label": "Provenance Text",
+                    "type": "text",
+                    "short_description": "Provenance Text of the data.",
+                    "long_description": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
+                    "category": "provenance"
+                },
+                {
+                    "name": "provenance_url",
+                    "label": "Provenance URL",
+                    "type": "text",
+                    "short_description": "Provenance URL of the data.",
+                    "long_description": "If there is additional documentation about the provenance of the catalogued dataset, this property stores a URL to the external location where this information is available.",
+                    "category": "provenance"
+                },
+                {
+                    "name": "temporal_resolution",
+                    "label": "Temporal resolution",
+                    "type": "text",
+                    "short_description": "Describes how granular the date/time data in the dataset is.",
+                    "long_description": "Describes how granular the date/time data in the dataset is. Usually, this explains the level of aggregation provided by the dataset. For example, time-series data can be by minute, hour, year, or season.",
+                    "category": "tempo_geo"
+                },
+                {
+                    "name": "geospatial_resolution_in_meters",
+                    "label": "GeoSpatial resolution in meters",
+                    "type": "text",
+                    "short_description": "Describes how granular (in meters) geospatial data is in the dataset.",
+                    "long_description": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
+                    "category": "tempo_geo"
+                },
+                {
+                    "name": "geospatial_resolution",
+                    "label": "GeoSpatial resolution (in regions)",
+                    "type": "text",
+                    "short_description": "Describes how granular (in regions) geospatial data is in the dataset.",
+                    "long_description": "Describes how granular (in regions) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be at the city, province, region, or country level. It can also be stored as a polygon defined by longitude/latitude coordinates.",
+                    "category": "tempo_geo"
+                }
+            ]
+        },
+        {
+            "title": "Maturity Level 5 (Indigenous Data)",
+            "name": "maturity_level_5",
+            "fields": [
                 {
                     "name": "indigenous_community_permission",
                     "label": "Indigenous Community Permission",
@@ -418,260 +440,21 @@
                     "category": "access"
                 },
                 {
+                    "name": "community_steward",
+                    "label": "Community Permission",
+                    "type": "text",
+                    "short_description": "Community permission (who gave permission).",
+                    "long_description": "Community permission identifies the person or contact information indicating who tocontact about gaining permission to use the data that belongs to an entire comunity. This comunity steward speaks on behalf of the enture community regarding access to the dataset.",
+                    "category": "ownership"
+                },
+
+                {
                     "name": "indigenous_span",
                     "label": "The Indigenous communities the dataset is about",
                     "type": "text",
                     "short_description": "Indigenous communities from which data is derived.",
                     "long_description": "Indigenous communities from which data is derived. this represents the community coverage of the communities that provided the data or are the subject of data stored in the dataset.",
                     "category": "tempo_geo"
-                }
-            ]
-        },
-        {
-            "title": "Maturity Level 5 (FAIR)",
-            "name": "maturity_level_5",
-            "fields": [
-                {
-                    "label": "Data complies with a community standard (RDA-R1.3-01D)",
-                    "name": "fair_rda_r1_3_01d",
-                    "short_description": "This indicator requires that data complies with community standards. (FAIR ID = RDA-R1.3-01D).",
-                    "long_description": "This indicator is linked to the following principle: R1.3: (Meta)data meet domain relevant community standards. The indicator can be evaluated by verifying that the data follows a community standard. A service like the RDA-endorsed FAIR-sharing could be helpful to identify the relevant standards. The indicator can be evaluated by verifying that the data follows a community standard. A service like the RDA-endorsed FAIR-sharing could be helpful to identify the relevant standards.",
-                    "category": "content",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data uses knowledge representation expressed in standardised format (RDA-I1-01D)",
-                    "name": "fair_rda_i1_01d",
-                    "short_description": "The indicator serves to determine that an appropriate standard is used to express knowledge, in particular the data model and format (FAIR ID = RDA-I1-01D).",
-                    "long_description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. The indicator can be evaluated by looking at information about the data model and format, verifying that the standard used is appropriate for the domain and the type of digital object. Deciding on the appropriateness of the knowledge representation may be based on its inclusion in a registry like the one developed by FAIR-sharing.",
-                    "category": "content",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data uses machine-understandable knowledge representation (RDA-I1-02D)",
-                    "name": "fair_rda_i1_02d",
-                    "short_description": "This indicator focuses on the machine-understandability aspect of the data. This means that data should be readable and thus interoperable for machines without any requirements such as specific translators or mappings (FAIR ID = RDA-I1-02D).",
-                    "long_description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. This indicator can be evaluated by looking at the knowledge representation model used for the expression of the data. Examples are RDF, OWL, JSON-LD, Data Cube, the Generalized Data Model for clinical research and SKOS. Information about models and formats can be looked up in a registry like the RDA endorsed FAIR-sharing (see for example: https://fairsharing.org/standards/?q=&selected_facets=type_exact:model/format).",
-                    "category": "content",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data uses FAIR-compliant vocabularies (RDA-I2-01D)",
-                    "name": "fair_rda_i2_01d",
-                    "short_description": "The indicator requires the controlled vocabulary used for the data to conform to the FAIR principles, and at least be documented and resolvable using globally unique and persistent identifiers. The documentation needs to be easily findable and accessible (FAIR ID = RDA-I2-01D).",
-                    "long_description": "This indicator is linked to the following principle: I2 : (Meta)data use vocabularies that follow the FAIR principles. The indicator can be evaluated by verifying that each of the vocabularies used in the data is documented and resolvable using globally unique and persistent identifiers, with the documentation being easily findable and accessible. Typically, the reference to the specification of the vocabularies used will be included in the documentation of the digital object or the repository where it is kept.",
-                    "category": "content",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data includes references to other data (RDA-I3-01D )",
-                    "name": "fair_rda_i3_01d",
-                    "short_description": "This indicator is about the way data is connected to other data, for example linking to previous or related research data that provides additional context to the data (FAIR ID = RDA-I3-01D).",
-                    "long_description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. The indicator can be evaluated by looking at the presence of references to other data in the data. For example, there may be links to other resources in cells in a spreadsheet, or in RDF-based data.",
-                    "category": "content",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data is accessible through an access protocol that supports authentication and authorisation (RDA-A1.2-01D)",
-                    "name": "fair_rda_a1_2_01d",
-                    "short_description": "The indicator requires that if the data or local environment indicates a degree of additional protection then the access protocol must support authentication and authorisation of people and/or machines? (FARI ID = RDA-A1.2-01D)",
-                    "long_description": "This indicator is linked to the following principle: A1.2: The protocol allows for an authentication and authorisation where necessary. The indicator can be evaluated by assessing whether an authentication and authorisation process is present in the protocol (e.g. HMAC).",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data can be accessed manually (RDA-A1-02D)",
-                    "name": "fair_rda_a1_02d",
-                    "short_description": "Data can be accessed manually (i.e., with human intervention, FAIR ID = RDA-A1-02D).",
-                    "long_description": "The indicator refers to any human interactions that are needed if the requester wants to access the digital object. The FAIR principle refers mostly to automated interactions where a machine is able to access the digital object, but there may also be digital objects that require human interactions, such as clicking on a link on a landing page, sending an e-mail to the data owner, or even calling by telephone. This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator can be evaluated by looking for information in the metadata that describes how access to the digital object can be obtained through human intervention.",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data identifier resolves to a digital object (RDA-A1-03D)",
-                    "name": "fair_rda_a1_03d",
-                    "short_description": "Data identifier resolves to a digital object (FAIR ID = RDA-A1-03D)",
-                    "long_description": "This indicator is about the resolution of the identifier that identifies the digital object. The identifier assigned to the data should be associated with a formally defined retrieval/resolution mechanism that enables access to the digital object or provides access instructions for access in the case of human-mediated access. The FAIR principle and this indicator do not say anything about the mutability or immutability of the digital object that is identified by the data identifier -- this is an aspect that should be governed by a persistence policy of the data provider. This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator can be evaluated by invoking the mechanism specific to the protocol (e.g. GET for HTTP) and verifying that this delivers the digital object.",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data is accessible through a standardised protocol (RDA-A1-04D)",
-                    "name": "fair_rda_a1_04d",
-                    "short_description": "The indicator refers to automated interactions between machines to access digital objects (FAIR ID = RDA-A1-04D).",
-                    "long_description": "The indicator reflects the way machines interact and grant access to the digital object. This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. This indicator can be evaluated by resolving the link to the data, e.g. by resolving the persistent identifier and verifying that the data is reached. In the common case that the identifier is an HTTP URI, this can be done using the HTTP GET method. The evaluator or evaluation tool may also want to verify that the resolution delivers the correct data.",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data can be accessed automatically (RDA-A1-05D)",
-                    "name": "fair_rda_a1_05d",
-                    "short_description": "Data can be accessed automatically (i.e. by a computer program, FAIR ID = RDA-A1-05D)",
-                    "long_description": "The indicator refers to automated interactions between machines to access digital objects. The way machines interact and grant access to the digital object will be evaluated by the indicator. This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. This indicator can be evaluated by resolving the link to the data, e.g. by resolving the persistent identifier and verifying that the data is reached. In the common case that the identifier is an HTTP URI, this can be done using the HTTP GET method. The evaluator or evaluation tool may also want to verify that the resolution delivers the correct data.",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
-                },
-                {
-                    "label": "Data is accessible through a free access protocol (RDA-A1.1-01D)",
-                    "name": "fair_rda_a1_1_01d",
-                    "short_description": "The indicator requires that the protocol can be used free of charge which facilitates unfettered access (FAIR ID = RDA-A1.1-01D).",
-                    "long_description": "This indicator is linked to the following principle:A1.1 : The protocol is open, free and universally implementable. This indicator can be evaluated by verifying that the protocol is free of charge. This is the case for most protocols in use, for example HTTP and FTP.",
-                    "category": "access",
-                    "type": "single_select",
-                    "options": [
-                        {
-                            "text": "N/A",
-                            "value": ""
-                        },
-                        {
-                            "text": "Yes",
-                            "value": "Yes"
-                        },
-                        {
-                            "text": "No",
-                            "value": "No"
-                        }
-                    ]
                 }
             ]
         },
@@ -804,6 +587,11 @@
         "dcat:accessURL": {
             "@id": "{quote_url(location)}"
         },
+        "cudr:catalogueEntryIdentifier": "{unique_metadata_identifier}",
+        "cudr:file_size": {
+            "@type": "xsd:decimal",
+            "@value": "{file_size}"
+        },
         "dcat:accessService": {
             "@id": "http://data.urbandatacentre.ca/data_service/{generate_uuid()}",
             "@type": "dcat:DataService",
@@ -878,9 +666,9 @@
         },
         "cudr:spatialResolutionInRegion": {
             "@id": "http://data.urbandatacentre.ca/administrativeArea/{generate_uuid()}",
-        	"@type" : "sc:AdministrativeArea",
-        	"sc:name": "{geospatial_resolution}"
-    	},
+            "@type" : "sc:AdministrativeArea",
+            "sc:name": "{geospatial_resolution}"
+        },
 
 
 
@@ -898,8 +686,8 @@
             "@value": "{to_bool(contains_indigenous_data)}"
         },
         "odrl:hasPolicy": {
-        	"@type"		: "odrl:Policy",
-        	"@value"	: "{limits_on_use}"
+            "@type"     : "odrl:Policy",
+            "@value"    : "{limits_on_use}"
         },
         "cudr:indigenousRightsHolder": {
             "@id": "http://data.urbandatacentre.ca/indigenousRightsHolder/{generate_uuid()}",
@@ -907,6 +695,13 @@
                 "foaf:Agent"
             ],
             "foaf:name": "{indigenous_community_permission}"
+        },
+        "cudr:communityRightsHolder": {
+            "@id": "http://data.urbandatacentre.ca/communityRightsHolder/{generate_uuid()}",
+            "@type": [
+                "foaf:Agent"
+            ],
+            "foaf:name": "{community_steward}"
         },
         "cudr:spatialIndigenousCommunity": {
             "@type": "dct:Location",
