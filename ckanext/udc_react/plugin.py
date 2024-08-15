@@ -60,10 +60,9 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     "import",
                     "import-status",
                     "qa",
-                    "maturity-levels",
-                    "maturity-levels/preview"
                 ]
-                if path in react_paths:
+                react_path_start_with = ["maturity-levels", "chatgpt-summary"]
+                if path in react_paths or any([path.startswith(p) for p in react_path_start_with]):
 
                     def dev_asset(file_path):
                         return f"{self.VITE_ORIGIN}/{UDC_REACT_PATH}/{file_path}"

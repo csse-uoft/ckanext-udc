@@ -1,14 +1,25 @@
 const baseURL = window.location.origin;
 
 export async function fetchWithErrorHandling(url: string, options?: RequestInit) {
-  const response = await fetch(url, options);
-  const data = await response.json();
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw data;
+    if (!response.ok) {
+      throw data;
+    }
+
+    return data;
+  } catch (error) {
+    if (error?.response) {
+      const jsonError = await error.response.json(); // must await for response
+      throw jsonError;
+    } else {
+      throw error
+    }
+
   }
 
-  return data;
 }
 
 export async function getImportConfigs() {
@@ -96,4 +107,52 @@ export async function updateConfig(configKey: string, value: string) {
   if (!result.success) {
     throw result.error;
   }
+}
+
+export interface CKANOrganization {
+  approval_status: string;
+  created: string;
+  description: string;
+  display_name: string;
+  id: string;
+  image_display_url: string;
+  image_url: string;
+  is_organization: boolean;
+  name: string;
+  num_followers: number;
+  package_count: number;
+  state: string;
+  title: string;
+  type: string;
+}
+
+export async function getOrganizations(): Promise<CKANOrganization[]> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/organization_list?all_fields=true&type=organization");
+  return result.result;
+}
+
+export async function packageSearch(q: string, rows: number, start: number, sort?: string, fq?: string) {
+  const params = { q, fq, rows, start, sort, facet: 'false' };
+  let paramsStr = Object.entries(params)
+    .filter(([k, v]) => (k != null && v != null))
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&')
+
+
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/package_search?" + paramsStr);
+  return result.result;
+}
+
+export async function generateSummary(id: string): Promise<{prompt: string, results: string[]}> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/summary_generate", {
+    method: "POST",
+    body: JSON.stringify({ id }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
 }

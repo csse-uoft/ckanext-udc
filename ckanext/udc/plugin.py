@@ -28,6 +28,9 @@ from ckanext.udc.graph.preload import preload_ontologies
 from ckanext.udc.licenses.logic.action import license_create, license_delete, licenses_get, init_licenses
 from ckanext.udc.licenses.utils import license_options_details
 from ckanext.udc.file_format.logic import file_format_create, file_format_delete, file_formats_get
+from ckanext.udc.desc.actions import summary_generate
+from ckanext.udc.desc.utils import init_plugin as init_udc_desc
+
 
 """
 See https://docs.ckan.org/en/latest/theming/templates.html
@@ -97,6 +100,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         
         # Load custom licenses
         init_licenses()
+        
+        # Init chatgpt summary plugin
+        init_udc_desc()
 
         log.info("UDC Plugin Loaded!")
 
@@ -146,7 +152,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 field: [tk.get_validator('ignore_missing'),
                         tk.get_converter('convert_to_extras')],
             })
-
+       
+        schema.update({
+            # ---- chatgpt summary ------
+            "chatgpt_summary": [tk.get_validator('ignore_missing'),
+                                tk.get_converter('convert_to_extras')],
+        })
         return schema
 
     def create_package_schema(self) -> Schema:
@@ -166,6 +177,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 field: [tk.get_converter('convert_from_extras'),
                         tk.get_validator('ignore_missing')],
             })
+        
+        schema.update({
+            # ---- chatgpt summary ------
+            "chatgpt_summary": [tk.get_converter('convert_from_extras'),
+                                tk.get_validator('ignore_missing')],
+        })
 
         return schema
 
@@ -213,6 +230,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             'ckanext.udc.dataset_side_panel_text': [
                 ignore_missing, unicode_safe
             ],
+            # ---- chatgpt summary config ------
+            'ckanext.udc.desc.config': [
+                ignore_missing, unicode_safe
+            ],
         })
 
         return schema
@@ -234,7 +255,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # Custom file format
             "file_format_create": file_format_create,
             "file_format_delete": file_format_delete,
-            "file_formats_get": file_formats_get
+            "file_formats_get": file_formats_get,
+            
+            # Chatgpt summary actions
+            "summary_generate": summary_generate,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

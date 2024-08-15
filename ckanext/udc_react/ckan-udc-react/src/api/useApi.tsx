@@ -6,7 +6,7 @@ export function useApi() {
   const { handleError } = useAuthErrorHandler();
 
   const executeApiCall = useCallback(
-    async (apiCall: () => Promise<any>) => {
+    async <T,>(apiCall: () => Promise<T>): Promise<T> => {
       try {
         return await apiCall();
       } catch (error) {

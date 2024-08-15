@@ -1,8 +1,10 @@
-import { CloudSync, Publish, Edit, OpenInBrowser } from '@mui/icons-material';
+import { CloudSync, Publish, Edit, OpenInBrowser, Settings } from '@mui/icons-material';
 import ImportDashboard from '../import/import';
 import { ImportStatus } from '../import/importStatus';
 import QAPage from '../qa/QAPage';
 import ConfigManagementPage from '../qa/ConfigManagementPage';
+import ChatGPTSummarySettings from '../chatgptSummary/ChatGPTSummarySettings';
+import ManagerSummary from '../chatgptSummary/ManageSummary';
 
 
 export interface DrawerItem {
@@ -55,6 +57,23 @@ const drawerConfig: DrawerConfig = {
           icon: <OpenInBrowser/>,
           path: "/udc-react/maturity-levels/preview",
           component: QAPage,
+        }
+      ]
+    },
+    {
+      title: "ChatGPT Summary",
+      items: [
+        {
+          text: "Manage Summary",
+          icon: <Edit />,
+          path: "/udc-react/chatgpt-summary/manage",
+          component: ManagerSummary,
+        },
+        {
+          text: "Settings",
+          icon: <Settings/>,
+          path: "/udc-react/chatgpt-summary/settings",
+          component: ChatGPTSummarySettings,
         }
       ]
     }

@@ -6,7 +6,7 @@ export default defineConfig({
   base: "/udc-react",
   plugins: [react()],
   optimizeDeps: {
-    include: ['@mui/material/Tooltip', '@emotion/styled'],
+    include: ['@emotion/styled'],
   },
   build: {
     manifest: true,
