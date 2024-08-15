@@ -1,64 +1,8 @@
 from ckanext.udc_import_other_portals.logic import CKANBasedImport
+from ckanext.udc_import_other_portals.logic.ckan_based.api import import_package, get_package_ids, get_package
 
 from datetime import datetime
 
-
-# Map city of toronto -> UDC
-# one-to-one mapping without modification
-package_mapping = {
-    "author": "author",
-    "author_email": "author_email",
-    # "Table", "Map"
-    "dataset_category": "",
-    # In "2019-07-23 17:53:27.345526"
-    "date_published": "",
-    # Short description
-    "excerpt": "",
-    # Comma separated, free text
-    "formats": "file_format",
-    # Try keeping the id same
-    "id": "id",
-    "information_url": "data_service",
-    # String "true", "false"
-    "is_retired": "",
-    # Boolean true, false
-    "isopen": "",
-    # ?
-    "last_refreshed": "",
-    "license_id": "license_id",
-    # Same as the `license_id`
-    "license_title": "",
-    # CKAN Field, we don't use it
-    "maintainer": "maintainer",  # keep it?
-    "maintainer_email": "maintainer_email",  # keep it?
-    # CKAN Internal field that track the create/update time
-    "metadata_created": "metadata_created",
-    "metadata_modified": "metadata_modified",
-    # string id, "polls-conducted-by-the-city"
-    "name": "name",
-    "notes": "notes",
-    # "City Clerk's Office"
-    "owner_division": "",
-    # We don't have it
-    "owner_email": "owner",
-    # Daily
-    "refresh_rate": "",
-    # active
-    "state": "",
-    "title": "title",
-    "topics": "theme",
-    "version": "version",
-    # Removed
-    "excerpt": "",
-    "groups": "",
-    "num_resources": "",
-    "num_tags": "",
-    "organization": "",
-    "owner_org": "",
-    "private": "",
-    "relationships_as_object": "",
-    "relationships_as_subject": "",
-}
 
 # Map city of toronto -> UDC
 # one-to-one mapping without modification
@@ -86,11 +30,26 @@ package_mapping = {
 
 
 class CityOfTorontoImport(CKANBasedImport):
-    def __init__(self):
+    def __init__(self, context, import_config):
         super().__init__(
+            context, import_config,
             # City of Toronto URL
             "https://ckan0.cf.opendata.inter.prod-toronto.ca/api",
         )
+
+    def iterate_imports(self):
+        """
+        Iterate all possible imports from the source api.
+        """
+        global get_package_ids, get_package
+        packages_ids = get_package_ids(self.base_api)
+
+        # Set the import size for reporting in the frontend
+        # self.import_size = len(packages_ids)
+        # yield get_package("c21f3bd1-e016-4469-abf5-c58bb8e8b5ce", self.base_api)
+        for package_id in packages_ids:
+            package = get_package(package_id, self.base_api)
+            yield package
 
     def map_to_cudc_package(self, src: dict):
         """
@@ -100,8 +59,8 @@ class CityOfTorontoImport(CKANBasedImport):
             src (dict): The source package that needs to be mapped.
         """
         # Default fields in CUDC
-        target = {"owner_org": "city-of-toronto-open-data", "type": "catalogue"}
-        
+        target = {"owner_org": self.import_config.owner_org, "type": "catalogue"}
+
         global package_mapping
 
         # One-to-one Mapping
@@ -118,10 +77,15 @@ class CityOfTorontoImport(CKANBasedImport):
         # date_published -> published_date
         # "2019-07-23 17:53:27.345526" -> "2019-07-23"
         global datetime
-        target["published_date"] = datetime.fromisoformat(
-            src["date_published"]
-        ).strftime("%Y-%m-%d")
-
+        try:
+            target["published_date"] = datetime.strptime(
+                src["date_published"], "%Y-%m-%d %H:%M:%S.%f"
+            ).strftime("%Y-%m-%d")
+        except:
+            target["published_date"] = datetime.strptime(
+                src["date_published"], "%Y-%m-%d %H:%M:%S"
+            ).strftime("%Y-%m-%d")
+        
         # maintainer -> publisher
         target["publisher"] = src["maintainer"]
         # maintainer_email -> publisher_email

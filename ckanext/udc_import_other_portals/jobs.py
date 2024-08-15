@@ -1,5 +1,3 @@
-import logging
-import json
 from typing import Any, List, Dict, cast
 from datetime import datetime
 
@@ -7,12 +5,9 @@ from ckanext.udc_import_other_portals.logger import ImportLogger
 
 from ckan.types import Context
 import ckan.logic as logic
-import ckan.authz as authz
-import ckan.lib.jobs as jobs
 import ckan.model as model
 
 from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportLog
-from .logic.base import BaseImport
 
 
 def job_run_import(import_config_id: str, run_by: str):
@@ -24,9 +19,11 @@ def job_run_import(import_config_id: str, run_by: str):
         logic.ValidationError
     """
     logger = ImportLogger()
-    import_log = CUDCImportLog(import_config_id=import_config_id, 
-                               run_at=datetime.utcnow(),
-                               run_by=run_by)
+    import_log_data = {
+        "import_config_id": import_config_id,
+        "run_at": datetime.utcnow(),
+        "run_by": run_by
+    }
     userobj = model.User.get(run_by)
     
     import_instance = None
@@ -66,7 +63,6 @@ def job_run_import(import_config_id: str, run_by: str):
             raise logic.ValidationError("DefaultImportClass is not defined.")
 
         try:
-            import_instance = DefaultImportClass()
             context = cast(
                 Context,
                 {
@@ -76,7 +72,12 @@ def job_run_import(import_config_id: str, run_by: str):
                     "auth_user_obj": userobj,
                 },
             )
-            import_instance.run_imports(context)
+            import_config.run_by = run_by
+            import_instance = DefaultImportClass(context, import_config)
+            import_instance.run_imports()
+            model.Session.add(import_config)
+            model.Session.commit()
+
         except Exception as e:
             raise logger.exception(e)
 
@@ -84,6 +85,8 @@ def job_run_import(import_config_id: str, run_by: str):
         raise logger.exception(e)
     finally:
         # Finished
+        import_log = CUDCImportLog(**import_log_data)
+
         if import_instance:
             import_log.has_error = logger.has_error or import_instance.logger.has_error
             import_log.has_warning = logger.has_warning or import_instance.logger.has_warning
@@ -91,7 +94,7 @@ def job_run_import(import_config_id: str, run_by: str):
         else:
             import_log.has_error = logger.has_error
             import_log.has_warning = logger.has_warning
-            import_log.logs = "\n".join([*logger.logs].join("\n"))
+            import_log.logs = "\n".join([*logger.logs])
         import_log.finished_at = datetime.utcnow()
         print(import_log.logs)
         

@@ -48,7 +48,8 @@ def initdb():
     try:
         lib = import_module("ckanext.udc_import_other_portals.model")
         lib.init_tables()
-    except:
+    except Exception as e:
+        print(e)
         log.warning("Cannot init DB in import_other_portals plugin")
         
     log.info("DB tables are setup")

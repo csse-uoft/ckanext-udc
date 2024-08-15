@@ -128,6 +128,8 @@ def cudc_import_config_delete(context: Context, data: Dict[str, Any]):
     uuid_to_delete = data.get("uuid")
     if not uuid_to_delete:
         raise logic.ValidationError("uuid missing.")
+    
+    # TODO: check if any package is imported by this config
 
     CUDCImportConfig.delete_by_id(uuid_to_delete)
     model.Session.commit()

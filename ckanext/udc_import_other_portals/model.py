@@ -24,7 +24,7 @@ class CUDCImportConfig(Base):
     name = Column(types.UnicodeText)
     code = Column(types.UnicodeText)
     notes = Column(types.UnicodeText)
-    # "CKAN", "Socrata"
+    # "ckan", "socrata"
     platform = Column(types.UnicodeText)
     # The organization to import into
     owner_org = Column(types.UnicodeText)
@@ -33,6 +33,7 @@ class CUDCImportConfig(Base):
     created_by = Column(types.UnicodeText, ForeignKey(model.User.id), nullable=False)
 
     other_config = Column(MutableDict.as_mutable(JSONB))
+    other_data = Column(MutableDict.as_mutable(JSONB))
     # https://cloud.google.com/scheduler/docs/configuring/cron-job-schedules
     cron_schedule = Column(types.UnicodeText)
     is_running = Column(types.BOOLEAN)
@@ -67,7 +68,8 @@ class CUDCImportConfig(Base):
             "owner_org": self.owner_org,
             "stop_on_error": self.stop_on_error,
             "created_by": self.created_by,
-            "other_config": self.other_config,
+            "other_config": self.other_config or {},
+            "other_data": self.other_data or {},
             "cron_schedule": self.cron_schedule,
             "is_running": self.is_running,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -141,6 +143,6 @@ class CUDCImportLog(Base):
 
 
 def init_tables():
-    # CUDCImportConfig.__table__.drop(model.meta.engine)
     # CUDCImportLog.__table__.drop(model.meta.engine)
+    # CUDCImportConfig.__table__.drop(model.meta.engine)
     Base.metadata.create_all(model.meta.engine)

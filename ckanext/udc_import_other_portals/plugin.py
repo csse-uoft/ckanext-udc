@@ -13,14 +13,18 @@ from .logic.actions import (
     cudc_import_logs_get,
     cudc_import_log_delete,
 )
+from .logic.relationships import init_relationships
 
 log = logging.getLogger(__name__)
 
 
 class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IConfigurable)
+    
 
     def configure(self, config: CKANConfig):
+        init_relationships()
         log.info("Udc ImportOtherPortals Plugin Loaded!")
 
     # IActions

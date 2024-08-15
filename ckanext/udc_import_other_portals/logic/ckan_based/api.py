@@ -15,7 +15,7 @@ def get_package(package_id, base_api, api_key=None):
             f"{base_api}/3/action/package_show?id={package_id}", headers=headers
         ).json()
     except:
-        raise ValueError(f"Cannot find package from UDC with id={package_id}")
+        raise ValueError(f"Cannot find package with id={package_id}")
     if res.get("error"):
         raise ValueError(f"{res['error'].get('__type')}: {res['error'].get('message')}")
     return res["result"]
@@ -78,3 +78,11 @@ def check_existing_package_id_or_name(id_or_name: str, base_api):
     except:
         pass
     return False
+
+
+def check_site_alive(base_api):
+    try:
+        res = requests.get(f"{base_api}/3/action/site_read").json()
+        return res["result"]
+    except:
+        return False
