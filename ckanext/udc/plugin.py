@@ -18,7 +18,7 @@ from ckan.common import current_user, CKANConfig
 
 import logging
 from ckanext.udc.cli import udc as cli_udc
-from ckanext.udc.validator import udc_config_validor
+from ckanext.udc.validator import udc_config_validator
 from ckanext.udc.helpers import config_option_update, get_full_search_facets,\
       get_default_facet_titles, process_facets_fields, humanize_entity_type, get_maturity_percentages,\
       package_update, package_delete, get_system_info
@@ -230,8 +230,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return True
 
     def package_types(self):  # -> list[str]
-        # This plugin doesn't handle any special package types, it just
-        # registers itself as the default (above).
+        # This plugin just registers itself as the 'catalogue'.
         return ['dataset', 'catalogue']
 
     def update_config_schema(self, schema: Schema):
@@ -243,7 +242,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         schema.update({
             # This is a custom configuration option
             'ckanext.udc.config': [
-                ignore_missing, unicode_safe, udc_config_validor
+                ignore_missing, unicode_safe, udc_config_validator
             ],
             'ckanext.udc.group_side_panel_text': [
                 ignore_missing, unicode_safe

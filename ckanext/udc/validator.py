@@ -16,7 +16,7 @@ REQUIRED_CKAN_FIELDS = [
 ]
 
 
-def udc_config_validor(config_str):
+def udc_config_validator(config_str):
     """
     Check whether the UDC config is valid.
     Raise a `tk.Invalid` Error when config is not valid, otherwire return the original config string.
