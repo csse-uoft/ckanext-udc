@@ -14,8 +14,8 @@ from pathlib import Path
 import requests
 from .constants import UDC_REACT_PATH
 
-from ckanext.udc_react.actions import get_maturity_levels
-
+from ckanext.udc_react.actions import get_maturity_levels, get_ws_token
+from ckanext.udc_react.socketio import initSocketIO
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     "import",
                     "import-status",
                     "qa",
+                    "realtime-status"
                 ]
                 react_path_start_with = ["maturity-levels", "chatgpt-summary"]
                 if path in react_paths or any([path.startswith(p) for p in react_path_start_with]):
@@ -140,7 +141,8 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                             },
                         )
                     
-
+        # Socket.io
+        initSocketIO(app)
 
         return app
 
@@ -187,4 +189,5 @@ class UdcReactPlugin(plugins.SingletonPlugin):
     def get_actions(self):
         return {
             'get_maturity_levels': get_maturity_levels,
+            'get_ws_token': get_ws_token,
         }

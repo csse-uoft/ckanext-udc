@@ -5,6 +5,7 @@ import QAPage from '../qa/QAPage';
 import ConfigManagementPage from '../qa/ConfigManagementPage';
 import ChatGPTSummarySettings from '../chatgptSummary/ChatGPTSummarySettings';
 import ManagerSummary from '../chatgptSummary/ManageSummary';
+import { RealtimeImportStatus } from '../import/realtime/RealtimeImportStatus';
 
 
 export interface DrawerItem {
@@ -40,6 +41,12 @@ const drawerConfig: DrawerConfig = {
           icon: <CloudSync />,
           path: "/udc-react/import-status",
           component: ImportStatus,
+        },
+        {
+          text: "Realtime Status",
+          icon: <CloudSync />,
+          path: "/udc-react/realtime-status",
+          component: RealtimeImportStatus,
         }
       ]
     },

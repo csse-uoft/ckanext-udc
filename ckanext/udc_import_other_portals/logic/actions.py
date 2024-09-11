@@ -1,7 +1,9 @@
 import logging
+import uuid
+from datetime import datetime
 from typing import Any, List, Dict
 
-from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportLog
+from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportJob
 from ckanext.udc_import_other_portals.jobs import job_run_import
 
 from ckan.types import Context
@@ -158,24 +160,41 @@ def cudc_import_run(context: Context, data: Dict[str, Any]):
     if not isinstance(data, dict):
         raise logic.ValidationError("Input should be a dict.")
 
-    uuid = data.get("uuid")
+    config_uuid = data.get("uuid")
     print(data)
 
-    if not uuid:
+    if not config_uuid:
         raise logic.ValidationError("uuid should be provided.")
 
-    current_config = CUDCImportConfig.get(uuid)
+    current_config = CUDCImportConfig.get(config_uuid)
     if not current_config:
         raise logic.ValidationError("import config does not exists.")
     
     if not current_config.code:
         raise logic.ValidationError("Code does not existed.")
     
-    if current_config.is_running:
-        raise logic.ValidationError("Another import instance is running.")
+    # if current_config.is_running:
+    #     raise logic.ValidationError("Another import instance is running.")
+    
+    current_config.is_running = True
+    model.Session.add(current_config)
+    
+
+    # Init the import log instance
+    job_uuid = str(uuid.uuid4())
+    import_log_data = {
+        "import_config_id": config_uuid,
+        "run_at": datetime.utcnow(),
+        "run_by": userobj.id,
+        "id": job_uuid,
+        "is_running": True
+    }
+    import_log = CUDCImportJob(**import_log_data)
+    model.Session.add(import_log)
+    model.Session.commit()
 
     # Submit the job
-    jobs.enqueue(job_run_import, [uuid, userobj.id])
+    jobs.enqueue(job_run_import, [config_uuid, userobj.id, job_uuid])
 
     return {"success": True, "message": "Job submitted."}
 
@@ -211,7 +230,7 @@ def cudc_import_logs_get(context: Context, data_dict):
         raise logic.ValidationError("config_id should be provided.")
     
     
-    logs = CUDCImportLog.get_by_config_id(config_id)
+    logs = CUDCImportJob.get_by_config_id(config_id)
     
     return [log.as_dict() for log in logs]
 
@@ -242,5 +261,5 @@ def cudc_import_log_delete(context: Context, data: Dict[str, Any]):
     if not id_to_delete:
         raise logic.ValidationError("id missing.")
 
-    CUDCImportLog.delete_by_id(id_to_delete)
+    CUDCImportJob.delete_by_id(id_to_delete)
     model.Session.commit()

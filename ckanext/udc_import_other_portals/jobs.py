@@ -7,10 +7,10 @@ from ckan.types import Context
 import ckan.logic as logic
 import ckan.model as model
 
-from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportLog
+from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportJob
 
 
-def job_run_import(import_config_id: str, run_by: str):
+def job_run_import(import_config_id: str, run_by: str, job_id: str):
     """
     Run imports.
     Raises:
@@ -19,11 +19,6 @@ def job_run_import(import_config_id: str, run_by: str):
         logic.ValidationError
     """
     logger = ImportLogger()
-    import_log_data = {
-        "import_config_id": import_config_id,
-        "run_at": datetime.utcnow(),
-        "run_by": run_by
-    }
     userobj = model.User.get(run_by)
     
     import_instance = None
@@ -41,8 +36,8 @@ def job_run_import(import_config_id: str, run_by: str):
             )
 
         # Check existing import instance
-        if import_config.is_running:
-            raise logger.exception(logic.ValidationError("Already running."))
+        # if import_config.is_running:
+        #     raise logger.exception(logic.ValidationError("Already running."))
 
         code = import_config.code
         if not code:
@@ -73,7 +68,7 @@ def job_run_import(import_config_id: str, run_by: str):
                 },
             )
             import_config.run_by = run_by
-            import_instance = DefaultImportClass(context, import_config)
+            import_instance = DefaultImportClass(context, import_config, job_id)
             import_instance.run_imports()
             model.Session.add(import_config)
             model.Session.commit()
@@ -85,7 +80,8 @@ def job_run_import(import_config_id: str, run_by: str):
         raise logger.exception(e)
     finally:
         # Finished
-        import_log = CUDCImportLog(**import_log_data)
+        import_log = CUDCImportJob.get(job_id)
+        import_log.is_running = False
 
         if import_instance:
             import_log.has_error = logger.has_error or import_instance.logger.has_error

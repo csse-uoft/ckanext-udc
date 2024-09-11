@@ -156,3 +156,13 @@ export async function generateSummary(id: string): Promise<{prompt: string, resu
   }
   return result.result;
 }
+
+export async function GetWsToken() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_ws_token", {
+    method: "GET"
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}

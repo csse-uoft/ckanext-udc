@@ -67,7 +67,7 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
           Logs:
         </Typography>
         <CodeMirror
-          value={data.logs}
+          value={data.logs || ''}
           // @ts-ignore
           options={{
             theme: 'material',

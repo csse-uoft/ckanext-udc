@@ -1,4 +1,5 @@
-from ckanext.udc_import_other_portals.logger import ImportLogger
+from ckanext.udc_import_other_portals.logger import ImportLogger, generate_trace
+from ckanext.udc_import_other_portals.worker.socketio_client import SocketClient
 import ckan.plugins.toolkit as toolkit
 from ckan.types import Context
 import ckan.logic as logic
@@ -47,7 +48,7 @@ def import_package(context: Context, package: dict, merge: bool = False):
 
     if not is_id_existed and is_name_existed:
         raise ImportError(
-            f"There is an {is_name_existed} with the 'different id' but the 'same name'."
+            f'There is a package name={package["name"]} with the "different id" but the "same name".'
         )
 
     existing_package = {}
@@ -70,6 +71,7 @@ def import_package(context: Context, package: dict, merge: bool = False):
     # print(action, existing_package)
 
     logic.get_action(action)(context, existing_package)
+    return "created" if action == "package_create" else "updated"
 
 
 def delete_package(context: Context, package_id: str):
@@ -85,10 +87,12 @@ class BaseImport:
     logger = ImportLogger(base_logger)
     import_size = 0
     running = False
+    socket_client: SocketClient = None
 
-    def __init__(self, context, import_config):
+    def __init__(self, context, import_config, job_id):
         self.context = context
         self.import_config = import_config
+        self.job_id = job_id
 
     def build_context(self):
         userobj = model.User.get(self.import_config.run_by)
@@ -103,38 +107,128 @@ class BaseImport:
         )
         return context
 
+    def map_to_cudc_package(self, src: dict):
+        """
+        Map source package to cudc package.
+
+        Args:
+            src (dict): The source package that needs to be mapped.
+        """
+        raise NotImplementedError()
+
+    def process_package(self, src):
+        """
+        Process a single package: map it to cudc package and import it.
+
+        Args:
+            src (dict): The source package to process.
+
+        Returns:
+            str: The ID of the mapped package.
+        """
+        try:
+            mapped = self.map_to_cudc_package(src)
+        except Exception as e:
+            self.logger.error(f"ERROR: Failed to map package from source.")
+            self.logger.exception(e)
+            self.logger.finished_one(
+                "errored",
+                mapped["id"],
+                mapped["name"],
+                mapped["title"],
+                f"Failed to map package from source.\n{generate_trace(e)}",
+            )
+            raise
+
+        try:
+            action_done, duplications_log, err_msg = self.import_to_cudc(mapped)
+            self.logger.info(f'INFO: Updated {mapped["name"]} ({mapped["id"]})')
+            if err_msg:
+                # Package is imported but deduplications run into issues
+                self.logger.finished_one(
+                    "errored",
+                    mapped["id"],
+                    mapped["name"],
+                    mapped["title"],
+                    logs=err_msg,
+                    duplications=duplications_log,
+                )
+            else:
+                self.logger.finished_one(
+                    action_done,
+                    mapped["id"],
+                    mapped["name"],
+                    mapped["title"],
+                    duplications=duplications_log,
+                )
+
+            return mapped["id"], mapped["name"]
+        except Exception as e:
+            self.logger.error(
+                f'ERROR: Failed to update {mapped["name"]} ({mapped["id"]})'
+            )
+            self.logger.exception(e)
+            self.logger.finished_one(
+                "errored",
+                mapped["id"],
+                mapped["name"],
+                mapped["title"],
+                f'ERROR: Failed to update {mapped["name"]} ({mapped["id"]})\n{generate_trace(e)}',
+            )
+            raise
+
     def import_to_cudc(self, package, merge=False):
         """
         Call the API to do the actual import for a single package.
         """
-        
+
         # Save which import config it used
         package["cudc_import_config_id"] = self.import_config.id
-        
+
         # Use different context for each package import
         # This will replace with the exisiting package
-        import_package(self.build_context(), package, merge)
+        action_done = import_package(self.build_context(), package, merge)
+        duplications_log = None
+        err_msg = None
 
         # Duplication check
-        duplication_result, reason = find_duplicated_packages(self.build_context(), package, self.import_config.id)
-        if duplication_result:
-            
-            if duplication_result["count"] >= 20:
-                self.logger.error(f'Skipped: More than 20 packages are duplicated for package {package["name"]}({package["id"]}), {reason}')
-                self.logger.error(', '.join([f'{p["name"]}({p["id"]})' for p in duplication_result["results"]]))
-                return
-            
-            self.logger.warning(f'Found {duplication_result["count"]} duplication(s) for package {package["name"]}({package["id"]}), {reason}')
-            self.logger.warning(', '.join([f'{p["name"]}({p["id"]})' for p in duplication_result["results"]]))
-            
-            try:
-                process_duplication(self.build_context(), [package, *duplication_result["results"]])
-            except:
-                self.logger.error(f'Failed to create unified package.')
-                raise
-            
+        duplications, reason = find_duplicated_packages(
+            self.build_context(), package, self.import_config.id
+        )
 
+        if duplications:
 
+            duplications_log = [
+                {"id": p["id"], "name": p["name"], "title": p["title"], 'reason': reason}
+                for p in duplications["results"]
+            ]
+
+            if duplications["count"] >= 20:
+                err_msg = f'Skipped: More than 20 packages are duplicated for package {package["name"]}({package["id"]}), {reason}'
+                err_msg += ", ".join(
+                    [f'{p["name"]}({p["id"]})' for p in duplications["results"]]
+                )
+                self.logger.error(err_msg)
+            else:
+                self.logger.warning(
+                    f'Found {duplications["count"]} duplication(s) for package {package["name"]}({package["id"]}), {reason}'
+                )
+                self.logger.warning(
+                    ", ".join(
+                        [f'{p["name"]}({p["id"]})' for p in duplications["results"]]
+                    )
+                )
+
+                try:
+                    process_duplication(
+                        self.build_context(), [package, *duplications["results"]]
+                    )
+                except Exception as e:
+                    self.logger.error(f"Failed to create unified package.")
+                    self.logger.exception(e)
+                    err_msg = f"Package is imported but failed to create a unified package.\n{generate_trace(e)}"
+
+        return action_done, duplications_log, err_msg
 
     def run_imports(self):
         """

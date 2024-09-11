@@ -30,9 +30,9 @@ package_mapping = {
 
 
 class CityOfTorontoImport(CKANBasedImport):
-    def __init__(self, context, import_config):
+    def __init__(self, context, import_config, job_id):
         super().__init__(
-            context, import_config,
+            context, import_config, job_id,
             # City of Toronto URL
             "https://ckan0.cf.opendata.inter.prod-toronto.ca/api",
         )

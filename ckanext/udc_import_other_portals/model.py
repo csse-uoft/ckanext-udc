@@ -55,7 +55,7 @@ class CUDCImportConfig(Base):
     
     @classmethod
     def delete_by_id(cls, id):
-        CUDCImportLog.delete_by_config_id(id)
+        CUDCImportJob.delete_by_config_id(id)
         model.Session.query(cls).filter(cls.id == id).delete()
 
     def as_dict(self):
@@ -82,8 +82,8 @@ class CUDCImportConfig(Base):
         return model.Session.query(cls).order_by(cls.created_at).all()
 
 
-class CUDCImportLog(Base):
-    __tablename__ = "cudc_import_log"
+class CUDCImportJob(Base):
+    __tablename__ = "cudc_import_job"
 
     id = Column(types.UnicodeText, primary_key=True, default=_types.make_uuid)
     import_config_id = Column(
@@ -96,6 +96,7 @@ class CUDCImportLog(Base):
     run_at = Column(types.DateTime, default=datetime.datetime.utcnow)
     finished_at = Column(types.DateTime)
     run_by = Column(types.UnicodeText, ForeignKey(model.User.id))
+    is_running = Column(types.BOOLEAN)
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -116,6 +117,10 @@ class CUDCImportLog(Base):
     @classmethod
     def get_by_config_id(cls, id):
         return model.Session.query(cls).filter(cls.import_config_id == id).order_by(cls.run_at).all()
+    
+    @classmethod
+    def get_running_jobs_by_config_id(cls, id):
+        return model.Session.query(cls).filter(cls.import_config_id == id).filter(cls.is_running == True).order_by(cls.run_at).all()
 
 
     def as_dict(self):
@@ -143,6 +148,7 @@ class CUDCImportLog(Base):
 
 
 def init_tables():
-    # CUDCImportLog.__table__.drop(model.meta.engine)
+    # Uncomment the following two lines to clear the tables
+    # CUDCImportJob.__table__.drop(model.meta.engine)
     # CUDCImportConfig.__table__.drop(model.meta.engine)
     Base.metadata.create_all(model.meta.engine)

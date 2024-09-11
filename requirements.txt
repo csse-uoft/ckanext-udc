@@ -5,3 +5,5 @@ graphdb-importer @ git+https://github.com/csse-uoft/graphdb-importer@f1cf9597833
 numpy>=1.24.4
 pandas>=2.0.3
 openai>=1.37.1
+Flask-SocketIO>=5.3.6
+python-socketio[client]>=5.11.3

@@ -1,5 +1,5 @@
 import requests
-
+from requests.adapters import HTTPAdapter, Retry
 
 def get_package_ids(base_api):
     res = requests.get(f"{base_api}/3/action/package_list").json()
@@ -7,11 +7,14 @@ def get_package_ids(base_api):
 
 
 def get_package(package_id, base_api, api_key=None):
+    session = requests.Session()
+    retries = Retry(total=10, backoff_factor=1, status_forcelist=[ 104, 502, 503, 504 ])
     headers = None
     if api_key:
         headers = {"Authorization": api_key}
     try:
-        res = requests.get(
+        session.mount('https://', HTTPAdapter(max_retries=retries))
+        res = session.get(
             f"{base_api}/3/action/package_show?id={package_id}", headers=headers
         ).json()
     except:
@@ -19,6 +22,52 @@ def get_package(package_id, base_api, api_key=None):
     if res.get("error"):
         raise ValueError(f"{res['error'].get('__type')}: {res['error'].get('message')}")
     return res["result"]
+
+
+def get_all_packages(base_api, api_key=None):
+    """
+    Retrieve all packages from the CKAN API using the package_search endpoint.
+    
+    :param base_url: The base URL of the CKAN instance (e.g., "https://demo.ckan.org")
+    :param api_key: Optional API key for authorization, if required
+    :return: A list of all packages
+    """
+    session = requests.Session()
+    retries = Retry(total=10, backoff_factor=1, status_forcelist=[ 104, 502, 503, 504 ])
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+    
+    packages = []
+    rows = 500
+    offset = 0
+    headers = {'Authorization': api_key} if api_key else {}
+
+    while True:
+        # Construct the API request URL
+        url = f"{base_api}/3/action/package_search?rows={rows}&start={offset}"
+        print(f"getting package rows={rows} offset={offset}")
+        
+        try:
+            # Make the API request
+            response = session.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+
+            if not data['success']:
+                raise Exception(f"API request failed: {data['error']}")
+
+            # Extract the results
+            result_packages = data['result']['results']
+            if not result_packages:
+                break  # Stop if no more packages are returned
+
+            packages.extend(result_packages)
+            offset += rows  # Increase the offset for the next request
+            
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+            break
+
+    return packages
 
 
 def package_delete(package_id, base_api, api_key):

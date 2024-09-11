@@ -20,15 +20,21 @@
     "@mui/x-data-grid": "^7.11.0",
     "@uiw/react-codemirror": "^4.22.1",
     "ajv": "^8.14.0",
+    "esbuild-plugin-react-virtualized": "^1.0.4",
     "json-source-map": "^0.6.1",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "react-virtualized": "^9.22.5",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.7",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/react-virtualized": "^9.21.30",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
