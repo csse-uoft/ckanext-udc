@@ -1,5 +1,5 @@
 import { Card, CardContent, Typography, Box } from '@mui/material';
-import { List, AutoSizer } from 'react-virtualized';
+import { List, AutoSizer, Index } from 'react-virtualized';
 import React, { useEffect, useRef, useState } from 'react';
 import { ImportLog } from './types';
 import { debounce } from 'lodash';
@@ -30,9 +30,10 @@ export const LogsPanel: React.FC<LogsPanelProps> = ({ importLogs, autoScroll }) 
         const newLogs = [...prevLogs, ...logQueueRef.current];
         logQueueRef.current = []; // Clear the queue after rendering
 
-        const isAtBottom = list
-          ? list.scrollHeight - list.scrollTop === list.clientHeight
-          : false;
+        // const isAtBottom = list
+        //   ? list.scrollHeight - list.scrollTop === list.clientHeight
+        //   : false;
+        const isAtBottom = true; // Always auto-scroll for now
 
         if (list && autoScroll && isAtBottom) {
           setTimeout(() => list.scrollToRow(newLogs.length - 1), 0); // Auto-scroll to the bottom
@@ -67,9 +68,9 @@ export const LogsPanel: React.FC<LogsPanelProps> = ({ importLogs, autoScroll }) 
                 width={width}
                 height={height}
                 rowCount={renderedLogs.length}
-                rowHeight={(idx) =>
-                  renderedLogs[idx]
-                    ? renderedLogs[idx].message.split('\n').length * 20
+                rowHeight={(idx: Index) =>
+                  renderedLogs[idx.index]
+                    ? renderedLogs[idx.index].message.split('\n').length * 20
                     : 20
                 }
                 rowRenderer={renderLogRow}

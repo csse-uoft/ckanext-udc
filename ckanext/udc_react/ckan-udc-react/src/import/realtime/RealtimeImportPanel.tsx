@@ -87,7 +87,7 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
 
     })();
 
-    return () => socket && socket.close();
+    return () => socket && socket.close() && setSocket(undefined);
   }, [props.uuid]);
 
   const handleJobSelection = (event: any) => {

@@ -9,7 +9,7 @@ export function RealtimeImportStatus() {
   const [tabs, setTabs] = useState<IDynamicTab[]>([]);
 
   const load = async (option?: string) => {
-    const importConfigs = await executeApiCall(api.getImportConfigs);
+    const importConfigs = await executeApiCall(api.getImportConfigs) as Record<string, { code: string, name: string }>;
     const newTabs = [];
     for (const [uuid, { code, name }] of Object.entries(importConfigs)) {
       newTabs.push({

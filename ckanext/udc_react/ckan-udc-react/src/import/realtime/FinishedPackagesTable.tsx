@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Popover, Typography, Tooltip, TablePagination, MenuItem, Select, FormControl, List, ListItem } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Popover, Typography, Tooltip, TablePagination, MenuItem, Select, FormControl, List, ListItem, SelectChangeEvent } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -43,11 +43,11 @@ export const FinishedPackagesTable: React.FC<FinishedPackagesTableProps> = ({ fi
       case 'errored':
         return <ErrorIcon color="error" />;
       default:
-        return null;
+        return <span />;
     }
   };
 
-  const handleChangeTypeFilter = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleChangeTypeFilter = (event: SelectChangeEvent<string>) => {
     setTypeFilter(event.target.value as string);
     setPage(0);
   };

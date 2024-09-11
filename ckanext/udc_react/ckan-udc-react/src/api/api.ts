@@ -10,7 +10,7 @@ export async function fetchWithErrorHandling(url: string, options?: RequestInit)
     }
 
     return data;
-  } catch (error) {
+  } catch (error: any) {
     if (error?.response) {
       const jsonError = await error.response.json(); // must await for response
       throw jsonError;
@@ -155,6 +155,20 @@ export async function generateSummary(id: string): Promise<{prompt: string, resu
     throw result.error;
   }
   return result.result;
+}
+
+export async function updatePackage(id: string, data: any) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/package_update", {
+    method: "POST",
+    body: JSON.stringify({ id, ...data }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+
+  if (!result.success) {
+    throw result.error;
+  }
 }
 
 export async function GetWsToken() {
