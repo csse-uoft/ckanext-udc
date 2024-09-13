@@ -24,13 +24,19 @@ class SocketClient:
             self.registered = True
             print("Client registered successfully with the server.")
 
+        debug = config.get("debug", False)
         self.sio.connect(
-            "ws://localhost:5000", transports=["websocket"], namespaces=[self.namespace]
+            f"ws://localhost:{'5000' if debug else '8080'}",
+            transports=["websocket"],
+            namespaces=[self.namespace],
         )
-        # Reuse beaker.session.validate_key for socket validation 
+
+        # Reuse beaker.session.validate_key for socket validation
         valication_key = config.get("beaker.session.validate_key")
-        self.sio.emit("register", data=(job_id, valication_key), namespace=self.namespace)
-        
+        self.sio.emit(
+            "register", data=(job_id, valication_key), namespace=self.namespace
+        )
+
         @self.sio.on("stop_job", namespace=self.namespace)
         def on_stop_requested():
             # Ask the executor to stop the job gracefully
@@ -40,7 +46,6 @@ class SocketClient:
                 print("Shutting down executor")
                 self.executor.shutdown(cancel_futures=True)
                 self.sio.emit("job_stopped", (job_id,), namespace=self.namespace)
-            
 
     def send_message(self, log_level: str, message: str):
         """
@@ -67,14 +72,14 @@ class SocketClient:
             self.sio.emit("progress_update", progress_data, namespace=self.namespace)
         else:
             print("Client is not registered yet. Progress not sent.")
-    
+
     def finish_one(self, type: str, data: dict):
         """
         Sends a message to the server indicating that a package import has been completed.
-        
+
         type: created, updated, deleted, errored
         data: {
-            "id": id, "name": name, "title": title, 
+            "id": id, "name": name, "title": title,
             "logs": [str],
             "duplications": {"id": id, "name": name, "title": title}
             }
