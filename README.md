@@ -148,6 +148,9 @@ To install ckanext-udc:
 3. Add `udc udc_theme udc_import udc_import_other_portals udc_react` to the `ckan.plugins` setting in your CKAN
    config file (by default the config file is located at
    `/etc/ckan/default/ckan.ini`).
+
+    Adjust `ckan.jobs.timeout` to 36000 (10 hours)
+
 4. Install UDC-React Dependencies & Build
    ```
    cd /usr/lib/ckan/default/src/ckanext-udc/ckanext/udc_react/ckan-udc-react
