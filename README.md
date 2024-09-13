@@ -155,18 +155,64 @@ To install ckanext-udc:
    npm run build
    ```
 
-6. Init DB
+5. Init DB
      ```shell
      # Use your own path to the ckan.ini
      ckan -c /etc/ckan/default/ckan.ini udc initdb
      ```
 
-7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+6. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
      ```shell
      sudo supervisorctl reload
      ```
 
+## Configure deployment server to support websocket connection
+
+1. Reinstall uwsgi with SSL support
+    ```shell
+    sudo apt-get install libssl-dev
+
+    source /usr/lib/ckan/default/bin/activate
+
+    # Uninstall previous version of `uwsgi` if exists
+    pip uninstall uwsgi
+
+    ## Manually build uwsgi with SSL support
+    # set necessary lib paths
+    export CFLAGS="-I/usr/include/openssl"
+    # aarch64-linux-gnu folder used for ARM architecture and may be different for your env
+    # use [apt-file list libssl-dev] to check lib folders (apt-file should be additionally installed)
+    export LDFLAGS="-L/usr/lib/aarch64-linux-gnu"
+    # activate SSL support
+    export UWSGI_PROFILE_OVERRIDE=ssl=true
+    # build uwsgi using pip (--no-use-wheel deprecated so used --no-binary instead)
+    # this command will install 2.0.20 version. Version may be changed or removed. It is not mandatory
+    pip install -I --no-binary=:all: --no-cache-dir uwsgi
+
+    # Check SSL support
+    uwsgi --help | grep https
+    ```
+
+2. Add to `/etc/ckan/default/ckan-uwsgi.ini`
+    > Remove `enable-threads` and `threads` if exists, threading is not compitable with `gevent`.
+    ```ini
+    gevent          =  100 # number of coroutine
+    http-websockets = true
+    ```
+
+3. Update nginx config `sudo nano /etc/nginx/sites-enabled/ckan`
+    
+    Add the following after `location / {...}`
+    ```nginx
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:8080/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+    ```
 
 ## Config settings
 
