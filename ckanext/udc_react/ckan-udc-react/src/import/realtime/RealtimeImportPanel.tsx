@@ -100,7 +100,8 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
     socket?.emit('get_job_status', selectedJob);
     socket?.once('job_status', (status: { progress: ImportProgress, logs: ImportLog[], finished: FinishedPackage[] }) => {
       console.log(status)
-      setImportProgress(status.progress);
+      if (status.progress)
+        setImportProgress(status.progress);
       setImportLogs(status.logs);
       setFinishedPackages(status.finished);
     });
