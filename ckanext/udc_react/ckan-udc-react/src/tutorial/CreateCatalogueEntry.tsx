@@ -28,7 +28,7 @@ const CreateCatalogueEntry: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('/create-catalogue-entry.md')
+    fetch('/udc-react/create-catalogue-entry.md')
       .then(response => response.text())
       .then(text => {
         setMd(text);
