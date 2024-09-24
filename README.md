@@ -222,18 +222,23 @@ To install ckanext-udc:
 None at present
 
 
-## Developer installation
+### Run as a developer
 
-To install ckanext-udc for development, activate your CKAN virtualenv and
-do:
-
-```shell
-git clone https://github.com/csse-uoft/ckanext-udc.git
-cd ckanext-udc
-python setup.py develop
-pip install -r dev-requirements.txt
-```
-
+- CKAN main procress
+    ```shell
+    source /usr/lib/ckan/default/bin/activate
+    VITE_ORIGIN=http://<your-server-ip>:5173 WERKZEUG_DEBUG_PIN=223344 uwsgi --http :5000 --gevent 1000 --http-websockets --master --wsgi-file /etc/ckan/default/wsgi.py --callable application --module wsgi:application --py-autoreload=1
+    ```
+- React Frontend
+    ```shell
+    cd /usr/lib/ckan/default/src/ckanext-udc/ckanext/udc_react/ckan-udc-react/
+    npm run dev -- --host 0.0.0.0
+    ```
+- CKAN worker process
+    ```shell
+    source /usr/lib/ckan/default/bin/activate
+    WERKZEUG_DEBUG_PIN=223344 ckan -c /etc/ckan/default/ckan.ini jobs worker
+    ```
 
 ## Tests
 
