@@ -23,13 +23,15 @@ export const MarkdownWithTOC: React.FC<MarkdownWithTOCProps> = ({ markdown, befo
     if (markdownContent) {
       const headingElements = markdownContent.querySelectorAll("h1, h2, h3");
       headingElements.forEach((heading) => {
-        const id = heading.innerText.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
-        parsedHeadings.push({
-          id,
-          text: heading.innerText,
-          level: parseInt(heading.tagName.substring(1)), // Extract number from h1, h2, etc.
-        });
-        heading.id = id; // Assign the ID for the heading so it can be linked
+        if (heading instanceof HTMLElement) {
+          const id = heading.innerText.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+          parsedHeadings.push({
+            id,
+            text: heading.innerText,
+            level: parseInt(heading.tagName.substring(1)), // Extract number from h1, h2, etc.
+          });
+          heading.id = id; // Assign the ID for the heading so it can be linked
+        }
       });
       setHeadings(parsedHeadings);
     }
