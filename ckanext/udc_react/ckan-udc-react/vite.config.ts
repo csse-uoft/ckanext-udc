@@ -22,10 +22,10 @@ export default defineConfig({
           // mui: ['@mui/material'],
           // mui2: ['@mui/system', '@mui/icons-material', '@mui/base', '@emotion/react', '@emotion/styled'],
           // icons: ['@mui/icons-material'],
-          // react: ['react', 'react-dom', 'react-router-dom', 'react-router'],
+          react: ['react', 'react-dom', 'react-router-dom', 'react-router', 'react/jsx-runtime'],
           markdown: ['rehype-raw', 'react-markdown'],
-          codemirror: ['codemirror', '@uiw/react-codemirror', '@codemirror/lang-python', '@codemirror/lang-json'],
-          datagrid: ['@mui/x-data-grid'],
+          'codemirror-lang': ['@codemirror/lang-python', '@codemirror/lang-json'],
+          // datagrid: ['@mui/x-data-grid'],
         }
       }
     }
