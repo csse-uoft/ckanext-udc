@@ -3,15 +3,20 @@
 {% block secondary_content %}
   {% block info_module %}
     <section class="module module-narrow module-shallow">
-      <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('What are catalogues?') }}</h2>
+      <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('What is catalogue entry?') }}</h2>
       <div class="module-content">
-        <p>
-          {% trans %}
-          A CUDR Catalogue entry is a collection of data resources (such as files),
-          together with a description and other information, at a fixed URL.
-          Catalogues are what users see when searching for data.
-          {% endtrans %}
-        </p>
+       {% set side_panel_text = h.get_system_info("ckanext.udc.catalogue_side_panel_text") %}
+        {% if side_panel_text %}
+          {{ h.render_markdown(side_panel_text) }}
+        {% else %}
+          <p>
+            {% trans %}
+            A CUDC Catalogue entry is a collection of data resources (such as files),
+            together with a description and other information, at a fixed URL.
+            Catalogue is what users see when searching for data.
+            {% endtrans %}
+          </p>
+        {% endif %}
       </div>
     </section>
   {% endblock %}

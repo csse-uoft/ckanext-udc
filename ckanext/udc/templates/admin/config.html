@@ -17,6 +17,7 @@
   <h3>UDC configuration options </h3>
   {{ form.markdown('ckanext.udc.organization_side_panel_text', id='field-ckanext.udc.organization_side_panel_text', label=_('Organization Side Panel Text'), value=data['ckanext.udc.organization_side_panel_text'], error=errors['ckanext.udc.organization_side_panel_text'], attrs={'class': 'form-control'}) }}
   {{ form.markdown('ckanext.udc.group_side_panel_text', id='field-ckanext.udc.group_side_panel_text', label=_('Group Side Panel Text'), value=data['ckanext.udc.group_side_panel_text'], error=errors['ckanext.udc.group_side_panel_text'], attrs={'class': 'form-control'}) }}
+  {{ form.markdown('ckanext.udc.catalogue_side_panel_text', id='field-ckanext.udc.catalogue_side_panel_text', label=_('Add Catalogue Side Panel Text'), value=data['ckanext.udc.catalogue_side_panel_text'], error=errors['ckanext.udc.catalogue_side_panel_text'], attrs={'class': 'form-control'}) }}
   {{ form.markdown('ckanext.udc.dataset_side_panel_text', id='field-ckanext.udc.dataset_side_panel_text', label=_('Add Dataset Side Panel Text'), value=data['ckanext.udc.dataset_side_panel_text'], error=errors['ckanext.udc.dataset_side_panel_text'], attrs={'class': 'form-control'}) }}
 
   {{ form.textarea('ckanext.udc.config', id='field-ckanext.udc.config', label=_('Maturity Model JSON'), value=data['ckanext.udc.config'], rows=data['ckanext.udc.config'].count('\n') + 2, error=errors['ckanext.udc.config'], attrs={'class': 'form-control'}) }}
