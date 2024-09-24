@@ -16,6 +16,19 @@ export default defineConfig({
     manifest: true,
     emptyOutDir: true,
     outDir: "../public/udc-react",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // mui: ['@mui/material'],
+          // mui2: ['@mui/system', '@mui/icons-material', '@mui/base', '@emotion/react', '@emotion/styled'],
+          // icons: ['@mui/icons-material'],
+          // react: ['react', 'react-dom', 'react-router-dom', 'react-router'],
+          markdown: ['rehype-raw', 'react-markdown'],
+          codemirror: ['codemirror', '@uiw/react-codemirror', '@codemirror/lang-python', '@codemirror/lang-json'],
+          datagrid: ['@mui/x-data-grid'],
+        }
+      }
+    }
     // modulePreload: {
     //   polyfill: false
     // }
