@@ -91,7 +91,7 @@ export const Markdown: React.FC<{ children: string }> = (props) => {
         },
         img: ({ src, alt }) => {
           return (
-            <img src={src} alt={alt} style={{ maxWidth: "100%" }} />
+            <img src={"/udc-react/" + src} alt={alt} style={{ maxWidth: "100%" }} />
           );
         }
       }}
