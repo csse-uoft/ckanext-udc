@@ -1,6 +1,37 @@
 {% ckan_extends %}
 
 {% block header_site_navigation_tabs %}
-    {{ super() }}
-    <li><a href="/udc-react/qa">FAQ</a></li>
+  {% asset "udc_react/udc-react-css" %}
+  {% asset "udc_react/udc-react-js" %}
+
+  {% set org_type = h.default_group_type('organization') %}
+  {% set group_type = h.default_group_type('group') %}
+
+  <ul class="nav navbar-nav ms-auto mb-2 mb-lg-0">
+
+    <li class="dropdown">
+      <a href="/catalogue/" class="dropdown-toggle" data-toggle="dropdown">{{_('Catalogue')}}</a>
+      <ul class="dropdown-menu">
+        <li class="d-lg-none"><a href="/catalogue/">{{_('View Catalogue')}}</a></li>
+        <li><a href="/catalogue/new">{{_('Add Catalogue Entry')}}</a></li>
+      </ul>
+    </li>
+
+    <li class="dropdown">
+      <a href="/organization/" class="dropdown-toggle" data-toggle="dropdown">{{_('Organizations')}}</a>
+      <ul class="dropdown-menu">
+        <li class="d-lg-none"><a href="/organization/">{{_('View Organizations')}}</a></li>
+        <li><a href="/organization/new">{{_('Add Organization')}}</a></li>
+      </ul>
+    </li>
+  
+    {{ h.build_nav_main(
+      (group_type ~ '.index',
+      h.humanize_entity_type('group', group_type, 'main nav') or _('Groups'), ['group']),
+      ('home.about', _('About')) ) }}
+
+    <li><a href="/udc-react/tutorial/create-catalogue-entry">FAQ</a></li>
+  </ul>
+
+
 {% endblock %}

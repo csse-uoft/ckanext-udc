@@ -1,0 +1,41 @@
+{% ckan_extends %}
+
+{% block primary %}
+  {% set reply_to = config.get('smtp.reply_to', 'admin@example.com') %}
+
+  <article class="module">
+    <div class="module-content">
+      {% if name %}
+      <h1>{{ code }} {{ name }}</h1>
+      {% endif %}
+      {% if code == 403 and request.path == '/catalogue/new' and not show_login_redirect_link %}
+        
+        <h4>Sorry, you need to be added to an organization to add a catalogue entry.</h4>
+        <h4>Please contact an organization admin or <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a> to add you to an organization.</h4>
+
+      {% else %}
+        <h4>{{content}}</h4>
+      {% endif %}
+
+      {% if request.path == '/catalogue/new' %}
+        <br/>
+        <h4>See <a style="text-decoration: underline;" href="/udc-react/tutorial/create-catalogue-entry" target="_blank">tutorial</a> on how to add a catalogue entry.</h4>
+      {% endif %}
+      
+    </div>
+    {% block login_redirect %}
+    {% if show_login_redirect_link %}
+    <div class="module-content">
+      <h4>{{ _("You might need to login to access this page.") }} <a href="{{ h.url_for('user.login') }}">{{ _("Click here to login") }}</a></h4>
+    </div>
+  {% endif %}
+  {% endblock %}
+  <div class="module-content">
+    If you think this is a server error, please contact the <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a>.
+  </div>
+  
+  </article>
+{% endblock %}
+
+{% block breadcrumb %}
+{% endblock %}

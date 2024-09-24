@@ -1,0 +1,14 @@
+udc-react-css:
+  filter: cssrewrite
+  output: ckanext-udc_react/%(version)s-udc_react.css
+  contents:
+    - css/udc_react.css
+
+udc-react-js:
+  filter: rjsmin
+  output: ckanext-udc_react/%(version)s-udc_react.js
+  contents:
+    - js/udc_react.js
+  extra:
+    preload:
+      - base/main

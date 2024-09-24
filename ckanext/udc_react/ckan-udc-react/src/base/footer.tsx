@@ -5,7 +5,8 @@ export default function Footer() {
   return <Box sx={{
     background: '#002a5c url("../../../base/images/bg.png")',
     padding: "20px 0",
-    color: "#CCDEE3"
+    color: "#CCDEE3",
+    fontSize: "0.875rem",
   }}>
     <Container>
       <Grid container>

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from flask import request, Response, abort
+import ckan.lib
 import ckan.lib.base as base
 from ckan.lib.helpers import url_for
+import ckan.lib.helpers
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 from ckan.common import CKANConfig
@@ -62,7 +64,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     "qa",
                     "realtime-status"
                 ]
-                react_path_start_with = ["maturity-levels", "chatgpt-summary"]
+                react_path_start_with = ["maturity-levels", "chatgpt-summary", "tutorial", "dashboard"]
                 if path in react_paths or any([path.startswith(p) for p in react_path_start_with]):
 
                     def dev_asset(file_path):
@@ -157,6 +159,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
             tk.add_public_directory(config_, "ckan-udc-react/public")
         else:
             tk.add_public_directory(config_, "public")
+        tk.add_resource('assets', 'udc_react')
 
     def load_react(self, is_production: bool):
 
