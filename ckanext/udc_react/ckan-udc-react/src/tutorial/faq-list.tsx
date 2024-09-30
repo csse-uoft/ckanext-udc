@@ -42,7 +42,7 @@ export const FAQList: FAQ[] = [
     question: "How do I add a user to an organization?",
     id: "add-user-to-organization",
     beforeTOC: <>
-      <Link label="Add User to Organization" url="/organization/user/new" />
+      <Link label="Add User to Organization" url="/organization" />
     </>,
     markdownPath: '/udc-react/add-user-to-organization.md',
   }
