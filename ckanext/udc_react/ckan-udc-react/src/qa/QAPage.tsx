@@ -78,7 +78,7 @@ const QAPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container sx={{ padding: 4, textAlign: 'center' }}>
+      <Container sx={{ minHeight: '80%', padding: 4, textAlign: 'center' }}>
         <CircularProgress />
       </Container>
     );
@@ -105,7 +105,7 @@ const QAPage: React.FC = () => {
   });
 
   return (
-    <Container sx={{ padding: 4 }}>
+    <Box sx={{ padding: 0 }}>
       <CssBaseline />
       <Box sx={{ pt: 1 }}>
         <Markdown>
@@ -201,7 +201,7 @@ const QAPage: React.FC = () => {
           </Box>
         );
       })}
-    </Container>
+    </Box>
   );
 };
 

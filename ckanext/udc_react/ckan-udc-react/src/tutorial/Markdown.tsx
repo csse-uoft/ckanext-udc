@@ -1,14 +1,17 @@
-import { Divider, Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "react-router-dom";
 import rehypeRaw from 'rehype-raw';
 
 export const Markdown: React.FC<{ children: string }> = (props) => {
+  const navigate = useNavigate();
+
   // Function to generate id from text
   const generateId = (text: string) => {
     return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
   };
-  
+
 
   return (
     <ReactMarkdown
@@ -91,9 +94,17 @@ export const Markdown: React.FC<{ children: string }> = (props) => {
         },
         img: ({ src, alt }) => {
           return (
-            <img src={"/udc-react/" + src} alt={alt} style={{ maxWidth: "100%" }} />
+            <img src={"/udc-react/" + src} alt={alt} style={{ maxWidth: "100%", paddingTop: "4px" }} />
           );
-        }
+        },
+        a: ({ children, href, target, rel }) => {
+          if (href?.startsWith("/udc-react")) {
+            return <Link sx={{cursor: 'pointer'}} onClick={() => navigate(href)}>{children}</Link>;
+          }
+          return (
+            <Link href={href} target={target || '_blank'} rel={rel}>{children}</Link>
+          );
+        },
       }}
     >
       {props.children}

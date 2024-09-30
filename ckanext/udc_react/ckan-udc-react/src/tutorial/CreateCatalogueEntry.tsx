@@ -3,25 +3,7 @@ import { MarkdownWithTOC } from "./MarkdownWithTOC";
 import { Container } from "@mui/system";
 import { Box, Button, CssBaseline, CircularProgress, Paper } from "@mui/material";
 import { OpenInNew as OpenInNewIcon, Add as CreateIcon } from '@mui/icons-material';
-
-
-interface LinkProps {
-  label: string;
-  url: string;
-}
-
-const Link: React.FC<LinkProps> = ({label, url}) => {
-  return (
-    <Box display="flex" alignItems="center" sx={{ pb: 1 }}>
-      <Button variant="outlined" startIcon={<OpenInNewIcon />} color="secondary"
-        sx={{ textTransform: 'none' }}
-        onClick={() => window.open(url, '_blank')}
-      >
-        {label}
-      </Button>
-    </Box>
-  );
-};
+import { Link } from "./components/Link";
 
 const CreateCatalogueEntry: React.FC = () => {
   const [md, setMd] = useState<string>('');

@@ -64,7 +64,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     "qa",
                     "realtime-status"
                 ]
-                react_path_start_with = ["maturity-levels", "chatgpt-summary", "tutorial", "dashboard"]
+                react_path_start_with = ["maturity-levels", "chatgpt-summary", "tutorial", "dashboard", "faq"]
                 if path in react_paths or any([path.startswith(p) for p in react_path_start_with]):
 
                     def dev_asset(file_path):
