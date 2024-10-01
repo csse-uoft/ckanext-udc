@@ -99,4 +99,38 @@ class CKANBasedImport(BaseImport):
             self.socket_client = None
             
         self.running = False
+        
+    def test(self, use_cache=False):
+        from ckanext.udc_import_other_portals.logic.ckan_based.api import (
+            get_all_packages,
+        )
+        self.test = True
+        
+        cache_file = f"/tmp/all_packages_{self.import_config.id}.json"
+
+        if use_cache:
+            # Check if there is a file with all packages
+            try:
+                import json
+
+                with open(cache_file, "r") as f:
+                    self.all_packages = json.load(f)
+            except:
+                self.all_packages = get_all_packages(self.base_api)
+                # save all packages to a file
+                import json
+
+                with open(cache_file, "w") as f:
+                    json.dump(self.all_packages, f)
+        else:
+            self.all_packages = get_all_packages(self.base_api)
+            # save all packages to a file
+            import json
+
+            with open(cache_file, "w") as f:
+                json.dump(self.all_packages, f)
+
+        # Iterrate all packages and make sure no error occurred
+        for src in self.all_packages:
+            mapped = self.map_to_cudc_package(src)
 

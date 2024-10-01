@@ -15,7 +15,7 @@ class SocketClient:
         :param job_id: The job ID to register with the server.
         :param worker_idx: The worker index to register with the server.
         """
-        self.sio = socketio.Client(logger=True)
+        self.sio = socketio.Client(logger=False)
         self.registered = False  # Flag to track if the client is registered
 
         # Event listener for 'registered' event from the server
@@ -24,18 +24,19 @@ class SocketClient:
             self.registered = True
             print("Client registered successfully with the server.")
 
-        debug = config.get("debug", False)
-        self.sio.connect(
-            f"ws://localhost:{'5000' if debug else '8080'}",
-            transports=["websocket"],
-            namespaces=[self.namespace],
-        )
-
-        # Reuse beaker.session.validate_key for socket validation
-        valication_key = config.get("beaker.session.validate_key")
-        self.sio.emit(
-            "register", data=(job_id, valication_key), namespace=self.namespace
-        )
+        
+        # Event listener for 'connect' event
+        @self.sio.on("connect", namespace=self.namespace)
+        def on_connect():
+            print("Connected to the server.")
+            self.register_client(job_id)
+        
+        # Event listener for 'reconnect' event
+        @self.sio.on("reconnect", namespace=self.namespace)
+        def on_reconnect():
+            print("Reconnected to the server.")
+            self.register_client(job_id)
+            
 
         @self.sio.on("stop_job", namespace=self.namespace)
         def on_stop_requested():
@@ -46,6 +47,24 @@ class SocketClient:
                 print("Shutting down executor")
                 self.executor.shutdown(cancel_futures=True)
                 self.sio.emit("job_stopped", (job_id,), namespace=self.namespace)
+                
+        
+        debug = config.get("debug", False)
+        self.sio.connect(
+            f"ws://localhost:{'5000' if debug else '8080'}",
+            transports=["websocket"],
+            namespaces=[self.namespace],
+        )
+                
+    def register_client(self, job_id: str):
+        """
+        Register the client with the server.
+        """
+        # Reuse beaker.session.validate_key for socket validation
+        validation_key = config.get("beaker.session.validate_key")
+        self.sio.emit(
+            "register", data=(job_id, validation_key), namespace=self.namespace
+        )
 
     def send_message(self, log_level: str, message: str):
         """

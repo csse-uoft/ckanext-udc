@@ -19,7 +19,7 @@
     }
 
     /* Only apply hover behavior on larger screens */
-    .dropdown:hover .dropdown-menu {
+    .nav .dropdown:hover .dropdown-menu {
         display: block; /* Show dropdown on hover for desktop */
       }
 }

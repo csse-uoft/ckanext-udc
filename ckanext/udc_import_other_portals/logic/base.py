@@ -95,6 +95,9 @@ class BaseImport:
         self.job_id = job_id
 
     def build_context(self):
+        if not self.context:
+            # testing environment, do not create context
+            return
         userobj = model.User.get(self.import_config.run_by)
         context = cast(
             Context,
@@ -133,7 +136,7 @@ class BaseImport:
             self.logger.exception(e)
             self.logger.finished_one(
                 "errored",
-                src["id"], # Using source package info
+                src["id"],  # Using source package info
                 src["name"],
                 src["title"],
                 f"Failed to map package from source.\n{generate_trace(e)}",
@@ -199,7 +202,12 @@ class BaseImport:
         if duplications:
 
             duplications_log = [
-                {"id": p["id"], "name": p["name"], "title": p["title"], 'reason': reason}
+                {
+                    "id": p["id"],
+                    "name": p["name"],
+                    "title": p["title"],
+                    "reason": reason,
+                }
                 for p in duplications["results"]
             ]
 
@@ -235,3 +243,23 @@ class BaseImport:
         Run imports for all source packages.
         """
         raise NotImplemented()
+
+
+def ensure_license(context, license_id, license_title, license_url, check=True):
+    """Ensure that the license exists in the database."""
+    if not context:
+        # tesing environment, do not create license
+        return
+    licenses = logic.get_action("licenses_get")(context)
+    for license in licenses:
+        if license["id"] == license_id:
+            if check and not (license["title"] == license_title and license["url"] == license_url):
+                raise logic.ValidationError("License ID already exists with different title or URL.")
+            else:
+                return
+            
+    logic.get_action("license_create")(
+        context, {"id": license_id, "title": license_title, "url": license_url}
+    )
+    return
+

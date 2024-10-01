@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 def initSocketIO(app):
-    socketio = SocketIO(app, debug=True, logger=True, manage_session=True)
+    socketio = SocketIO(app, debug=False, logger=False, manage_session=True)
     worker_data = (
         {}
     )  # Structure: { job_id: { 'sid': sid, 'logs': [], 'progress': None, 'finished': [] } }
@@ -198,7 +198,7 @@ def initSocketIO(app):
         :param data: Dictionary containing 'log_level' and 'message'.
         """
         sid = request.sid
-        log.info(f"Received log_message from sid {sid}: {data}")
+        # log.info(f"Received log_message from sid {sid}: {data}")
 
         # Check if the client is registered
         if sid not in client_map:
@@ -245,7 +245,7 @@ def initSocketIO(app):
         :param data: Dictionary containing 'current' and 'total'.
         """
         sid = request.sid
-        log.info(f"Received progress_update from sid {sid}: {data}")
+        # log.info(f"Received progress_update from sid {sid}: {data}")
 
         # Check if the client is registered
         if sid not in client_map:
@@ -275,7 +275,7 @@ def initSocketIO(app):
 
         # Log the progress update to the server logs
         progress = f"Progress for job {job_id}: {current}/{total}"
-        log.info(progress)
+        # log.info(progress)
         
     @socketio.event(namespace="/import-worker")
     def finish_one(data):
@@ -293,7 +293,7 @@ def initSocketIO(app):
         """
         print("Import job finished:", data)
         sid = request.sid
-        log.info(f"Received progress_update from sid {sid}: {data}")
+        # log.info(f"Received progress_update from sid {sid}: {data}")
 
         # Check if the client is registered
         if sid not in client_map:

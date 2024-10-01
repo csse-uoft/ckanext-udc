@@ -159,6 +159,7 @@ function ImportPanel(props: ImportPanelProps) {
             placeholder="e.g. */10 * * * * for every 10 minutes"
             sx={{ mt: 1 }}
             fullWidth
+            disabled
           />
 
           <Grid xs={12}>
@@ -193,7 +194,7 @@ function ImportPanel(props: ImportPanelProps) {
         </Grid>
 
         <Grid xs={12} sx={{ mt: 2 }}>
-          <FormControl fullWidth variant="standard">
+          <FormControl fullWidth variant="standard" disabled>
             <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600,  mb: 10 }}>
               Stop on error
             </InputLabel>

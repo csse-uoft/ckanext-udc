@@ -24,7 +24,7 @@ def get_package(package_id, base_api, api_key=None):
     return res["result"]
 
 
-def get_all_packages(base_api, api_key=None):
+def get_all_packages(base_api, size=None, api_key=None):
     """
     Retrieve all packages from the CKAN API using the package_search endpoint.
     
@@ -62,6 +62,9 @@ def get_all_packages(base_api, api_key=None):
 
             packages.extend(result_packages)
             offset += rows  # Increase the offset for the next request
+            
+            if size and len(packages) >= size:
+                break
             
         except requests.RequestException as e:
             print(f"Request failed: {e}")

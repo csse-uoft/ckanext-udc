@@ -20,6 +20,12 @@ export const FinishedPackagesTable: React.FC<FinishedPackagesTableProps> = ({ fi
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [typeFilter, setTypeFilter] = useState<string>('');
 
+  
+  if (!finishedPackages) {
+    return <Typography variant="body1">No finished packages</Typography>;
+  }
+
+
   const handleLogClick = (event: React.MouseEvent<HTMLElement>, logs: string) => {
     setAnchorEl(event.currentTarget);
     setLogs(logs);

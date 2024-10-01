@@ -109,7 +109,14 @@
               {% elif field["type"] == "single_select" %}
                 {{ valToText[pkg_dict[field["name"]]] }}
               {% else %}
-                {{ pkg_dict[field["name"]] }}
+                {% set val = pkg_dict[field["name"]] %}
+                {% if h.is_url(val) %}
+                  <a href="{{ val }}" target="_blank">
+                    {{ val }}
+                  </a>
+                {% else %}
+                  {{ val }}
+                {% endif %}
               {% endif %}
               </td>
             </tr>
@@ -134,7 +141,7 @@
             {% elif field["ckanField"] == "author_email" and pkg_dict.author_email %}
               <tr>
                 <th scope="row" class="dataset-label">{{ _("Author Email") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
-                <td class="dataset-details" property="dc:creator">{{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author) }}</td>
+                <td class="dataset-details" property="dc:creator">{{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author_email) }}</td>
               </tr>
             {% elif field["ckanField"] == "author" and pkg_dict.author %}
               <tr>
@@ -144,7 +151,7 @@
             {% elif field["ckanField"] == "maintainer_email" and pkg_dict.maintainer_email %}
               <tr>
                 <th scope="row" class="dataset-label">{{ _('Maintainer Email') }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
-                <td class="dataset-details" property="dc:contributor">{{ h.mail_to(email_address=pkg_dict.maintainer_email, name=pkg_dict.maintainer) }}</td>
+                <td class="dataset-details" property="dc:contributor">{{ h.mail_to(email_address=pkg_dict.maintainer_email, name=pkg_dict.maintainer_email) }}</td>
               </tr>
             {% elif field["ckanField"] == "maintainer" and pkg_dict.maintainer %}
               <tr>

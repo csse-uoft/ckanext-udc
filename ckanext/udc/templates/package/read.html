@@ -2,18 +2,16 @@
 
 {% block package_resources %}
 
+  <h2>Related Catalogue Entries:</h2>
+  <div id="related-packages">
+    {% for package in pkg_dict.get("related_packages") %}
+      <a href="{{ h.url_for('catalogue.read', id=package.get("name")) }}" class="d-flex align-items-center mb-2" target="_blank" style="width:fit-content">
+        <i class="fas fa-up-right-from-square me-2"></i>
+        <span>{{ package.get("title") }}</span>
+      </a>
+    {% endfor %}
+  </div>
 
-  {% if pkg_dict.get("is_unified") %}
-    <h2>Related Catalogue Entries:</h2>
-    <div id="unified-show-packages">
-      <div id="loading-placeholder" class="d-flex align-items-center" style="height: 70px; padding-left: 20px">
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-            </div>
-        </div>
-      </div>
-    </div>
-  {% endif %}
   {{ super() }}
   {# {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %} #}
 {% endblock %}
