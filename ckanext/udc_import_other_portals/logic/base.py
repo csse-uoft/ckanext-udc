@@ -253,10 +253,7 @@ def ensure_license(context, license_id, license_title, license_url, check=True):
     licenses = logic.get_action("licenses_get")(context)
     for license in licenses:
         if license["id"] == license_id:
-            if check and not (license["title"] == license_title and license["url"] == license_url):
-                raise logic.ValidationError("License ID already exists with different title or URL.")
-            else:
-                return
+            return
     try:
         logic.get_action("license_create")(
             context, {"id": license_id, "title": license_title, "url": license_url}
