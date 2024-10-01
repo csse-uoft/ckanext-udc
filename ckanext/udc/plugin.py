@@ -428,6 +428,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return search_results
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
+        # Do not index related packages
+        del pkg_dict["related_packages"]
         return pkg_dict
 
     def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
