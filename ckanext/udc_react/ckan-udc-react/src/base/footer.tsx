@@ -15,7 +15,7 @@ export default function Footer() {
             <Link href="/about" color="inherit" underline="hover">
               About Canadian Urban Data Catalogue (CUDC)
             </Link>
-            <Link href="/udc-react/qa" color="inherit" underline="hover">
+            <Link href="/udc-react/faq/maturity-levels" color="inherit" underline="hover">
               Maturity Model FAQ
             </Link>
             <Link href="https://urbandatacentre.ca" color="inherit" underline="hover">
