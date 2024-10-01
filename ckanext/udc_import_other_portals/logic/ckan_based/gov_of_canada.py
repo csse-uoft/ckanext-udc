@@ -120,7 +120,7 @@ class GovOfCanadaImport(CKANBasedImport):
         target["name"] = "gov-canada-" + src["name"]
         
         # source
-        target["source"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"
+        target["url"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"
 
         # Tags
         tags = []

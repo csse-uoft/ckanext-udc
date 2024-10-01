@@ -258,10 +258,8 @@ def ensure_license(context, license_id, license_title, license_url, check=True):
         logic.get_action("license_create")(
             context, {"id": license_id, "title": license_title, "url": license_url}
         )
-    except logic.ValidationError as e:
+    except:
         # Weird concurrency issue
-        if "licencse id existed" in str(e):
-            # License already exists
-            pass
+        pass
     return
 
