@@ -25,7 +25,7 @@ interface LogData {
   import_config_id: string;
   logs: string;
   other_data: {
-    finished: FinishedPackage[];
+    finished?: FinishedPackage[];
   };
   run_at: string;
   run_by: string;
@@ -81,7 +81,7 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
         </Button>
         
 
-        <FinishedPackagesTable finishedPackages={data.other_data.finished} />
+        <FinishedPackagesTable finishedPackages={data.other_data?.finished || []} />
         
       </CardContent>
     </Card>
