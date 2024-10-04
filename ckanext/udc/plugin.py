@@ -410,11 +410,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 
                 for r in rel2:
                     related_package = model.Package.get(r.object_package_id)
-                    related_packages.append({
-                        "title": related_package.title,
-                        "id": related_package.id,
-                        "name": related_package.name,
-                    })
+                    # Check if exists
+                    if related_package.id not in set([p["id"] for p in related_packages]):
+                        related_packages.append({
+                            "title": related_package.title,
+                            "id": related_package.id,
+                            "name": related_package.name,
+                        })
                 
 
         pkg_dict["related_packages"] = related_packages

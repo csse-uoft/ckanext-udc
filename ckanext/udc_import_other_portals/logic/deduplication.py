@@ -224,6 +224,7 @@ def process_duplication(context: Context, linked_packages: list):
         unified_name = p_has_unified_package[0]["name"]
 
         unified_package_data = {
+            "id": p_has_unified_package[0]["id"], # Do not create another unified package
             "title": "Unified: " + p_has_unified_package[0]["title"],
             "name": unified_name,
             "notes": sorted_packages[0]["notes"],
