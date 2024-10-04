@@ -149,7 +149,7 @@ class CityOfTorontoImport(CKANBasedImport):
                         "https://www.iana.org/assignments/media-types/" + mime_type
                     )
 
-            target["file_formats"] = ",".join(formats_iana)
+            target["file_format"] = ",".join(formats_iana)
 
         # date_published -> published_date
         # "2019-07-23 17:53:27.345526" -> "2019-07-23"
