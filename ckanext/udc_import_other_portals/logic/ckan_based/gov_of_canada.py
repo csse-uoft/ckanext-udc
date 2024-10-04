@@ -192,7 +192,7 @@ class GovOfCanadaImport(CKANBasedImport):
         for resource in src["resources"]:
             target["resources"].append(
                 {
-                    "id": resource["id"],
+                    # "id": resource["id"], // error will occur if id is used by other package
                     "name": resource["name"],
                     "url": resource.get("url"),
                     "format": resource.get("format"),
