@@ -11,7 +11,6 @@ from typing import List, Dict, cast
 from .deduplication import find_duplicated_packages, process_duplication
 
 import logging
-import time
 
 base_logger = logging.getLogger(__name__)
 
@@ -20,20 +19,34 @@ class ImportError(ValueError):
     pass
 
 
-def get_package(context: Context, package_id: str):
-    data_dict = {"id": package_id}
+def get_package(context: Context, package_id: str=None, package_name: str=None):
+    if not package_id and not package_name:
+        raise ValueError("Either package_id or package_name should be provided.")
+    if package_id and package_name:
+        raise ValueError("Only one of package_id or package_name should be provided.")
+    if package_id:
+        data_dict = {"id": package_id}
+    else:
+        data_dict = {"name": package_name}
     logic.check_access("package_show", context, data_dict=data_dict)
     package_dict = logic.get_action("package_show")(context, data_dict)
+    
+    # Prevent the package with the same name but different id (the provided id is treated as a name)
+    if package_id and package_dict["id"] != package_id:
+        raise ValueError(f"Package id={package_id} is not found.")
+    
     return package_dict
 
 
-def check_existing_package_id_or_name(context, id_or_name: str):
+def check_existing_package_id_or_name(context, id: str=None, name: str=None):
+    if not id and not name:
+        raise ValueError("Either id or name should be provided.")
+    if id and name:
+        raise ValueError("Only one of id or name should be provided.")
     try:
-        get_package(context, id_or_name)
+        get_package(context, id, name)
         return True
     except Exception as e:
-        # base_logger.error("!!!!!!!!")
-        # base_logger.exception(e)
         pass
     return False
 
@@ -42,8 +55,8 @@ def import_package(context: Context, package: dict, merge: bool = False):
     """
     :param merge: Merge with the fields from the existing package
     """
-    is_id_existed = check_existing_package_id_or_name(context, package["id"])
-    is_name_existed = check_existing_package_id_or_name(context, package["name"])
+    is_id_existed = check_existing_package_id_or_name(context, id=package["id"])
+    is_name_existed = check_existing_package_id_or_name(context, name=package["name"])
     print(is_id_existed, is_name_existed)
 
     if not is_id_existed and is_name_existed:
