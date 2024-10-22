@@ -76,6 +76,20 @@ class GovOfCanadaImport(CKANBasedImport):
         """
         for package in self.all_packages:
             yield package
+            
+    def before_create_organization(self, organization: dict, related_package: dict):
+        """
+        A hook to modify the organization before creating it.
+        """
+        # Remove the french name
+        org_title_at_publication = related_package.get("org_title_at_publication")
+        if isinstance(org_title_at_publication, dict) and org_title_at_publication.get("en"):
+            organization["title"] = org_title_at_publication["en"]
+        else:
+            titles = organization.get("title").split(" | ")
+            if len(titles) == 2:
+                organization["title"] = titles[0]
+        return organization
 
     def map_to_cudc_package(self, src: dict, target: dict):
         """

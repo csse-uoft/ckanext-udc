@@ -199,13 +199,14 @@ class BaseImport:
                     
                     # Create the organization if not exists
                     if org is None:
+                        organization = self.before_create_organization(src["organization"], src)
                         ensure_organization(
                             self.build_context(),
                             {
-                                "id": src["organization"]["id"],
-                                "name": src["organization"]["name"],
-                                "title": src["organization"]["title"],
-                                "description": src["organization"]["description"],
+                                "id": organization["id"],
+                                "name": organization["name"],
+                                "title": organization["title"],
+                                "description": organization["description"],
                             },
                         )
                         model.Session.commit()
@@ -324,6 +325,12 @@ class BaseImport:
         Run imports for all source packages.
         """
         raise NotImplemented()
+    
+    def before_create_organization(self, organization: dict, related_package: dict):
+        """
+        A hook to modify the organization before creating it.
+        """
+        return organization
 
 
 def ensure_license(context, license_id, license_title, license_url, check=True):
