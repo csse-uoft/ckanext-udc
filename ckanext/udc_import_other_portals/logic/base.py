@@ -1,4 +1,5 @@
 from ckanext.udc_import_other_portals.logger import ImportLogger, generate_trace
+from ckanext.udc_import_other_portals.model import CUDCImportConfig
 from ckanext.udc_import_other_portals.worker.socketio_client import SocketClient
 import ckan.plugins.toolkit as toolkit
 from ckan.types import Context
@@ -7,6 +8,7 @@ import ckan.model as model
 from ckan.common import current_user
 from ckan.lib.search.common import SearchIndexError
 
+import threading
 from typing import List, Dict, cast
 from .deduplication import find_duplicated_packages, process_duplication
 
@@ -14,12 +16,13 @@ import logging
 
 base_logger = logging.getLogger(__name__)
 
+lock = threading.Lock()
 
 class ImportError(ValueError):
     pass
 
 
-def get_package(context: Context, package_id: str=None, package_name: str=None):
+def get_package(context: Context, package_id: str = None, package_name: str = None):
     if not package_id and not package_name:
         raise ValueError("Either package_id or package_name should be provided.")
     if package_id and package_name:
@@ -30,15 +33,15 @@ def get_package(context: Context, package_id: str=None, package_name: str=None):
         data_dict = {"name": package_name}
     logic.check_access("package_show", context, data_dict=data_dict)
     package_dict = logic.get_action("package_show")(context, data_dict)
-    
+
     # Prevent the package with the same name but different id (the provided id is treated as a name)
     if package_id and package_dict["id"] != package_id:
         raise ValueError(f"Package id={package_id} is not found.")
-    
+
     return package_dict
 
 
-def check_existing_package_id_or_name(context, id: str=None, name: str=None):
+def check_existing_package_id_or_name(context, id: str = None, name: str = None):
     if not id and not name:
         raise ValueError("Either id or name should be provided.")
     if id and name:
@@ -92,6 +95,32 @@ def delete_package(context: Context, package_id: str):
     logic.get_action("package_delete")(context, {"id": package_id})
 
 
+def get_organization(context: Context, organization_id: str = None):
+    data_dict = {"id": organization_id}
+    logic.check_access("organization_show", context, data_dict=data_dict)
+    return logic.get_action("organization_show")(context, data_dict)
+
+
+def get_organization_ids(context: Context):
+    logic.check_access("organization_list", context)
+    return logic.get_action("organization_list")(context)
+
+
+def ensure_organization(context: Context, organization: dict):
+    with lock:
+        if not context:
+            # testing environment, do not create organization
+            return
+        logic.check_access("organization_list", context)
+        organization_ids = logic.get_action("organization_list")(context)
+        for organization_id in organization_ids:
+            if organization_id == organization["id"]:
+                return
+
+        logic.check_access("organization_create", context, data_dict=organization)
+        logic.get_action("organization_create")(context, organization)
+
+
 class BaseImport:
     """
     Abstract class that manages logging and provides interface to backend APIs
@@ -102,7 +131,7 @@ class BaseImport:
     running = False
     socket_client: SocketClient = None
 
-    def __init__(self, context, import_config, job_id):
+    def __init__(self, context, import_config: "CUDCImportConfig", job_id):
         self.context = context
         self.import_config = import_config
         self.job_id = job_id
@@ -123,7 +152,7 @@ class BaseImport:
         )
         return context
 
-    def map_to_cudc_package(self, src: dict):
+    def map_to_cudc_package(self, src: dict, target: dict):
         """
         Map source package to cudc package.
 
@@ -142,8 +171,47 @@ class BaseImport:
         Returns:
             str: The ID of the mapped package.
         """
+        # Some defaults
+        target = {
+            "owner_org": self.import_config.owner_org,
+            "type": "catalogue",
+            "license_id": "notspecified",
+        }
+        platform = self.import_config.platform
+        if platform == "ckan":
+            org_import_mode = self.import_config.other_config.get("org_import_mode")
+            org_mapping = self.import_config.other_config.get("org_mapping") or {}
+
+            if org_import_mode == "importToOwnOrg":
+                if org_mapping.get(src["owner_org"]):
+                    target["owner_org"] = org_mapping[src["owner_org"]]
+                else:
+                    # Use the same organization id
+                    target["owner_org"] = src["owner_org"]
+                    
+                    
+                    query = (
+                        model.Session.query(model.Group)
+                        .filter(model.Group.id == src["owner_org"])
+                        .filter(model.Group.is_organization == True)
+                    )
+                    org = query.first()
+                    
+                    # Create the organization if not exists
+                    if org is None:
+                        ensure_organization(
+                            self.build_context(),
+                            {
+                                "id": src["organization"]["id"],
+                                "name": src["organization"]["name"],
+                                "title": src["organization"]["title"],
+                                "description": src["organization"]["description"],
+                            },
+                        )
+                        model.Session.commit()
+
         try:
-            mapped = self.map_to_cudc_package(src)
+            mapped = self.map_to_cudc_package(src, target)
         except Exception as e:
             self.logger.error(f"ERROR: Failed to map package from source.")
             self.logger.exception(e)
@@ -260,19 +328,19 @@ class BaseImport:
 
 def ensure_license(context, license_id, license_title, license_url, check=True):
     """Ensure that the license exists in the database."""
-    if not context:
-        # tesing environment, do not create license
-        return
-    licenses = logic.get_action("licenses_get")(context)
-    for license in licenses:
-        if license["id"] == license_id:
+    with lock:
+        if not context:
+            # tesing environment, do not create license
             return
-    try:
-        logic.get_action("license_create")(
-            context, {"id": license_id, "title": license_title, "url": license_url}
-        )
-    except:
-        # Weird concurrency issue
-        pass
-    return
-
+        licenses = logic.get_action("licenses_get")(context)
+        for license in licenses:
+            if license["id"] == license_id:
+                return
+        try:
+            logic.get_action("license_create")(
+                context, {"id": license_id, "title": license_title, "url": license_url}
+            )
+        except:
+            # Weird concurrency issue
+            pass
+        return

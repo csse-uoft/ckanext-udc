@@ -24,7 +24,7 @@ def get_package(package_id, base_api, api_key=None):
     return res["result"]
 
 
-def get_all_packages(base_api, size=None, api_key=None):
+def get_all_packages(base_api, size=None, api_key=None, cb=None):
     """
     Retrieve all packages from the CKAN API using the package_search endpoint.
     
@@ -45,6 +45,8 @@ def get_all_packages(base_api, size=None, api_key=None):
         # Construct the API request URL
         url = f"{base_api}/3/action/package_search?rows={rows}&start={offset}"
         print(f"getting package rows={rows} offset={offset}")
+        if cb:
+            cb(f"Got {offset} packages")
         
         try:
             # Make the API request
@@ -138,3 +140,36 @@ def check_site_alive(base_api):
         return res["result"]
     except:
         return False
+
+def get_organization(base_api, organization_id=None):
+    res = requests.get(f"{base_api}/3/action/organization_show?id={organization_id}").json()
+    return res["result"]
+
+def get_organization_ids(base_api):
+    res = requests.get(f"{base_api}/3/action/organization_list").json()
+    return res["result"]
+
+def get_organizations(base_api):
+    """
+    Example response:
+    [
+        {
+            "approval_status": "approved",
+            "created": "2018-07-27T18:51:10.451359",
+            "description": "",
+            "display_name": "Argentia Private Investments Inc. | Argentia Private Investments Inc.",
+            "id": "76287b5c-ceb0-44fb-a62f-3cd4ee5de656",
+            "image_display_url": "",
+            "image_url": "",
+            "is_organization": true,
+            "name": "api",
+            "num_followers": 0,
+            "package_count": 0,
+            "state": "active",
+            "title": "Argentia Private Investments Inc. | Argentia Private Investments Inc.",
+            "type": "organization"
+        },
+    ]
+    """
+    res = requests.get(f"{base_api}/3/action/organization_list?all_fields=true&limit=1000").json()
+    return res["result"]

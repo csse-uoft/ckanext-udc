@@ -1,5 +1,5 @@
 import { CloudSync, Publish, Edit, OpenInBrowser, Settings } from '@mui/icons-material';
-import ImportDashboard from '../import/import';
+import ImportDashboard from '../import/ImportDashboard';
 import { ImportStatus } from '../import/importStatus';
 import QAPage from '../qa/QAPage';
 import ConfigManagementPage from '../qa/ConfigManagementPage';

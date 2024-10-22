@@ -28,7 +28,7 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
                 logic.ValidationError("import_config_id should be provided.")
             )
 
-        import_config = CUDCImportConfig.get(import_config_id)
+        import_config: 'CUDCImportConfig' = CUDCImportConfig.get(import_config_id)
 
         if not import_config:
             raise logger.exception(

@@ -1,5 +1,6 @@
 import traceback
 import logging
+from ckanext.udc_import_other_portals.model import CUDCImportConfig
 from ckanext.udc_import_other_portals.worker.socketio_client import SocketClient
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,9 +19,9 @@ class CKANBasedImport(BaseImport):
     Abstract class for imports
     """
 
-    def __init__(self, context, import_config, job_id, base_api):
+    def __init__(self, context, import_config: 'CUDCImportConfig', job_id: str):
         super().__init__(context, import_config, job_id)
-        self.base_api = base_api
+        self.base_api = import_config.other_config.get("base_api")
 
     def iterate_imports(self):
         """
@@ -35,10 +36,12 @@ class CKANBasedImport(BaseImport):
         """
         self.running = True
         self.socket_client = SocketClient(self.job_id)
-        self.all_packages = get_all_packages(self.base_api)
+        self.logger = ImportLogger(base_logger, 0, self.socket_client)
+        
+        self.all_packages = get_all_packages(self.base_api, cb=lambda x: self.logger.info(x))
         self.packages_ids = [p['id'] for p in self.all_packages]
         # Set the import size for reporting in the frontend
-        self.import_size = len(self.packages_ids)
+        self.logger.total = self.import_size = len(self.packages_ids)
         
         # Make sure the sockeio server is connected
         while not self.socket_client.registered:
@@ -46,7 +49,6 @@ class CKANBasedImport(BaseImport):
             base_logger.info("Waiting socketio to be connected.")
         base_logger.info("socketio connected.")
         print("self.import_size", self.import_size)
-        self.logger = ImportLogger(base_logger, self.import_size, self.socket_client)
 
         # Check if packages are deleted from the remote since last import
         if self.import_config.other_data is None:

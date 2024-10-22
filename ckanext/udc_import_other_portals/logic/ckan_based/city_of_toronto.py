@@ -48,16 +48,8 @@ format_mapping = {
     "XML": "application/xml",
 }
 
-
+# "https://ckan0.cf.opendata.inter.prod-toronto.ca/api"
 class CityOfTorontoImport(CKANBasedImport):
-    def __init__(self, context, import_config, job_id):
-        super().__init__(
-            context,
-            import_config,
-            job_id,
-            # City of Toronto URL
-            "https://ckan0.cf.opendata.inter.prod-toronto.ca/api",
-        )
 
     def iterate_imports(self):
         """
@@ -82,7 +74,7 @@ class CityOfTorontoImport(CKANBasedImport):
 
             yield package
 
-    def map_to_cudc_package(self, src: dict):
+    def map_to_cudc_package(self, src: dict, target: dict):
         """
         Map source package to cudc package.
 
@@ -92,13 +84,6 @@ class CityOfTorontoImport(CKANBasedImport):
         from ckanext.udc_import_other_portals.logic.base import ensure_license
         from datetime import datetime
         import re
-
-        # Default fields in CUDC
-        target = {
-            "owner_org": self.import_config.owner_org,
-            "type": "catalogue",
-            "license_id": "notspecified",
-        }
 
         global package_mapping
 

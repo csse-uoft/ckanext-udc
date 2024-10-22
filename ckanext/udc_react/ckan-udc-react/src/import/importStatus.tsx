@@ -4,7 +4,7 @@ import DynamicTabs, { IDynamicTab } from './tabs';
 
 import CodeMirror from "@uiw/react-codemirror";
 import { useEffect, useState } from 'react';
-import { IImportConfig } from './import';
+import { IImportConfig } from './types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useApi } from '../api/useApi';
 import { FinishedPackagesTable } from './realtime/FinishedPackagesTable';

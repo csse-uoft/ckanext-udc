@@ -143,6 +143,9 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
             <Card>
               <CardContent>
                 <Typography variant="h6">Progress</Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {importLogs.length > 0 ? importLogs[0].message : ''}
+                </Typography>
                 <Box width="100%" mr={1}>
                   <LinearProgress variant="determinate" value={(importProgress.current / importProgress.total) * 100} />
                 </Box>

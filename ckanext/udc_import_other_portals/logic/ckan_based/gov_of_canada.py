@@ -67,16 +67,8 @@ topic_mapping = {
     "climatology_meterology_atmosphere": "Climatology Meteorology Atmosphere",
 }
 
-
+# https://open.canada.ca/data/api/
 class GovOfCanadaImport(CKANBasedImport):
-    def __init__(self, context, import_config, job_id):
-        super().__init__(
-            context,
-            import_config,
-            job_id,
-            # City of Toronto URL
-            "https://open.canada.ca/data/api",
-        )
 
     def iterate_imports(self):
         """
@@ -85,18 +77,23 @@ class GovOfCanadaImport(CKANBasedImport):
         for package in self.all_packages:
             yield package
 
-    def map_to_cudc_package(self, src: dict):
+    def map_to_cudc_package(self, src: dict, target: dict):
         """
         Map source package to cudc package.
 
         Args:
             src (dict): The source package that needs to be mapped.
         """
-        from ckanext.udc_import_other_portals.logic.base import ensure_license
+        from ckanext.udc_import_other_portals.logic.base import (
+            ensure_license,
+            ensure_organization,
+        )
+        from ckanext.udc_import_other_portals.logic.ckan_based.api import (
+            get_organization,
+        )
         import re
 
         # Default fields in CUDC
-        target = {"owner_org": self.import_config.owner_org, "type": "catalogue"}
 
         global package_mapping, subject_mapping, topic_mapping
 
@@ -111,14 +108,12 @@ class GovOfCanadaImport(CKANBasedImport):
         license_url = src.get("license_url")
 
         if license_id and license_title and license_url:
-            ensure_license(
-                self.build_context(), license_id, license_title, license_url
-            )
+            ensure_license(self.build_context(), license_id, license_title, license_url)
             target["license_id"] = license_id
 
         # name
         target["name"] = "gov-canada-" + src["name"]
-        
+
         # source
         target["url"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"
 
@@ -129,20 +124,20 @@ class GovOfCanadaImport(CKANBasedImport):
         keywords_en = kw.get("en") or kw.get("en-t-fr")
         if isinstance(keywords_en, list) and len(keywords_en) > 0:
             tags = keywords_en
-        
+
         # Add subject to tags
         if src.get("subject"):
             for subject in src["subject"]:
                 if subject in subject_mapping:
                     tags.append(subject_mapping[subject])
-        
-        # Remove special characters from tags, 
+
+        # Remove special characters from tags,
         # can only contain alphanumeric characters, spaces (" "), hyphens ("-"), underscores ("_") or dots (".")'
         tags = [re.sub(r"[^a-zA-Z0-9 ._-]", "", tag) for tag in tags]
         # Remove tags that are longer than 100 characters
         tags = [tag for tag in tags if len(tag) <= 100]
         target["tags"] = [{"name": tag} for tag in tags]
-        
+
         # topic -> theme
         theme = []
         if src.get("topic_category"):
@@ -163,17 +158,21 @@ class GovOfCanadaImport(CKANBasedImport):
 
         # metadata_contact -> contact point (access_steward)
         metadata_contact = src.get("metadata_contact") or {}
-        metadata_contact_en = metadata_contact.get("en") or metadata_contact.get("en-t-fr")
+        metadata_contact_en = metadata_contact.get("en") or metadata_contact.get(
+            "en-t-fr"
+        )
         if metadata_contact_en:
             # split and remove empty strings
-            metadata_contact_en = [x.strip() for x in metadata_contact_en.split(",") if x.strip()]
-            target["access_steward"] = ', '.join(metadata_contact_en)
-        
+            metadata_contact_en = [
+                x.strip() for x in metadata_contact_en.split(",") if x.strip()
+            ]
+            target["access_steward"] = ", ".join(metadata_contact_en)
+
         # DOI -> unique_identifier
         if src.get("digital_object_identifier"):
             target["unique_identifier"] = src.get("digital_object_identifier")
             target["global_unique_identifier"] = "Yes"
-        
+
         # date_published -> published_date
         # "2019-07-23 17:53:27.345526" -> "2019-07-23"
         if src.get("date_published"):
@@ -229,6 +228,7 @@ class GovOfCanadaImport(CKANBasedImport):
         example = {}
         all_subjects = set()
         all_topics = set()
+        all_orgs = dict()
         for src in self.all_packages:
             for key in src:
                 if key not in example:
@@ -245,10 +245,15 @@ class GovOfCanadaImport(CKANBasedImport):
                     all_subjects.update(src[key])
                 if key == "topic_category":
                     all_topics.update(src[key])
+                    print(src["id"], src["name"])
+                if key == "owner_org":
+                    if src[key] not in all_orgs:
+                        all_orgs[src[key]] = src["organization"]
 
         # print("example", json.dumps(example, indent=2))
         print(all_subjects)
         print(all_topics)
+        print(all_orgs)
 
         for src in self.all_packages:
             #

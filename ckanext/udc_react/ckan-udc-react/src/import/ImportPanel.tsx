@@ -1,21 +1,12 @@
-import { Container, Paper, Box, InputLabel, FormControl, Button, Divider, Switch, TextField, Autocomplete, FormControlLabel, FormGroup } from '@mui/material';
+import { Paper, Box, InputLabel, FormControl, Button, Divider, Switch, TextField, Autocomplete, FormControlLabel, RadioGroup, Radio, CircularProgress } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
-import DynamicTabs, { IDynamicTab } from './tabs';
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from '@codemirror/lang-python';
-import { BootstrapTextField } from './inputs';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SaveOutlined, PlayArrowOutlined, DeleteForeverOutlined } from '@mui/icons-material';
 import { useApi } from '../api/useApi';
 import { CKANOrganization } from '../api/api';
-
-export interface IImportConfig {
-  [uuid: string]: {
-    uuid?: string
-    name: string;  // The name of the import task
-    code: string;  // Some code or identifier related to the import task (e.g., configuration or script code)
-  };
-}
+import OrganizationMapper from './mapper/OrganizationMapper';
 
 export interface ImportPanelProps {
   defaultConfig?: {
@@ -25,7 +16,11 @@ export interface ImportPanelProps {
     notes?: string;
     owner_org?: string;
     stop_on_error?: boolean;
-    other_config?: object;
+    other_config?: {
+      org_import_mode?: string;
+      base_api?: string;
+      org_mapping?: { [k: string]: string };
+    };
     cron_schedule?: string;
     platform?: string;
     created_at?: string;
@@ -36,11 +31,11 @@ export interface ImportPanelProps {
 }
 
 const supportedPlatform = [
-  {id: "ckan", label: "CKAN"},
-  {id: "socrata", label: "Socrata"},
+  { id: "ckan", label: "CKAN" },
+  { id: "socrata", label: "Socrata" },
 ]
 
-function ImportPanel(props: ImportPanelProps) {
+export default function ImportPanel(props: ImportPanelProps) {
   const { api, executeApiCall } = useApi();
 
   const [importConfig, setImportConfig] = useState({
@@ -52,7 +47,10 @@ function ImportPanel(props: ImportPanelProps) {
     stop_on_error: props.defaultConfig?.stop_on_error ?? false,
     cron_schedule: props.defaultConfig?.cron_schedule ?? "",
     platform: props.defaultConfig?.platform ?? "ckan",
+    other_config: props.defaultConfig?.other_config ?? {},
   });
+
+  const [loading, setLoading] = useState({ save: false, saveAndRun: false, delete: false });
 
   const handleChange = (field: string) => (e: any) => {
     setImportConfig(initials => ({
@@ -90,15 +88,19 @@ function ImportPanel(props: ImportPanelProps) {
   }
 
   const handleSave = async () => {
+    setLoading(prev => ({ ...prev, save: true }));
     try {
       await executeApiCall(() => api.updateImportConfig(importConfig));
       props.onUpdate();
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(prev => ({ ...prev, save: false }));
     }
   }
 
   const handleSaveAndRun = async () => {
+    setLoading(prev => ({ ...prev, saveAndRun: true }));
     try {
       const { result } = await executeApiCall(() => api.updateImportConfig(importConfig));
       if (result?.id) {
@@ -109,18 +111,39 @@ function ImportPanel(props: ImportPanelProps) {
 
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(prev => ({ ...prev, saveAndRun: false }));
     }
   }
 
   const handleDelete = async () => {
+    setLoading(prev => ({ ...prev, delete: true }));
     try {
       if (importConfig.uuid)
         await executeApiCall(() => api.deleteImportConfig(importConfig.uuid!))
       props.onUpdate();
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(prev => ({ ...prev, delete: false }));
     }
   }
+
+
+  const handleChangeOtherConfig = (name: string) => (value: any) => {
+    setImportConfig(initials => ({
+      ...initials,
+      other_config: {
+        ...initials.other_config,
+        [name]: value?.target instanceof Object ? value.target.value : value
+      }
+    }));
+  }
+
+  const orgMappingComponent = useMemo(() => {
+    console.log(importConfig.other_config)
+    return <OrganizationMapper defaultValue={importConfig.other_config.org_mapping} externalBaseApi={importConfig.other_config.base_api!} onChange={handleChangeOtherConfig('org_mapping')} />
+  }, [importConfig.other_config.base_api]);
 
   return (
     <Paper variant='outlined' sx={{ p: 3 }}>
@@ -135,15 +158,6 @@ function ImportPanel(props: ImportPanelProps) {
         </Grid>
         <Grid xs={12}>
           <Autocomplete
-            options={props.organizations}
-            getOptionLabel={(option) => option.display_name}
-            value={props.organizations.find(org => org.id === importConfig.owner_org) || null}
-            onChange={handleChangeOrganization}
-            renderInput={(params) => <TextField {...params} label="Organization" />}
-          />
-        </Grid>
-        <Grid xs={12}>
-          <Autocomplete
             options={supportedPlatform}
             getOptionLabel={(option) => option.label}
             value={supportedPlatform.find(p => p.id === importConfig.platform) || null}
@@ -151,6 +165,58 @@ function ImportPanel(props: ImportPanelProps) {
             renderInput={(params) => <TextField {...params} label="Platform" />}
           />
         </Grid>
+        {importConfig.platform === 'ckan' && (
+          <>
+            <Grid xs={12}>
+              <TextField
+                label="API URL"
+                value={importConfig.other_config.base_api}
+                onChange={handleChangeOtherConfig("base_api")}
+                helperText="e.g. https://open.canada.ca/data/api/"
+                fullWidth
+              />
+            </Grid>
+
+            <Grid xs={12}>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  value={importConfig.other_config.org_import_mode}
+                  onChange={handleChangeOtherConfig('org_import_mode')}
+                >
+                  <FormControlLabel
+                    value="importToSpecifiedOrg"
+                    control={<Radio />}
+                    label="Import everything to a specified organization"
+                  />
+                  <FormControlLabel
+                    value="importToOwnOrg"
+                    control={<Radio />}
+                    label="Import into its own organization, create if it does not exist, or map to an existing organization"
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+
+            {importConfig.other_config.org_import_mode === "importToSpecifiedOrg" && (
+              <Grid xs={12}>
+                <Autocomplete
+                  options={props.organizations}
+                  getOptionLabel={(option) => option.display_name}
+                  value={props.organizations.find(org => org.id === importConfig.owner_org) || null}
+                  onChange={handleChangeOrganization}
+                  renderInput={(params) => <TextField {...params} label="Organization" />}
+                />
+              </Grid>
+            )}
+
+            {importConfig.other_config.org_import_mode === "importToOwnOrg" && (
+              <Grid xs={12}>
+                {orgMappingComponent}
+              </Grid>
+            )}
+          </>
+        )}
+
         <Grid xs={12}>
           <TextField
             label="Cron Schedule"
@@ -175,7 +241,7 @@ function ImportPanel(props: ImportPanelProps) {
           </Grid>
 
           <Grid xs={12}>
-            <FormControl variant="standard" fullWidth sx={{mt: 3}}>
+            <FormControl variant="standard" fullWidth sx={{ mt: 3 }}>
               <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600 }}>
                 Python code snippets
               </InputLabel>
@@ -195,7 +261,7 @@ function ImportPanel(props: ImportPanelProps) {
 
         <Grid xs={12} sx={{ mt: 2 }}>
           <FormControl fullWidth variant="standard" disabled>
-            <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600,  mb: 10 }}>
+            <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600, mb: 10 }}>
               Stop on error
             </InputLabel>
             <Box sx={{ pt: 3 }}>
@@ -208,18 +274,38 @@ function ImportPanel(props: ImportPanelProps) {
           <Divider />
         </Grid>
         <Grid>
-          <Button variant="outlined" startIcon={<SaveOutlined />} sx={{ textTransform: "none" }} onClick={handleSave}>
-            Save
+          <Button
+            variant="outlined"
+            startIcon={loading.save ? <CircularProgress size={24} /> : <SaveOutlined />}
+            sx={{ textTransform: "none" }}
+            onClick={handleSave}
+            disabled={loading.save}
+          >
+            {'Save'}
           </Button>
         </Grid>
         <Grid>
-          <Button variant="outlined" color="success" startIcon={<PlayArrowOutlined />} sx={{ textTransform: "none" }} onClick={handleSaveAndRun}>
-            Save and Run Import
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={loading.saveAndRun ? <CircularProgress size={24} /> : <PlayArrowOutlined />}
+            sx={{ textTransform: "none" }}
+            onClick={handleSaveAndRun}
+            disabled={loading.saveAndRun || loading.save}
+          >
+            {'Save and Run Import'}
           </Button>
         </Grid>
         {importConfig.uuid && <Grid>
-          <Button variant="outlined" startIcon={<DeleteForeverOutlined />} color="error" sx={{ textTransform: "none" }} onClick={handleDelete}>
-            Delete
+          <Button
+            variant="outlined"
+            startIcon={loading.delete ? <CircularProgress size={24} /> : <DeleteForeverOutlined />}
+            color="error"
+            sx={{ textTransform: "none" }}
+            onClick={handleDelete}
+            disabled={loading.delete || loading.save || loading.saveAndRun}
+          >
+            {'Delete'}
           </Button>
         </Grid>}
       </Grid>
@@ -227,36 +313,3 @@ function ImportPanel(props: ImportPanelProps) {
   );
 }
 
-export default function ImportDashboard() {
-  const { api, executeApiCall } = useApi();
-  const [tabs, setTabs] = useState<IDynamicTab[]>([]);
-
-  const load = async (option?: string) => {
-    // Get organizations
-    const organizations = await executeApiCall(api.getOrganizations);
-
-    const importConfigs: IImportConfig = await executeApiCall(api.getImportConfigs);
-    const newTabs = [];
-    for (const [uuid, config] of Object.entries(importConfigs)) {
-      const { code, name } = config;
-      newTabs.push({
-        key: uuid, label: name, panel: <ImportPanel defaultConfig={{ uuid, ...config }} onUpdate={requestRefresh} organizations={organizations} />
-      })
-    }
-    newTabs.push({ key: "new-import", label: "New Import", panel: <ImportPanel onUpdate={requestRefresh} organizations={organizations} /> });
-    setTabs(newTabs);
-  }
-  const requestRefresh = () => {
-    load();
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  return (
-    <Container>
-      <DynamicTabs tabs={tabs} />
-    </Container>
-  );
-}
