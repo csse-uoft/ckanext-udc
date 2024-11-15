@@ -126,8 +126,20 @@ export interface CKANOrganization {
   type: string;
 }
 
+export interface CKANOrganizationAndAdmin {
+  id: string;
+  name: string;
+  admins: CKANUser[];
+}
+
+export interface CKANUser {
+  id: string;
+  name: string;
+  fullname: string;
+}
+
 export async function getOrganizations(): Promise<CKANOrganization[]> {
-  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/organization_list?all_fields=true&type=organization");
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/organization_list?all_fields=true&type=organization&limit=10000");
   return result.result;
 }
 
@@ -142,7 +154,7 @@ export async function packageSearch(q: string, rows: number, start: number, sort
   return result.result;
 }
 
-export async function generateSummary(id: string): Promise<{prompt: string, results: string[]}> {
+export async function generateSummary(id: string): Promise<{ prompt: string, results: string[] }> {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/summary_generate", {
     method: "POST",
     body: JSON.stringify({ id }),
@@ -171,8 +183,18 @@ export async function updatePackage(id: string, data: any) {
   }
 }
 
-export async function GetWsToken() {
+export async function getWsToken() {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_ws_token", {
+    method: "GET"
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function getOrganizationsAndAdmins(): Promise<CKANOrganizationAndAdmin[]> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_organizations_and_admins", {
     method: "GET"
   });
   if (!result.success) {

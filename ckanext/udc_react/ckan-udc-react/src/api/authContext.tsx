@@ -8,7 +8,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode, dismissable?: boolean }> = ({ children, dismissable = true }) => {
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const location = useLocation()
@@ -26,13 +26,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider value={{ showError }}>
       {children}
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={dismissable ? handleClose : undefined}>
         <DialogTitle>Authorization Error</DialogTitle>
         <DialogContent>{errorMessage}</DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
-            Dismiss
-          </Button>
+          {dismissable && <Button onClick={() => setOpen(false)} color="secondary">Dismiss</Button>}
           <Button onClick={handleClose} color="primary">
             Go to Login
           </Button>

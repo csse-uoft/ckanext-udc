@@ -1,12 +1,11 @@
 import React, { Suspense, lazy } from 'react';
 import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import QAPage from './qa/QAPage'
 import Footer from './base/footer'
 import { AuthProvider } from './api/authContext';
-import CreateCatalogueEntry from './tutorial/CreateCatalogueEntry'
 import { CircularProgress, Container } from '@mui/material';
 import FAQPage from './tutorial/FAQPage';
+import RequestOrganizationAccess from './requestOrgAccess/RequestOrganizationAccess';
 
 const DrawerDashboard = lazy(() => import('./dashboard/drawer'));
 
@@ -24,6 +23,12 @@ export default function App() {
           <FAQPage />
         </Suspense>
 
+      },
+    },
+    {
+      path: "/udc-react/request-organization-access/:option?",
+      Component() {
+        return <AuthProvider dismissable={false}><RequestOrganizationAccess /></AuthProvider>
       },
     },
     {

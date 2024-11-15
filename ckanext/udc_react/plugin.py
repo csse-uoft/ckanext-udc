@@ -16,7 +16,7 @@ from pathlib import Path
 import requests
 from .constants import UDC_REACT_PATH
 
-from ckanext.udc_react.actions import get_maturity_levels, get_ws_token
+from ckanext.udc_react.actions import get_maturity_levels, get_ws_token, get_organizations_and_admins
 from ckanext.udc_react.socketio import initSocketIO
 
 log = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                     "qa",
                     "realtime-status"
                 ]
-                react_path_start_with = ["maturity-levels", "chatgpt-summary", "tutorial", "dashboard", "faq"]
+                react_path_start_with = ["maturity-levels", "chatgpt-summary", "tutorial", "dashboard", "faq", "request-organization-access"]
                 if path in react_paths or any([path.startswith(p) for p in react_path_start_with]):
 
                     def dev_asset(file_path):
@@ -193,4 +193,5 @@ class UdcReactPlugin(plugins.SingletonPlugin):
         return {
             'get_maturity_levels': get_maturity_levels,
             'get_ws_token': get_ws_token,
+            'get_organizations_and_admins': get_organizations_and_admins,
         }

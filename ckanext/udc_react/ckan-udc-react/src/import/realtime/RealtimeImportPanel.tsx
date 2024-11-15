@@ -20,7 +20,7 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
   useEffect(() => {
     let socket: Socket;
     (async function () {
-      const token = await executeApiCall(() => api.GetWsToken());
+      const token = await executeApiCall(() => api.getWsToken());
       socket = io(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/admin-dashboard`, {
         reconnectionDelayMax: 10000,
         withCredentials: true,

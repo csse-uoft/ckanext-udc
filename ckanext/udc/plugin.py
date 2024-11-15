@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import json
 import traceback
-import re
+import chalk
 from collections import OrderedDict
 from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
-
-from ckan.types import Schema, Context
+from ckan.types import Schema, Context, CKANApp, Response
 import ckan
 import ckan.plugins as plugins
 import ckan.logic as logic
@@ -47,6 +46,7 @@ from ckanext.udc.file_format.logic import (
 )
 from ckanext.udc.desc.actions import summary_generate
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
+from ckanext.udc.error_handler import override_error_handler
 
 
 """
@@ -72,6 +72,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController)
+    plugins.implements(plugins.IMiddleware)
 
     disable_graphdb = False
     maturity_model = []
@@ -348,6 +349,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return facets_dict
 
     def read(self, entity: "model.Package") -> None:
+        print(chalk.red("create"))
         pass
 
     def create(self, entity: "model.Package") -> None:
@@ -436,3 +438,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
         return pkg_dict
+    
+    # IMiddleware
+    def make_middleware(self, app: CKANApp, config: CKANConfig) -> CKANApp:
+        override_error_handler(app, config)
+        return app

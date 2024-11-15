@@ -10,6 +10,7 @@ const FAQItem: React.FC<FAQ> = ({ question, beforeTOC, markdown, markdownPath, c
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    document.title = question + ' - CUDC FAQ';
     if (component) {
       setLoading(false);
       return;
