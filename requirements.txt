@@ -7,3 +7,4 @@ pandas>=2.0.3
 openai>=1.37.1
 Flask-SocketIO>=5.3.6
 python-socketio[client]>=5.11.3
+pychalk>=1.0.0
