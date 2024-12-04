@@ -46,9 +46,8 @@ def get_catalogue_summary_from_openai(row, mapping, config):
         f"this catalogue's fields values, ensuring uniqueness and distinct meanings for each field. Do not summarize "
         f"the names of the fields available but describe their values. Skip the fields that have a value of \"Not provided\"."
     )
-    model = 'gpt-4'
     res = client.chat.completions.create(
-        model=model,
+        model=config["openai_model"],
         messages=[{"role": "system", "content": prompt}],
         max_tokens=config["max_tokens"],
         temperature=config["temperature"],
