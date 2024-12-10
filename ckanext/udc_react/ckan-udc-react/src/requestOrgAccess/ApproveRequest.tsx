@@ -51,20 +51,26 @@ const ApproveRequest: React.FC = () => {
   const [dialog, setDialog] = useState<{ title: string, message: string }>({ title: '', message: '' });
   const [loading, setLoading] = useState<boolean>(true);
 
-  const reload = useCallback(function () {
+  const reload = useCallback(async function () {
     if (token) {
-      executeApiCall(() => api.decodeOrganizationAccessToken(token)).then((data) => {
-        setData(data);
-        setLoading(false);
-        // console.log(data);
-      }).catch((error) => {
-        console.error('Failed to fetch user and organization:', error);
-        if (typeof error === 'string') {
-          setDialog({ title: 'Error', message: error });
-          setShowDialog(true);
-        }
-
-      });
+      const user = await executeApiCall(api.getCurrentUser);
+      if (user.id == null) {
+        window.location.href = '/user/login?came_from=' + location.pathname;
+      } else {
+        executeApiCall(() => api.decodeOrganizationAccessToken(token)).then((data) => {
+          setData(data);
+          setLoading(false);
+          // console.log(data);
+        }).catch((error) => {
+          console.error('Failed to fetch user and organization:', error);
+          if (typeof error === 'string') {
+            setDialog({ title: 'Error', message: error });
+            setShowDialog(true);
+          }
+  
+        });
+      }
+      
     }
   }, [token]);
 

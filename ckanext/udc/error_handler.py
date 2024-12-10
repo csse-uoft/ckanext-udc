@@ -33,11 +33,14 @@ MESSAGE_NOT_LOGGED_IN_REQUEST_ORGANIZATION_ACCESS = """
 You are not authorized to request access to an organization. Please login to request access to an organization. If you do not have an account, please <a href="/user/register">create one</a>.
 """
 
-messages = [
-    MESSAGE_NOT_LOGGED_IN_ADD_TO_CATALOGUE,
-    MESSAGE_NOT_LOGGED_IN_CREATE_ORGANIZATION,
-    MESSAGE_NOT_LOGGED_IN_REQUEST_ORGANIZATION_ACCESS,
-]
+MESSAGE_NOT_LOGGED_IN_WRONG_USER = """
+You are not authorized to access this page. Please login with the correct account.
+"""
+
+MESSAGE_NOT_LOGGED_IN_VIEW_ORGANIZATION_ACCESS_REQUESTS = """
+You are not authorized to view organization access requests. Please login to view organization access requests.
+"""
+
 
 def clear_and_flash(message, category):
     # Remove the error flash message
@@ -53,6 +56,8 @@ def override_error_handler(app: CKANApp, config: CKANConfig):
     def display_flashes():
         if request.full_path.endswith(f"came_from=/{UDC_REACT_PATH}/request-organization-access"):
             clear_and_flash(MESSAGE_NOT_LOGGED_IN_REQUEST_ORGANIZATION_ACCESS, "alert-warning")
+        elif f"came_from=/{UDC_REACT_PATH}/request-organization-access/token/" in request.full_path:
+            clear_and_flash(MESSAGE_NOT_LOGGED_IN_VIEW_ORGANIZATION_ACCESS_REQUESTS, "alert-warning")
 
     @app.errorhandler(Forbidden)
     def handle_forbidden(e) -> Union[tuple[str, Optional[int]], Optional[Response]]:
