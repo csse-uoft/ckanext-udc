@@ -148,6 +148,7 @@ export interface CKANUser {
   id: string;
   name: string;
   fullname: string;
+  sysadmin?: boolean;
 }
 
 export async function getOrganizations(): Promise<CKANOrganization[]> {
@@ -223,7 +224,7 @@ export async function flashMessage(messageType: string) {
   }
 }
 
-export async function getOrganizationsAndAdmins(): Promise<CKANOrganizationAndAdmin[]> {
+export async function getOrganizationsAndAdmins(): Promise<{organizations: CKANOrganizationAndAdmin[], sysadmins: CKANUser[]}> {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_organizations_and_admins", {
     method: "GET"
   });

@@ -38,7 +38,7 @@ class CUDCImportConfig(Base):
     cron_schedule = Column(types.UnicodeText)
     is_running = Column(types.BOOLEAN)
 
-    created_at = Column(types.DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(types.DateTime, default=datetime.datetime.now)
     updated_at = Column(types.DateTime)
 
     def __init__(self, **kwargs):
@@ -93,7 +93,7 @@ class CUDCImportJob(Base):
     has_error = Column(types.BOOLEAN)
     logs = Column(types.UnicodeText)
     other_data = Column(MutableDict.as_mutable(JSONB))
-    run_at = Column(types.DateTime, default=datetime.datetime.utcnow)
+    run_at = Column(types.DateTime, default=datetime.datetime.now)
     finished_at = Column(types.DateTime)
     run_by = Column(types.UnicodeText, ForeignKey(model.User.id))
     is_running = Column(types.BOOLEAN)

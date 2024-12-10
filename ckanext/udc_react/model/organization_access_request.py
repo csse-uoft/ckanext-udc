@@ -43,9 +43,9 @@ class OrganizationAccessRequest(Base):
         types.DateTime,
         nullable=False,
     )
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
     )
 
     # Define relationships
@@ -68,7 +68,7 @@ class OrganizationAccessRequest(Base):
         self.status = status
 
     def __repr__(self):
-        return "<OrganizationAccessRequest %r>" % self.id
+        return "<OrganizationAccessRequest id=%r user=%r org=%r status=%r>" % (self.id, self.user_id, self.organization_id, self.status)
 
     @classmethod
     def get(cls, id):

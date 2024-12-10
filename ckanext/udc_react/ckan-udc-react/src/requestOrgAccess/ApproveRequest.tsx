@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -31,6 +31,8 @@ interface ApproveRequestProps {
     email: string;
     picture?: string;
     notes?: string;
+    created_at: string;
+    requested_at: string;
   };
   organization: {
     id: string;
@@ -47,28 +49,35 @@ const ApproveRequest: React.FC = () => {
   const [data, setData] = useState<ApproveRequestProps | null>(null);
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [dialog, setDialog] = useState<{ title: string, message: string }>({ title: '', message: '' });
+  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    // Fetch user and organization from API
+  const reload = useCallback(function () {
     if (token) {
       executeApiCall(() => api.decodeOrganizationAccessToken(token)).then((data) => {
         setData(data);
-        console.log(data);
+        setLoading(false);
+        // console.log(data);
       }).catch((error) => {
         console.error('Failed to fetch user and organization:', error);
-        setDialog({ title: 'Error', message: error });
-        setShowDialog(true);
+        if (typeof error === 'string') {
+          setDialog({ title: 'Error', message: error });
+          setShowDialog(true);
+        }
+
       });
     }
-
-
   }, [token]);
+
+  useEffect(() => {
+    // Fetch user and organization from API
+    reload();
+  }, [reload]);
 
 
   const submit = (approve: boolean) => () => {
     if (token) {
+      setLoading(true);
       executeApiCall(() => api.approveOrDenyOrganizationAccess(token, approve)).then(() => {
-        console.log('User approved');
         if (approve) {
           setDialog({ title: 'Success', message: 'User approved' });
           setShowDialog(true);
@@ -76,10 +85,13 @@ const ApproveRequest: React.FC = () => {
           setDialog({ title: 'Success', message: 'User declined' });
           setShowDialog(true);
         }
+        setLoading(true);
+        reload();
       }).catch((error) => {
         console.error(`Failed to ${approve ? 'approve' : 'decline'} user:`, error);
         setDialog({ title: 'Error', message: error });
         setShowDialog(true);
+        setLoading(false);
       });
     }
   }
@@ -92,14 +104,16 @@ const ApproveRequest: React.FC = () => {
     return (
       <Container>
         <Paper elevation={3} sx={{ padding: 3, m: 2 }}>
-          <CircularProgress />
-          <Typography variant="h6" gutterBottom>
-            Loading...
-          </Typography>
+          <Box display="flex" alignItems="center" mb={2} gap={2}>
+            <CircularProgress />
+            <Typography variant="h6" gutterBottom>
+              Loading...
+            </Typography>
+          </Box>
         </Paper>
         <Dialog title={dialog.title} open={showDialog} onClose={() => {
           setShowDialog(false);
-          if (dialog.title.includes("Invalid User")) {
+          if (dialog.message.includes("Invalid user")) {
             window.location.href = "/user/login?next=" + encodeURIComponent(window.location.href);
           }
         }} message={dialog.message} />
@@ -186,16 +200,32 @@ const ApproveRequest: React.FC = () => {
                       <Typography variant="body2" whiteSpace="pre">{data.requester.notes}</Typography>
                     </TableCell>
                   </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <Typography variant="body2">Registered At:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{new Date(data.requester.created_at).toLocaleString()}</Typography>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <Typography variant="body2">Requested At:</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{new Date(data.requester.requested_at).toLocaleString()}</Typography>
+                    </TableCell>
+                  </TableRow>
 
                 </TableBody>
               </Table>
             </TableContainer>
           </CardContent>
           <CardActions sx={{ ml: 1, mb: 1 }}>
-            <Button variant="contained" color="primary" onClick={submit(true)} disabled={data.status !== "pending"}>
+            <Button variant="contained" color="primary" onClick={submit(true)} disabled={data.status !== "pending" || loading}>
               Accept
             </Button>
-            <Button variant="contained" color="error" onClick={submit(false)} disabled={data.status !== "pending"}>
+            <Button variant="contained" color="error" onClick={submit(false)} disabled={data.status !== "pending" || loading}>
               Reject
             </Button>
           </CardActions>

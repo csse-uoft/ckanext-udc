@@ -22,6 +22,26 @@ import { useLocation, useParams } from 'react-router-dom';
 import { Dialog as ErrorDialog } from './Dialog';
 
 
+const getAdminLabel = (admin: CKANUser) => {
+  const optional = [];
+  if (admin.fullname) {
+    optional.push("username: " + admin.name);
+  }
+  if (admin.sysadmin) {
+    optional.push('sysadmin');
+  } else {
+    optional.push('organization admin');
+  }
+  const optionalText = optional.length > 0 ? ` (${optional.join(', ')})` : '';
+
+  if (admin.fullname) {
+    return `${admin.fullname}${optionalText}`;
+  } else {
+    return `${admin.name}${optionalText}`;
+  }
+}
+
+
 const RequestOrganizationAccess: React.FC = () => {
   const [organizations, setOrganizations] = useState<CKANOrganizationAndAdmin[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<CKANOrganizationAndAdmin | null>(null);
@@ -47,7 +67,18 @@ const RequestOrganizationAccess: React.FC = () => {
       } else {
         // Fetch organizations and admins from API
         const data = await executeApiCall(api.getOrganizationsAndAdmins);
-        setOrganizations(data);
+        for (const org of data.organizations) {
+          // Add sysadmins to each organization
+          const adminIds = new Set(org.admins.map(admin => admin.id));
+
+          for (const sysadmin of data.sysadmins) {
+            if (!adminIds.has(sysadmin.id)) {
+              org.admins.push({ ...sysadmin, sysadmin: true });
+              console.log(org.admins)
+            }
+          }
+        }
+        setOrganizations(data.organizations);
       }
 
     })();
@@ -57,7 +88,7 @@ const RequestOrganizationAccess: React.FC = () => {
     setSelectedAdmins([]);
   }, [selectedOrg]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setRequesting(true);
     console.log('Request submitted:', {
       organization: selectedOrg,
@@ -91,6 +122,7 @@ const RequestOrganizationAccess: React.FC = () => {
   const handleCloseError = () => {
     setShowError(false);
   }
+
 
   if (organizations.length === 0) {
     return <Container>
@@ -132,7 +164,7 @@ const RequestOrganizationAccess: React.FC = () => {
         <Autocomplete
           multiple
           options={selectedOrg?.admins || []}
-          getOptionLabel={(option) => option.fullname ? `${option.fullname} (${option.name})` : option.name}
+          getOptionLabel={getAdminLabel}
           value={selectedAdmins}
           onChange={(event, newValue) => setSelectedAdmins(newValue)}
           renderInput={(params) => <TextField {...params} label="Admins of selected organization to notify" variant="outlined" />}

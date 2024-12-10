@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
 
 from ckanext.udc_react.constants import UDC_REACT_PATH
