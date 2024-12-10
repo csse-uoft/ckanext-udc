@@ -1,0 +1,1 @@
+export const REACT_PATH = '/udc-react';

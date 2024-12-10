@@ -12,25 +12,28 @@ from ckan.config.middleware.flask_app import CKANApp, CKANFlask
 import logging
 import os
 import json
+import sys
 from pathlib import Path
 import requests
 from .constants import UDC_REACT_PATH
 
-from ckanext.udc_react.actions import get_maturity_levels, get_ws_token, get_organizations_and_admins
 from ckanext.udc_react.socketio import initSocketIO
+import ckanext.udc_react.logic.action as _action
 
 log = logging.getLogger(__name__)
 
-
+@tk.blanket.actions(_action.get_actions)
 class UdcReactPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IActions)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IMiddleware)
     # plugins.implements(plugins.IBlueprint)
 
     # IConfigurable
     def configure(self, config: CKANConfig):
+        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+            # Do not load the plugin if we are running the CLI
+            return
         self.project_path = Path(os.path.dirname(os.path.abspath(__file__)))
         self.load_vars(config)
         self.load_react(self.is_production)
@@ -44,6 +47,9 @@ class UdcReactPlugin(plugins.SingletonPlugin):
 
     # IMiddleware
     def make_middleware(self, app: CKANApp, config: CKANConfig) -> CKANApp:
+        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+            # Do not load the plugin if we are running the CLI
+            return app
         # In Development mode, redirect calls to vite
         if not self.is_production:
 
@@ -188,10 +194,3 @@ class UdcReactPlugin(plugins.SingletonPlugin):
             'ckanext.udc_react.qa_maturity_levels': [ignore_missing, unicode_safe]
         })
         return schema
-
-    def get_actions(self):
-        return {
-            'get_maturity_levels': get_maturity_levels,
-            'get_ws_token': get_ws_token,
-            'get_organizations_and_admins': get_organizations_and_admins,
-        }

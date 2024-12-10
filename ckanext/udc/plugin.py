@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import json
 import traceback
 import chalk
@@ -87,6 +88,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         tk.add_resource("assets", "udc")
 
     def configure(self, config: CKANConfig):
+        log.info(sys.argv)
+        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+            log.info("Skipping UDC Plugin Configuration")
+            # Do not load the plugin if we are running the CLI
+            return
         existing_config = ckan.model.system_info.get_system_info("ckanext.udc.config")
         # print(existing_config)
 

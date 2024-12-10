@@ -18,27 +18,39 @@ import {
 import { useApi } from '../api/useApi';
 import { Container } from '@mui/system';
 import { CKANOrganizationAndAdmin, CKANUser } from '../api/api';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { Dialog as ErrorDialog } from './Dialog';
 
 
 const RequestOrganizationAccess: React.FC = () => {
   const [organizations, setOrganizations] = useState<CKANOrganizationAndAdmin[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<CKANOrganizationAndAdmin | null>(null);
   const [selectedAdmins, setSelectedAdmins] = useState<CKANUser[]>([]);
+  const [message, setMessage] = useState<string>('');
   const [success, setSuccess] = useState<boolean>(false);
   const [requesting, setRequesting] = useState<boolean>(false);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('Request failed, please try again later.');
   const { executeApiCall, api } = useApi();
   const { option } = useParams()
   const showAlert = option === 'redirected';
 
+  const location = useLocation();
+
   useEffect(() => {
     document.title = 'Request Organization Access - CUDC';
 
-    // Fetch organizations and admins from API
-    executeApiCall(api.getOrganizationsAndAdmins).then((data: CKANOrganizationAndAdmin[]) => {
-      setOrganizations(data);
-    });
+    (async function () {
+      const user = await executeApiCall(api.getCurrentUser);
+      if (user.id == null) {
+        window.location.href = '/user/login?came_from=' + location.pathname;
+      } else {
+        // Fetch organizations and admins from API
+        const data = await executeApiCall(api.getOrganizationsAndAdmins);
+        setOrganizations(data);
+      }
 
+    })();
   }, []);
 
   useEffect(() => {
@@ -51,13 +63,41 @@ const RequestOrganizationAccess: React.FC = () => {
       organization: selectedOrg,
       admins: selectedAdmins,
     });
-    setRequesting(false);
-    setSuccess(true);
+
+    // Send request to API
+    executeApiCall(() => api.requestOrganizationAccess(selectedOrg?.id!, selectedAdmins.map(admin => admin.id), message)).then(() => {
+      setSuccess(true);
+      setRequesting(false);
+    }).catch((error) => {
+      if (error instanceof Error) {
+        error = error.message;
+      }
+      console.error('Request failed:', error);
+      if (typeof error == 'string') {
+        setErrorMessage(error);
+        setShowError(true);
+        setRequesting(false);
+      }
+
+    });
+
   };
 
   const handleClose = () => {
     setRequesting(false);
     setSuccess(false);
+  }
+
+  const handleCloseError = () => {
+    setShowError(false);
+  }
+
+  if (organizations.length === 0) {
+    return <Container>
+      <Typography variant="h5" gutterBottom>
+        Loading...
+      </Typography>
+    </Container>
   }
 
   return (
@@ -66,7 +106,7 @@ const RequestOrganizationAccess: React.FC = () => {
       {showAlert && (
         <Alert severity="error" sx={{ mb: 2, mt: 2 }}>
           You do not have access to any organizations. Please request access to an organization to proceed.
-          <br/>See <Link href="/udc-react/faq/create-catalogue-entry" target="_blank">tutorial</Link> for more information.
+          <br />See <Link href="/udc-react/faq/create-catalogue-entry" target="_blank">tutorial</Link> for more information.
         </Alert>
       )}
 
@@ -100,6 +140,18 @@ const RequestOrganizationAccess: React.FC = () => {
           disabled={!selectedOrg}
         />
 
+        <TextField
+          label="Message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          multiline
+          rows={4}
+          variant="outlined"
+          fullWidth
+          sx={{ mb: 2 }}
+          helperText="Optional message to send to the admins"
+        />
+
         <Button
           variant="outlined"
           color="primary"
@@ -125,6 +177,7 @@ const RequestOrganizationAccess: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+        <ErrorDialog open={showError} onClose={handleCloseError} message={errorMessage} />
       </Paper>
     </Container>
 

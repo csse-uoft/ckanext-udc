@@ -5,15 +5,27 @@ export async function fetchWithErrorHandling(url: string, options?: RequestInit)
     const response = await fetch(url, options);
     const data = await response.json();
 
-    if (!response.ok) {
+    if (response.status === 403) {
       throw data;
+    }
+
+    if (!response.ok) {
+      if (data?.error?.message) {
+        throw data.error.message;
+      } else {
+        throw data;
+      }
     }
 
     return data;
   } catch (error: any) {
     if (error?.response) {
       const jsonError = await error.response.json(); // must await for response
-      throw jsonError;
+      if (jsonError?.error?.message) {
+        throw jsonError.error.message;
+      } else {
+        throw jsonError;
+      }
     } else {
       throw error
     }
@@ -193,9 +205,69 @@ export async function getWsToken() {
   return result.result;
 }
 
+export async function getCurrentUser(): Promise<CKANUser> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_current_user");
+  return result.result;
+}
+
+export async function flashMessage(messageType: string) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/flash_message", {
+    method: "POST",
+    body: JSON.stringify({ message_type: messageType }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+}
+
 export async function getOrganizationsAndAdmins(): Promise<CKANOrganizationAndAdmin[]> {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_organizations_and_admins", {
     method: "GET"
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function requestOrganizationAccess(organization: string, admins: string[], message: string) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/request_organization_access", {
+    method: "POST",
+    body: JSON.stringify({ organization_id: organization, admin_ids: admins, notes: message }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function decodeOrganizationAccessToken(token: string) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/decode_request_organization_access_token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function approveOrDenyOrganizationAccess(token: string, approve: boolean) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/approve_or_deny_organization_access", {
+    method: "POST",
+    body: JSON.stringify({ token, approve }),
+    headers: {
+      "Content-Type": "application/json",
+    }
   });
   if (!result.success) {
     throw result.error;

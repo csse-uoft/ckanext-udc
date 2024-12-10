@@ -44,12 +44,16 @@ def initdb():
     from ..licenses.model import init_tables
     init_tables()
     
-    # Try import "import_other_portals" models
-    try:
-        lib = import_module("ckanext.udc_import_other_portals.model")
-        lib.init_tables()
-    except Exception as e:
-        print(e)
-        log.warning("Cannot init DB in import_other_portals plugin")
+    libs = [
+        "ckanext.udc_import_other_portals.model",
+        "ckanext.udc_react.model.organization_access_request",
+    ]
+    for lib_str in libs:
+        try:
+            lib = import_module(lib_str)
+            lib.init_tables()
+        except Exception as e:
+            print(e)
+            log.warning(f"Cannot init DB in {lib_str} plugin")
         
-    log.info("DB tables are setup")
+    log.info("DB tables initialized")

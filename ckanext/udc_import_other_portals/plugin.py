@@ -1,4 +1,5 @@
 import logging
+import sys
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.types import Action, AuthFunction, Schema
@@ -24,6 +25,9 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
     
 
     def configure(self, config: CKANConfig):
+        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+            # Do not load the plugin if we are running the CLI
+            return
         init_relationships()
         log.info("Udc ImportOtherPortals Plugin Loaded!")
 
