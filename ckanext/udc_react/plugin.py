@@ -31,7 +31,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
 
     # IConfigurable
     def configure(self, config: CKANConfig):
-        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+        if not ("run" in sys.argv or "uwsgi" in sys.argv or ("jobs" in sys.argv and "worker" in sys.argv)):
             # Do not load the plugin if we are running the CLI
             return
         self.project_path = Path(os.path.dirname(os.path.abspath(__file__)))

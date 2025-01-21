@@ -102,7 +102,7 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
       console.log(status)
       if (status.progress)
         setImportProgress(status.progress);
-      setImportLogs(status.logs);
+      setImportLogs(status.logs || []);
       setFinishedPackages(status.finished);
     });
   }, [selectedJob]);
