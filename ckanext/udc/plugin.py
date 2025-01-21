@@ -38,6 +38,7 @@ from ckanext.udc.licenses.logic.action import (
     license_delete,
     licenses_get,
     init_licenses,
+    test_long_task,
 )
 from ckanext.udc.licenses.utils import license_options_details
 from ckanext.udc.file_format.logic import (
@@ -89,7 +90,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def configure(self, config: CKANConfig):
         log.info(sys.argv)
-        if not ("run" in sys.argv or "uwsgi" in sys.argv):
+        if not ("run" in sys.argv or "uwsgi" in sys.argv or ("jobs" in sys.argv and "worker" in sys.argv)):
             log.info("Skipping UDC Plugin Configuration")
             # Do not load the plugin if we are running the CLI
             return
@@ -325,6 +326,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "license_create": license_create,
             "license_delete": license_delete,
             "licenses_get": licenses_get,
+            "test_long_task": test_long_task,
             # Custom file format
             "file_format_create": file_format_create,
             "file_format_delete": file_format_delete,

@@ -102,6 +102,16 @@ def licenses_get(context, data_dict):
         })
     
     return licenses
+
+
+@logic.side_effect_free
+def test_long_task(context, data_dict):
+    """
+    A test action to simulate a long running task.
+    """
+    import time
+    time.sleep(10)
+    return {"success": True}
     
     
 
