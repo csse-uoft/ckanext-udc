@@ -40,11 +40,11 @@ def gen_mapping(maturity_model):
     :param mapping_json: udc config json string
     :return: List of mappings between the internal and external display names
     """
-    mm_mapping = []
+    mm_mapping = {}
     for mm in maturity_model:
         for f in mm['fields']:
             external_name = f.get('ckanField') or f.get('label')
             internal_name = f.get('ckanField') or f.get('name')
             short_desc = f.get('short_description')
-            mm_mapping.append({'maturity_level': mm['name'], 'internal_name': internal_name, 'display_name': external_name, 'short_description': short_desc})
+            mm_mapping[external_name] = ({'maturity_level': mm['name'], 'internal_name': internal_name, 'display_name': external_name, 'short_description': short_desc})
     return mm_mapping
