@@ -101,7 +101,8 @@ const DrawerDashboard: React.FC = () => {
           p: 1,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh'
+          minHeight: '100vh',
+          maxWidth: `calc(100vw - ${drawerOpen ? drawerWidth : 0}px - 18px)`,
         }}
       >
         <Toolbar sx={{ flexShrink: 0 }}>

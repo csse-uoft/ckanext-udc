@@ -46,7 +46,7 @@ from ckanext.udc.file_format.logic import (
     file_format_delete,
     file_formats_get,
 )
-from ckanext.udc.desc.actions import summary_generate
+from ckanext.udc.desc.actions import summary_generate, update_summary
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
 
@@ -87,12 +87,28 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         tk.add_template_directory(config_, "templates")
         tk.add_public_directory(config_, "public")
         tk.add_resource("assets", "udc")
+        
+    def _cli_configure(self):
+        """Partial load for CLI"""
+        self.disable_graphdb = True
+        existing_config = ckan.model.system_info.get_system_info("ckanext.udc.config")
+        if existing_config:
+            try:
+                # Call our plugin to update the config
+                self.reload_config(json.loads(existing_config))
+            except:
+                log.error
+        
+        # Load custom licenses
+        init_licenses()
+        
 
     def configure(self, config: CKANConfig):
         log.info(sys.argv)
         if not ("run" in sys.argv or "uwsgi" in sys.argv or ("jobs" in sys.argv and "worker" in sys.argv)):
             log.info("Skipping UDC Plugin Configuration")
             # Do not load the plugin if we are running the CLI
+            self._cli_configure()
             return
         existing_config = ckan.model.system_info.get_system_info("ckanext.udc.config")
         # print(existing_config)
@@ -333,6 +349,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "file_formats_get": file_formats_get,
             # Chatgpt summary actions
             "summary_generate": summary_generate,
+            "update_summary": update_summary,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

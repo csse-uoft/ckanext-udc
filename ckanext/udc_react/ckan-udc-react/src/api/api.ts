@@ -156,11 +156,22 @@ export async function getOrganizations(): Promise<CKANOrganization[]> {
   return result.result;
 }
 
+export async function packageShow(id: string) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/package_show?id=" + id);
+  return result.result;
+}
+
 export async function packageSearch(q: string, rows: number, start: number, sort?: string, fq?: string) {
   const params = { q, fq, rows, start, sort, facet: 'false' };
   let paramsStr = Object.entries(params)
     .filter(([k, v]) => (k != null && v != null))
-    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&')
+    .map(([k, v]) => {
+      if (k === 'sort') {
+        return `${k}=${v}`;
+      } else {
+        return `${k}=${encodeURIComponent(String(v))}`;
+      }
+    }).join('&')
 
 
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/package_search?" + paramsStr);
@@ -180,6 +191,20 @@ export async function generateSummary(id: string): Promise<{ prompt: string, res
     throw result.error;
   }
   return result.result;
+}
+
+export async function update_summary(id: string, summary: string): Promise<void> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/update_summary", {
+    method: "POST",
+    body: JSON.stringify({ package_id: id, summary }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+
+  if (!result.success) {
+    throw result.error;
+  }
 }
 
 export async function updatePackage(id: string, data: any) {

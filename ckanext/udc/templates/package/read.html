@@ -1,5 +1,25 @@
 {% ckan_extends %}
 
+{% block package_notes %}
+  
+  {% if pkg.chatgpt_summary %}
+    {# <h2>Summary</h2> #}
+    <span class="badge bg-primary">ChatGPT</span>
+
+    {# {% if pkg.notes %}
+    <span class="badge bg-primary">View Original Description</span>
+    <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ h.render_markdown(h.get_translated(pkg, 'notes')) }}">
+        <i class="fa-regular fa-circle-question"></i>
+    </button>
+    {% endif %} #}
+    <div class="notes embedded-content">
+      {{ h.render_markdown(h.get_translated(pkg, 'chatgpt_summary')) }}
+    </div>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
 {% block package_resources %}
 
   {% if pkg_dict.get("related_packages") | length > 0 %}

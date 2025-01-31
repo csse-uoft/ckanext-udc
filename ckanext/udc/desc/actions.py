@@ -201,3 +201,27 @@ def summary_generate(context: Context, package_id: str):
         raise logic.ActionError(
             f"\nError while generating summary using OpenAI. Exited with error: {str(e)}"
         )
+
+def update_summary(context: Context, data: dict):
+    package_id = data.get("package_id")
+    summary = data.get("summary")
+    
+    if not package_id:
+        raise logic.ValidationError("package_id is required")
+    if not summary:
+        raise logic.ValidationError("summary is required")
+    
+    package = get_package(context, package_id)
+    
+    if not package:
+        raise logic.ValidationError("Package not found")
+    
+    package["chatgpt_summary"] = summary
+    
+    logic.check_access("package_update", context, data_dict=package)
+    # print(action, existing_package)
+
+    logic.get_action("package_update")(context, package)
+    
+    return {"package_id": package_id, "summary": summary}
+

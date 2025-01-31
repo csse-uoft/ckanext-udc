@@ -7,7 +7,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 interface EditPackageDialogProps {
   open: boolean;
-  handleClose: () => void;
+  handleClose: (pkg?: Package) => void;
   packageData: Package | null;
 }
 
@@ -51,8 +51,9 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
   const handleSave = async () => {
     if (formData) {
       try {
-        await executeApiCall(() => api.updatePackage(formData.id, { ...formData, chatgpt_summary: chatgptSummary }));
-        handleClose();
+        const updatedPkg = { ...formData, chatgpt_summary: chatgptSummary };
+        await executeApiCall(() => api.updatePackage(formData.id, updatedPkg));
+        handleClose(updatedPkg);
       } catch (error) {
         console.error('Failed to save package:', error);
       }
@@ -103,7 +104,7 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
   if (!formData) return null;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={() => handleClose()} maxWidth="md" fullWidth>
       <DialogTitle>Edit Summary</DialogTitle>
       <DialogContent>
         <TableContainer component={Paper}>

@@ -163,6 +163,28 @@
                 <th scope="row" class="dataset-label">{{ _("Version") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
                 <td class="dataset-details">{{ pkg_dict.version }}</td>
               </tr>
+            {% elif field["ckanField"] == "description" and pkg_dict.notes %}
+              <tr>
+                <th scope="row" class="dataset-label">{{ _("Description") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
+                <td class="dataset-details">
+                  {{ h.render_markdown(h.get_translated(pkg_dict, 'notes')) }}
+                </td>
+              </tr>
+            {% elif field["ckanField"] == "tags" and pkg_dict.tags %}
+              <tr>
+                <th scope="row" class="dataset-label">{{ _("Tags") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
+                <td class="dataset-details">
+                  {% snippet "package/snippets/tags.html", tags=pkg_dict.tags %}
+                </td>
+              </tr>
+            {% elif field["ckanField"] == "license_id" and pkg_dict.license_id %}
+              <tr>
+                <th scope="row" class="dataset-label">{{ _("License") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
+                <td class="dataset-details">
+                  {% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}
+                </td>
+              </tr>
+   
             {% endif %}
 
 
