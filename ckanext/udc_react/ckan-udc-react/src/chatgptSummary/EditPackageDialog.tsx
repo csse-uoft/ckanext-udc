@@ -227,7 +227,7 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="secondary">Cancel</Button>
+        <Button onClick={() => handleClose()} color="secondary">Cancel</Button>
         <Button onClick={handleSave} color="primary">Save</Button>
       </DialogActions>
     </Dialog>
