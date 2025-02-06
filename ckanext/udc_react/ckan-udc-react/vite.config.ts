@@ -4,7 +4,7 @@ import fixReactVirtualized from 'esbuild-plugin-react-virtualized'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/udc-react",
+  base: "/udc",
   plugins: [react()],
   optimizeDeps: {
     include: ['@emotion/styled'],
@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     manifest: true,
     emptyOutDir: true,
-    outDir: "../public/udc-react",
+    outDir: "../public/udc",
     rollupOptions: {
       output: {
         manualChunks: {

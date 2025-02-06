@@ -20,6 +20,7 @@ import { Container } from '@mui/system';
 import { CKANOrganizationAndAdmin, CKANUser } from '../api/api';
 import { useLocation, useParams } from 'react-router-dom';
 import { Dialog as ErrorDialog } from './Dialog';
+import { REACT_PATH } from '../constants';
 
 
 const getAdminLabel = (admin: CKANUser) => {
@@ -138,7 +139,7 @@ const RequestOrganizationAccess: React.FC = () => {
       {showAlert && (
         <Alert severity="error" sx={{ mb: 2, mt: 2 }}>
           You do not have access to any organizations. Please request access to an organization to proceed.
-          <br />See <Link href="/udc-react/faq/create-catalogue-entry" target="_blank">tutorial</Link> for more information.
+          <br />See <Link href={`/${REACT_PATH}/faq/create-catalogue-entry`} target="_blank">tutorial</Link> for more information.
         </Alert>
       )}
 

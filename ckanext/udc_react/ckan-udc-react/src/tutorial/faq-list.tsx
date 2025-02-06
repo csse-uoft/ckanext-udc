@@ -1,5 +1,6 @@
 import { Link } from "./components/Link";
 import MaturityLevels from "../qa/QAPage";
+import { REACT_PATH } from "../constants";
 
 
 export interface FAQ {
@@ -19,15 +20,15 @@ export const FAQList: FAQ[] = [
       <Link label="Create Catalogue Entry Now" url="/catalogue/new" />
       <Link label="Create Organization Now" url="/organization/new" />
     </>,
-    markdownPath: '/udc-react/create-catalogue-entry.md',
+    markdownPath: `/${REACT_PATH}/create-catalogue-entry.md`,
   },
   {
     question: "What are the maturity levels?",
     id: "maturity-levels",
     beforeTOC: <>
-      <Link label="Maturity Levels" url="/udc-react/tutorial/maturity-levels" />
+      <Link label="Maturity Levels" url={`/${REACT_PATH}/tutorial/maturity-levels`} />
     </>,
-    markdownPath: '/udc-react/maturity-levels.md',
+    markdownPath: '/${REACT_PATH}/maturity-levels.md',
     component: <MaturityLevels />,
   },
   {
@@ -36,7 +37,7 @@ export const FAQList: FAQ[] = [
     beforeTOC: <>
       <Link label="Create Organization Now" url="/organization/new" />
     </>,
-    markdownPath: '/udc-react/create-organization.md',
+    markdownPath: `/${REACT_PATH}/create-organization.md`,
   },
   {
     question: "How do I add a user to an organization?",
@@ -44,6 +45,6 @@ export const FAQList: FAQ[] = [
     beforeTOC: <>
       <Link label="Add User to Organization" url="/organization" />
     </>,
-    markdownPath: '/udc-react/add-user-to-organization.md',
+    markdownPath: `${REACT_PATH}/add-user-to-organization.md`,
   }
 ];

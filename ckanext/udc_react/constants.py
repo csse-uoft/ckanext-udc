@@ -1,1 +1,1 @@
-UDC_REACT_PATH = "udc-react"
+UDC_REACT_PATH = "udc"

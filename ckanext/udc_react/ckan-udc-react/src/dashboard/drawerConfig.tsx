@@ -6,6 +6,7 @@ import ConfigManagementPage from '../qa/ConfigManagementPage';
 import ChatGPTSummarySettings from '../chatgptSummary/ChatGPTSummarySettings';
 import ManagerSummary from '../chatgptSummary/ManageSummary';
 import { RealtimeImportStatus } from '../import/realtime/RealtimeImportStatus';
+import { REACT_PATH } from '../constants';
 
 
 export interface DrawerItem {
@@ -33,19 +34,19 @@ const drawerConfig: DrawerConfig = {
         {
           text: "Import",
           icon: <Publish />,
-          path: "/udc-react/import",
+          path: `/${REACT_PATH}/import`,
           component: ImportDashboard,
         },
         {
           text: "Import Status",
           icon: <CloudSync />,
-          path: "/udc-react/import-status",
+          path: `/${REACT_PATH}/import-status`,
           component: ImportStatus,
         },
         {
           text: "Realtime Status",
           icon: <CloudSync />,
-          path: "/udc-react/realtime-status",
+          path: `/${REACT_PATH}/realtime-status`,
           component: RealtimeImportStatus,
         }
       ]
@@ -56,13 +57,13 @@ const drawerConfig: DrawerConfig = {
         {
           text: "Maturity Levels",
           icon: <Edit />,
-          path: "/udc-react/maturity-levels",
+          path: `/${REACT_PATH}/maturity-levels`,
           component: ConfigManagementPage,
         },
         {
           text: "Preview",
           icon: <OpenInBrowser/>,
-          path: "/udc-react/maturity-levels/preview",
+          path: `/${REACT_PATH}/maturity-levels/preview`,
           component: QAPage,
         }
       ]
@@ -73,13 +74,13 @@ const drawerConfig: DrawerConfig = {
         {
           text: "Manage Summary",
           icon: <Edit />,
-          path: "/udc-react/chatgpt-summary/manage",
+          path: `/${REACT_PATH}/chatgpt-summary/manage`,
           component: ManagerSummary,
         },
         {
           text: "Settings",
           icon: <Settings/>,
-          path: "/udc-react/chatgpt-summary/settings",
+          path: `/${REACT_PATH}/chatgpt-summary/settings`,
           component: ChatGPTSummarySettings,
         }
       ]

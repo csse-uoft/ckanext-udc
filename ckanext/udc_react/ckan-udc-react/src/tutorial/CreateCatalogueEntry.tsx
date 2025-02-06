@@ -4,13 +4,14 @@ import { Container } from "@mui/system";
 import { Box, Button, CssBaseline, CircularProgress, Paper } from "@mui/material";
 import { OpenInNew as OpenInNewIcon, Add as CreateIcon } from '@mui/icons-material';
 import { Link } from "./components/Link";
+import { REACT_PATH } from "../constants";
 
 const CreateCatalogueEntry: React.FC = () => {
   const [md, setMd] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('/udc-react/create-catalogue-entry.md')
+    fetch(`/${REACT_PATH}/create-catalogue-entry.md`)
       .then(response => response.text())
       .then(text => {
         setMd(text);
@@ -35,7 +36,7 @@ const CreateCatalogueEntry: React.FC = () => {
           beforeTOC={<>
             <Link label="Create Catalogue Entry Now" url="/catalogue/new"/>
             <Link label="Create Organization Now" url="/organization/new"/>
-            <Link label="Maturity Levels" url="/udc-react/tutorial/maturity-levels"/>
+            <Link label="Maturity Levels" url={`/${REACT_PATH}/tutorial/maturity-levels`}/>
           </>}
            />
 

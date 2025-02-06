@@ -3,6 +3,7 @@ import { Drawer, List, ListItemButton, ListItemText, Box, CssBaseline } from '@m
 import { useNavigate, useParams, Routes, Route } from 'react-router-dom';
 import FAQItem from './faq';
 import { FAQList } from './faq-list';
+import { REACT_PATH } from '../constants';
 
 const drawerWidth = 300;
 
@@ -41,7 +42,7 @@ const FAQPage: React.FC = () => {
               key={faq.id}
               selected={faq.id === selectedFAQ}
               sx={{ pt: 1, pb: 1 }}
-              onClick={() => navigate(`/udc-react/faq/${faq.id}`)}  // Navigate to the FAQ's dedicated path
+              onClick={() => navigate(`/${REACT_PATH}/faq/${faq.id}`)}  // Navigate to the FAQ's dedicated path
             >
               <ListItemText
                 primary={faq.question}

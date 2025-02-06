@@ -3,6 +3,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 import rehypeRaw from 'rehype-raw';
+import { REACT_PATH } from "../constants";
 
 export const Markdown: React.FC<{ children: string }> = (props) => {
   const navigate = useNavigate();
@@ -94,11 +95,11 @@ export const Markdown: React.FC<{ children: string }> = (props) => {
         },
         img: ({ src, alt }) => {
           return (
-            <img src={"/udc-react/" + src} alt={alt} style={{ maxWidth: "100%", paddingTop: "4px" }} />
+            <img src={`/${REACT_PATH}/` + src} alt={alt} style={{ maxWidth: "100%", paddingTop: "4px" }} />
           );
         },
         a: ({ children, href, target, rel }) => {
-          if (href?.startsWith("/udc-react")) {
+          if (href?.startsWith(`/${REACT_PATH}`)) {
             return <Link sx={{cursor: 'pointer'}} onClick={() => navigate(href)}>{children}</Link>;
           }
           return (
