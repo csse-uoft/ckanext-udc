@@ -45,6 +45,6 @@ export const FAQList: FAQ[] = [
     beforeTOC: <>
       <Link label="Add User to Organization" url="/organization" />
     </>,
-    markdownPath: `${REACT_PATH}/add-user-to-organization.md`,
+    markdownPath: `/${REACT_PATH}/add-user-to-organization.md`,
   }
 ];
