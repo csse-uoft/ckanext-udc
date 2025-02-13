@@ -1,1 +1,1 @@
-export const REACT_PATH = 'udc';
+export const REACT_PATH = 'udrc';
