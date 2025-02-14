@@ -46,7 +46,8 @@
   {% set search_facets_for_popup = h.get_full_search_facets()%}
   {% set facets_data_for_popup = {} %}
   {% for facet_title in facet_titles %}
-    {% do facets_data_for_popup.update({facet_title: h.get_facet_items_dict(facet_title, search_facets_for_popup)}) %}
+    {# Need to add limit=0, override the default limit=10 #}
+    {% do facets_data_for_popup.update({facet_title: h.get_facet_items_dict(facet_title, search_facets_for_popup, limit=0)}) %}
   {% endfor %}
 
   <div class="filters">
