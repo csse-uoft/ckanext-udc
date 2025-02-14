@@ -171,7 +171,7 @@ To install ckanext-udc:
      sudo supervisorctl reload
      ```
 
-## Configure deployment server to support websocket connection
+## Configure deployment server to support websocket connection and use Gevent for multi-tasking
 
 1. Reinstall uwsgi with SSL support
     ```shell
@@ -203,6 +203,7 @@ To install ckanext-udc:
     ```ini
     gevent          =  100 # number of coroutine
     http-websockets = true
+    gevent-monkey-patch = true
     ```
 
 3. Update nginx config `sudo nano /etc/nginx/sites-enabled/ckan`
@@ -216,6 +217,10 @@ To install ckanext-udc:
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
     }
+    ```
+4. Copy `wsgi.py` to apply monkey patching
+    ```shell
+    cp /usr/lib/ckan/default/src/ckanext-udc/ckanext/udc/wsgi.py /etc/ckan/default/wsgi.py
     ```
 
 ## Config settings
