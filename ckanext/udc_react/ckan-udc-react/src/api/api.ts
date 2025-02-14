@@ -107,6 +107,11 @@ export async function getMaturityLevels() {
   return result.result;
 }
 
+export async function getDefaultAISummaryConfig() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/default_ai_summary_config");
+  return result.result;
+}
+
 export async function updateConfig(configKey: string, value: string) {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/config_option_update", {
     method: "POST",

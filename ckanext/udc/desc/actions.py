@@ -1,3 +1,4 @@
+import ckan.authz as authz
 from ckan.types import Context
 import ckan.logic as logic
 from ckan.types import Context
@@ -17,6 +18,23 @@ from .cleaning import (
 from .utils import gen_mapping, get_config, get_package
 
 logger = logging.getLogger(__name__)
+
+
+default_prompt = (
+    f'Reset previous sessions, do not hallucinate, and create a two paragraph summary for '
+    f"this catalogue's fields values, ensuring uniqueness and distinct meanings for each field. Do not summarize "
+    f'the names of the fields available but describe their values.'
+)
+
+default_config = {
+    "openai_key": "",
+    "openai_model": "gpt-4",
+    "max_tokens": 500,
+    "temperature": 0.0,
+    "use_custom_prompt": False,
+    "custom_prompt": default_prompt,
+    "use_markdown": False,
+}
 
 
 # Function to generate catalogue summary
@@ -45,24 +63,37 @@ def get_catalogue_summary_from_openai(row, mapping, config):
     catalogue_summary, field_desc_text = generate_catalogue_summary(
         row, mapping, column_to_ignore=["chatgpt_summary"]
     )
-
+    
     prompt = (
         f'These are the descriptions of the fields: \n```{field_desc_text}```\n And these are the catalogue field values:\n```'
-        f'{catalogue_summary}```\nReset previous sessions, do not hallucinate, and create a two paragraph summary for '
-        f"this catalogue's fields values, ensuring uniqueness and distinct meanings for each field. Do not summarize "
-        f'the names of the fields available but describe their values.'
+        f'{catalogue_summary}```\n'
     )
+
+    if config.get("use_custom_prompt") and config.get("custom_prompt"):
+        prompt += config.get("custom_prompt")
+    else:
+        prompt += default_prompt
+        
+        if config.get("use_markdown"):
+            prompt += " Markdown is supported and preferred. Please use links and lists where appropriate."
+   
+        
     res = client.chat.completions.create(
         model=config["openai_model"],
         messages=[{"role": "system", "content": prompt}],
         max_tokens=config["max_tokens"],
         temperature=config["temperature"],
     )
-    # print(res)
+    print(res)
+    
     return prompt, [choice.message.content for choice in res.choices]
 
 
 def summary_generate(context: Context, package_id: str):
+    # Check admin
+    if not authz.is_sysadmin(context.get('user')):
+        raise logic.NotAuthorized("You are not authorized to view this page")
+    
     config = get_config()
 
     # Get a single catalogue entry
@@ -203,6 +234,10 @@ def summary_generate(context: Context, package_id: str):
         )
 
 def update_summary(context: Context, data: dict):
+    # Check admin
+    if not authz.is_sysadmin(context.get('user')):
+        raise logic.NotAuthorized("You are not authorized to view this page")
+    
     package_id = data.get("package_id")
     summary = data.get("summary")
     
@@ -225,3 +260,11 @@ def update_summary(context: Context, data: dict):
     
     return {"package_id": package_id, "summary": summary}
 
+
+@logic.side_effect_free
+def default_ai_summary_config(context: Context, data: dict):
+    # Check admin
+    if not authz.is_sysadmin(context.get('user')):
+        raise logic.NotAuthorized("You are not authorized to view this page")
+    
+    return default_config

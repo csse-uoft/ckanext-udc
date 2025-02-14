@@ -46,7 +46,7 @@ from ckanext.udc.file_format.logic import (
     file_format_delete,
     file_formats_get,
 )
-from ckanext.udc.desc.actions import summary_generate, update_summary
+from ckanext.udc.desc.actions import summary_generate, update_summary, default_ai_summary_config
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
 
@@ -350,6 +350,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # Chatgpt summary actions
             "summary_generate": summary_generate,
             "update_summary": update_summary,
+            "default_ai_summary_config": default_ai_summary_config
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
