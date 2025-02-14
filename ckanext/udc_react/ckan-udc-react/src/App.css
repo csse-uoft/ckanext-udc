@@ -17,3 +17,7 @@ body .nav {
 #markdown-content>*:first-child{
   margin-top: 0 !important;
 }
+
+label:after {
+  content: initial !important;
+}
