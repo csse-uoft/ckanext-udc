@@ -305,3 +305,79 @@ export async function approveOrDenyOrganizationAccess(token: string, approve: bo
   }
   return result.result;
 }
+
+export interface License {
+  id: string;
+  title: string;
+  url: string;
+  user: {
+    name: string;
+    fullname?: string;
+  };
+}
+
+export async function getLicenses(): Promise<License[]> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/licenses_get");
+  return result.result;
+}
+
+export async function createLicense(data: {id: string, title: string, url: string}) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/license_create", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function deleteLicense(data: {id: string}) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/license_delete", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function updateLicense(data: {id: string, title: string, url: string}) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/license_update", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function reloadSupervisor(task: string) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/reload_supervisord", {
+    method: "POST",
+    body: JSON.stringify({ task }),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function getSystemStats() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/get_system_stats");
+  return result.result;
+}

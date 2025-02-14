@@ -1,4 +1,4 @@
-import { CloudSync, Publish, Edit, OpenInBrowser, Settings } from '@mui/icons-material';
+import { CloudSync, Publish, Edit, OpenInBrowser, Settings, Replay, SystemSecurityUpdate } from '@mui/icons-material';
 import ImportDashboard from '../import/ImportDashboard';
 import { ImportStatus } from '../import/importStatus';
 import QAPage from '../qa/QAPage';
@@ -8,6 +8,9 @@ import ManagerSummary from '../chatgptSummary/ManageSummary';
 import { RealtimeImportStatus } from '../import/realtime/RealtimeImportStatus';
 import { REACT_PATH } from '../constants';
 import UDRCConfigPage from '../udrc/Settings';
+import SystemReload from '../udrc/SystemReload';
+import CKANSystemStats from '../udrc/SystemStats';
+import ManageLicenses from '../udrc/License/ManageLicenses';
 
 
 export interface DrawerItem {
@@ -90,12 +93,29 @@ const drawerConfig: DrawerConfig = {
       title: "UDRC System",
       items: [
         {
+          text: "Manage Licenses",
+          icon: <Settings />,
+          path: `/${REACT_PATH}/system-config/licenses`,
+          component: ManageLicenses,
+        },
+        {
           text: "System Config",
           icon: <Settings />,
           path: `/${REACT_PATH}/system-config/manage`,
           component: UDRCConfigPage,
         },
-      
+        {
+          text: "Reload",
+          icon: <Replay />,
+          path: `/${REACT_PATH}/system-config/reload`,
+          component: SystemReload,
+        },
+        {
+          text: "Stats",
+          icon: <SystemSecurityUpdate />,
+          path: `/${REACT_PATH}/system-config/stats`,
+          component: CKANSystemStats,
+        }
       ]
     }
   ],

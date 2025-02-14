@@ -64,14 +64,14 @@ def license_delete(context, data_dict):
         raise logic.NotAuthorized("You are not logged in")
     
     userobj = model.User.get(user)
-    license = CustomLicense.get(data_dict["id"]).one()
+    license = CustomLicense.get(data_dict["id"])
     
     if not authz.is_sysadmin(user) and not license.user_id == userobj.id:
         raise logic.NotAuthorized("You are not authorized to delete this license")
     
     # Check if any package uses the license
     cnt = model.Session.query(model.Package) \
-            .filter(model.Package.licensce_id == data_dict['id']) \
+            .filter(model.Package.license_id == data_dict['id']) \
             .count()
         
     if cnt > 0:
@@ -79,6 +79,13 @@ def license_delete(context, data_dict):
     
     model.Session.delete(license)
     model.Session.commit()
+    
+    # Update the license register
+    license_register = model.Package.get_license_register()
+    for i, l in enumerate(license_register.licenses):
+        if l.id == license.id:
+            license_register.licenses.pop(i)
+            break
     
     return {'success': True}
 
@@ -102,6 +109,40 @@ def licenses_get(context, data_dict):
         })
     
     return licenses
+
+def license_update(context, data_dict):
+    """
+    The user who created the license, or the admin can update the license.
+    """
+    if not data_dict.get('id'):
+        raise logic.ValidationError("license id is required")
+    
+    user = context.get("user")
+    if not user:
+        raise logic.NotAuthorized("You are not logged in")
+    
+    userobj = model.User.get(user)
+    license = CustomLicense.get(data_dict["id"])
+    
+    if not authz.is_sysadmin(user) and not license.user_id == userobj.id:
+        raise logic.NotAuthorized("You are not authorized to update this license")
+    
+    if data_dict.get('title'):
+        license.title = data_dict['title']
+    
+    if data_dict.get('url'):
+        license.url = data_dict['url']
+    
+    model.Session.commit()
+    
+    # Update the license register
+    license_register = model.Package.get_license_register()
+    for i, l in enumerate(license_register.licenses):
+        if l.id == license.id:
+            license_register.licenses[i] = create_custom_license(license.id, license.url, license.title)
+    
+    
+    return {'success': True}
 
 
 @logic.side_effect_free

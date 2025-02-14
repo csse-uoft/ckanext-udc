@@ -37,6 +37,7 @@ from ckanext.udc.licenses.logic.action import (
     license_create,
     license_delete,
     licenses_get,
+    license_update,
     init_licenses,
     test_long_task,
 )
@@ -49,6 +50,7 @@ from ckanext.udc.file_format.logic import (
 from ckanext.udc.desc.actions import summary_generate, update_summary, default_ai_summary_config
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
+from ckanext.udc.system.actions import reload_supervisord, get_system_stats
 
 
 """
@@ -342,6 +344,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "license_create": license_create,
             "license_delete": license_delete,
             "licenses_get": licenses_get,
+            "license_update": license_update,
             "test_long_task": test_long_task,
             # Custom file format
             "file_format_create": file_format_create,
@@ -350,7 +353,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # Chatgpt summary actions
             "summary_generate": summary_generate,
             "update_summary": update_summary,
-            "default_ai_summary_config": default_ai_summary_config
+            "default_ai_summary_config": default_ai_summary_config,
+            # System actions
+            "reload_supervisord": reload_supervisord,
+            "get_system_stats": get_system_stats,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
