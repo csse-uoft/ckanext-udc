@@ -46,8 +46,8 @@
                 {
                     "name": "file_format",
                     "label": "Format (CSV, XLS, TXT, PDF, etc)",
-                    "short_description": "Format of the dataset.",
-                    "long_description": "Format of the dataset can indicate its file type (e.g. csv, pdf, ttl). If multiple types are available, the types are separated by commas (“csv, ttl, pdf”).",
+                    "short_description": "File format of the dataset.",
+                    "long_description": "Format of the dataset file can indicate its file type (e.g. csv, pdf, ttl). If multiple types are available, the types are separated by commas (“csv, ttl, pdf”).",
                     "type": "multiple_select",
                     "optionsFromQuery": {
                         "text": "label",
@@ -62,7 +62,7 @@
                     "label": "Dataset Size",
                     "type": "number",
                     "short_description": "Dataset size in megabytes.",
-                    "long_description": "Total size of the datasets in this catalogue entry Saved as an integer of megabtyes (MB).Dataset size in megabytes.",
+                    "long_description": "Total size of the datasets in this catalogue entry Saved as a decimal of megabtyes (MB).",
                     "category": "content"
                 },
                 {
@@ -83,7 +83,7 @@
                 },
                 {
                     "name": "time_span_start",
-                    "label": "Time Span (start date)",
+                    "label": "Time Period Data Span (start date)",
                     "type": "date",
                     "short_description": "Start date of the data in the dataset.",
                     "long_description": "First date the data was collected for. This is not the date it was collected but the earliest date of the data values.",
@@ -91,7 +91,7 @@
                 },
                 {
                     "name": "time_span_end",
-                    "label": "Time Span (end date)",
+                    "label": "Time Period Data Span (end date)",
                     "type": "date",
                     "short_description": "End date of time data in the dataset.",
                     "long_description": "Last date the data was collected for. This is not the date it was collected but the latest date of the data values.",
@@ -99,7 +99,7 @@
                 },
                 {
                     "name": "geo_span",
-                    "label": "GeoSpatial Area Span",
+                    "label": "GeoSpatial Area Data Span",
                     "type": "text",
                     "short_description": "A spatial region or named place the dataset covers.",
                     "long_description": "This data represents the geospatial area the dataset covers. This may be captured as a data column or simply defined by the creator or publisher.",
@@ -115,8 +115,8 @@
                 {
                     "name": "access_category",
                     "label": "Access category",
-                    "short_description": "Type of access granted for the dataset (open, closed, etc).",
-                    "long_description": "Access category provides a description of the licensing rights for accessing the dataset. Often provided by the rights owner, creator or publisher.",
+                    "short_description": "Type of access granted for the dataset (open, closed, service, etc).",
+                    "long_description": "Access category provides a description of the licensing rights for accessing the dataset. If the dataset is avaialble through a web service (e.g. API), state \"Service\" Often provided by the rights owner, creator or publisher.",
                     "type": "text",
                     "category": "access"
                 },
@@ -160,8 +160,16 @@
                     "name": "access_steward",
                     "label": "Contact Point",
                     "type": "text",
-                    "short_description": "Who to contact regarding access.",
+                    "short_description": "Who to contact regarding access?",
                     "long_description": "The access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
+                    "category": "access"
+                },
+                {
+                    "name": "access_steward_email",
+                    "label": "Contact Point Email",
+                    "type": "text",
+                    "short_description": "The email to contact regarding access?",
+                    "long_description": "The access rights steward is the point of contact (email of either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
                     "category": "access"
                 },
                 {
@@ -208,7 +216,7 @@
                     "name": "unique_identifier",
                     "label": "Identifier",
                     "short_description": "Unique identifier for the dataset.",
-                    "long_description": "Unique identifier for the dataset.  Often assigned by the creator or publisher.",
+                    "long_description": "Unique identifier for the dataset. Often assigned by the creator or publisher. Not necessarily persistent or globally unique.",
                     "type": "text",
                     "category": "content"
                 },
@@ -279,9 +287,9 @@
                 },
                 {
                     "name": "contains_individual_data",
-                    "label": "Contains Individual Data",
-                    "short_description": "Does the data hold individualized data?",
-                    "long_description": "Captures whether the dataset holds data about individuals in a population? If yes, the dataset is aggregated at the individual level. If not, the data is aggerated. This does not mean the individuals cannot be inferred from the dataset. Other metadata properties are required to indicate whether individuals can be inferred from the dataset or not.",
+                    "label": "Contains data about individuals",
+                    "short_description": "Does the data hold data about individuals?",
+                    "long_description": "Captures whether the dataset holds data about individuals in a population? If yes, the dataset is aggregated at the individual level. If not, the data is aggregated. This does not mean the individuals cannot be inferred from the dataset. Other metadata properties are required to indicate whether individuals can be inferred from the dataset or not.",
                     "category": "content",
                     "type": "single_select",
                     "options": [
@@ -301,9 +309,9 @@
                 },
                 {
                     "name": "contains_identifiable_individual_data",
-                    "label": "Contains Identifiable Data",
+                    "label": "Contains data about identifiable individuals",
                     "type": "single_select",
-                    "short_description": "Does the data hold identifiable individual data?",
+                    "short_description": "Does the data hold identifiable data about individual?",
                     "long_description": "Does the data hold identifiable individual data that can be used to uniquely identify an individual data was collected about? If yes, the dataset is not anonymized.",
                     "category": "content",
                     "options": [
@@ -607,7 +615,8 @@
         "dcat:contactPoint": {
             "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
             "@type":"vcard:Individual",
-            "vcard:fn": "{access_steward}"
+            "vcard:fn": "{access_steward}",
+            "vcard:hasEmail": "{access_steward_email}"
         },
         "dct:publisher": {
             "@id": "http://data.urbandatacentre.ca/publisher/{generate_uuid()}",
