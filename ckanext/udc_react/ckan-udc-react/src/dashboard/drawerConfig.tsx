@@ -7,6 +7,7 @@ import ChatGPTSummarySettings from '../chatgptSummary/ChatGPTSummarySettings';
 import ManagerSummary from '../chatgptSummary/ManageSummary';
 import { RealtimeImportStatus } from '../import/realtime/RealtimeImportStatus';
 import { REACT_PATH } from '../constants';
+import UDRCConfigPage from '../udrc/Settings';
 
 
 export interface DrawerItem {
@@ -62,7 +63,7 @@ const drawerConfig: DrawerConfig = {
         },
         {
           text: "Preview",
-          icon: <OpenInBrowser/>,
+          icon: <OpenInBrowser />,
           path: `/${REACT_PATH}/maturity-levels/preview`,
           component: QAPage,
         }
@@ -79,14 +80,26 @@ const drawerConfig: DrawerConfig = {
         },
         {
           text: "Settings",
-          icon: <Settings/>,
+          icon: <Settings />,
           path: `/${REACT_PATH}/chatgpt-summary/settings`,
           component: ChatGPTSummarySettings,
         }
       ]
+    },
+    {
+      title: "UDRC System",
+      items: [
+        {
+          text: "System Config",
+          icon: <Settings />,
+          path: `/${REACT_PATH}/system-config/manage`,
+          component: UDRCConfigPage,
+        },
+      
+      ]
     }
   ],
-  
+
 };
 
 export default drawerConfig;
