@@ -60,6 +60,9 @@ def udc_config_validator(config_str):
                     raise tk.Invalid(
                         f"Malformed UDC Config: The provided CKAN field `{field['ckanField']}` is duplicated.")
                 used_fields.add(field["name"])
+            if "enable_filter_logic_toggle" in field and not isinstance(field["enable_filter_logic_toggle"], bool):
+                raise tk.Invalid(
+                    f"Malformed UDC Config: `enable_filter_logic_toggle` must be a boolean.")
     # Check required CKAN fields
     for field_name in REQUIRED_CKAN_FIELDS:
         if field_name not in used_fields:
