@@ -14,6 +14,9 @@ SUPPORTED_CKAN_FIELDS = [
 REQUIRED_CKAN_FIELDS = [
     "title", "organization_and_visibility",
 ]
+SUPPORTED_FIELD_TYPES = [
+    "text", "date", "datetime", "time", "number", "single_select", "multiple_select",
+]
 
 
 def udc_config_validator(config_str):
@@ -47,6 +50,9 @@ def udc_config_validator(config_str):
                 if not ("name" in field and "label" in field):
                     raise tk.Invalid(
                         f"Malformed UDC Config: `name` and `label` is required for custom field.")
+                if field.get("type") is not None and field["type"] not in SUPPORTED_FIELD_TYPES:
+                    raise tk.Invalid(
+                        f"Malformed UDC Config: The provided field type `{field['type']}` is not supported.")
                 if re.match(r'^\w+$', field['name']) is None:
                     raise tk.Invalid(
                         f"Malformed UDC Config: The provided field name `{field['name']}` is not alpha-numeric.")
