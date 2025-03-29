@@ -62,3 +62,13 @@ span.success-text {
     font-size: 14px;
     color: #00a32c;
 }
+
+/* Filter Logic Toggle */
+input.form-check-input {
+    margin-top: 0.25rem;
+    height: 1em;
+}
+
+label.form-check-label:after {
+    content: "";
+}

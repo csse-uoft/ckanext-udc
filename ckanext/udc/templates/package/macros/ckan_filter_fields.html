@@ -4,10 +4,16 @@
   <div class="form-group control-full">
     <label class="form-label" for="{{id}}">{{ label }}</label>
     <div class="controls">
-      <input id="{{id}}" name="{{name}}" data-module="filter-multiple-select"></input>
+      <div id="{{id}}" name="{{name}}" data-module="filter-multiple-select"></div>
     </div>
     {{ field_descriptions(short_description, long_description) }}
   </div>
+{% endmacro %}
+
+{% macro _textfield(name, id, label, short_description, long_description) %}
+  {% call form.input(name, label=label, id=id, error=error, classes=['control-medium']) %}
+    {{ field_descriptions(short_description, long_description) }}
+  {% endcall %}
 {% endmacro %}
 
 {% macro field_descriptions(short_description="", long_description="") %}
@@ -34,7 +40,7 @@
   <div class="form-group control-full">
     <label class="form-label" for="filter-organization">{{ _("Organization") }}</label>
     <div class="controls">
-      <input id="filter-organization" name="organization" data-module="filter-multiple-select"></input>
+      <div id="filter-organization" name="organization" data-module="filter-multiple-select"></div>
     </div>
     {{ field_descriptions(short_description, long_description) }}
   </div>

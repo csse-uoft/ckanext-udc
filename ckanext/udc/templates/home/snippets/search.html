@@ -23,7 +23,7 @@
 
       {# Get combined facet_titles #}
       {% set search_facets = h.get_full_search_facets()%}
-      {% do facet_titles.update(h.facet_titles)%}
+      {# {% do facet_titles.update(h.facet_titles)%} #}
       {% do facet_titles.update(h.get_default_facet_titles())%}
 
 

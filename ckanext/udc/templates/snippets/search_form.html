@@ -6,24 +6,31 @@
         {% set facets_fields = h.process_facets_fields(facets.fields)%}
         {% for field in facets_fields %}
             {% set search_facets_items = facets.search.get(field)['items'] if facets.search and field in facets.search else [] %}
+            {% set has_extras = ("extras_" + field) in facets.titles %}
+            {% set title = facets.titles["extras_" + field] if has_extras else facets.titles[field] %}
 
-            <span class="facet">{{ facets.titles.get(field) }}:</span>
-            {% for field_detail in facets_fields[field] %}
-                {% set original_value = field_detail["ori_value"] %}
-                <span class="filtered pill">
-                    {% if original_value != field_detail["value"] %}
-                        {{ field_detail["value"] }}
-                    {% else %}
-                        {%- if facets.translated_fields and (field,original_value) in facets.translated_fields -%}
-                        {{ facets.translated_fields[(field,original_value)] }}
-                        {%- else -%}
-                        {{ h.list_dict_filter(search_facets_items, 'name', 'display_name', original_value) }}
-                        {%- endif %}
-                    {% endif %}
-                   
-                    <a href="{{ facets.remove_field(field_detail['ori_field'], original_value) }}" class="remove" title="{{ _('Remove') }}"><i class="fa fa-times"></i></a>
-                </span>
-            {% endfor %}
+            {% if title %}
+                {# Facet Title #}
+                <span class="facet">{{ title }}{{" (And)" if facets.filter_logics[field] else ""}}:</span>
+
+                {% for field_detail in facets_fields[field]["values"] %}
+                    {% set original_value = field_detail["ori_value"] %}
+                    <span class="filtered pill">
+                        {% if original_value != field_detail["value"] %}
+                            {{ field_detail["value"] }}
+                        {% else %}
+                            {%- if facets.translated_fields and (field,original_value) in facets.translated_fields -%}
+                            {{ facets.translated_fields[(field,original_value)] }}
+                            {%- else -%}
+                            {{ h.list_dict_filter(search_facets_items, 'name', 'display_name', original_value) }}
+                            {%- endif %}
+                        {% endif %}
+                    
+                        <a href="{{ facets.remove_field(field_detail['ori_field'], original_value) }}" class="remove" title="{{ _('Remove') }}"><i class="fa fa-times"></i></a>
+                    </span>
+                {% endfor %}
+                <br/>
+            {% endif %}
         {% endfor %}
         </p>
         <a class="show-filters btn btn-default">{{ _('Filter Results') }}</a>

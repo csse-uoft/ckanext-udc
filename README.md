@@ -69,7 +69,9 @@
 - `custom_fields`: Custom CKAN Fields, key/value pairs
 
 ### Supported field types
+> Notes: If `type` is not provided, it will default to `text`.
 - `text`
+- `number`
 - `date`
 - `datetime`
 - `time`
@@ -88,6 +90,25 @@
        ]
    }
    ```
+
+<!-- ### Filter Types
+Filter Types Available:
+- `fulltext` Full text search
+- `or` OR filter
+- `and` AND filter
+- `date_range` Date range filter
+- `time_range` Time range filter
+- `number_range` Number range filter
+
+Default Filter Types based on field `type`:
+- `text` - Default to `or` filter
+- `single_select` - Default to `or` filter
+- `multi_select` - Default to `or` filter
+- `date` - Default to `date_range` filter
+- `datetime` - Default to `date_range` filter
+- `time` - Default to `time_range` filter
+- `number` - Default to `number_range` filter -->
+
 
 ## Requirements
 

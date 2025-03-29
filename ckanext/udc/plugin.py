@@ -5,16 +5,23 @@ import json
 import traceback
 import chalk
 from collections import OrderedDict
-from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
-from ckan.types import Schema, Context, CKANApp, Response
+from typing import Any, Callable, Collection, KeysView, Optional, Union, cast, Iterable, List
+from functools import partial
+from ckan.types import Schema, Context, CKANApp, Response, SignalMapping
 import ckan
 import ckan.plugins as plugins
 import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as tk
+import ckan.lib.base as base
 from ckan.plugins.toolkit import chained_action, side_effect_free
 import ckan.lib.helpers as h
-from ckan.common import current_user, CKANConfig
+from ckan.lib.helpers import Page
+from ckan.common import asbool, current_user, CKANConfig, request, g, config, _
+from ckan.views.dataset import _get_search_details, remove_field, _sort_by, _pager_url, _setup_template_variables, _get_pkg_template
+from ckan.lib.search import SearchQueryError, SearchError
+
+from flask import Blueprint
 
 import logging
 from ckanext.udc.cli import udc as cli_udc
@@ -51,6 +58,7 @@ from ckanext.udc.desc.actions import summary_generate, update_summary, default_a
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
 from ckanext.udc.system.actions import reload_supervisord, get_system_stats
+from ckanext.udc.solr import update_solr_maturity_model_fields
 
 
 """
@@ -68,6 +76,7 @@ if hasattr(ckan, "cli") and hasattr(ckan.cli, "cli"):
     ckan.cli.cli.ckan.add_command(cli_udc.udc)
 
 
+@tk.blanket.blueprints
 class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
@@ -77,13 +86,17 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController)
     plugins.implements(plugins.IMiddleware)
+    plugins.implements(plugins.IBlueprint)
 
     disable_graphdb = False
     maturity_model = []
     mappings = {}
     preload_ontologies = {}
-    all_fields = []
+    all_fields: List[str] = []
     facet_titles = {}
+    text_fields: List[str] = []
+    date_fields: List[str] = []
+    multiple_select_fields: List[str] = []
 
     def update_config(self, config_):
         tk.add_template_directory(config_, "templates")
@@ -167,8 +180,16 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                         or type == "text"
                         or type == "single_select"
                         or type == "multiple_select"
+                        or type == "number"
+                        or type == "date"
                     ):
                         self.facet_titles[field["name"]] = tk._(field["label"])
+                    if field.get("name") and (type == "text" or type is None):
+                        self.text_fields.append(field["name"])
+                    if field.get("type") == "date":
+                        self.date_fields.append(field["name"])
+                    if field.get("type") == "multiple_select":
+                        self.multiple_select_fields.append(field["name"])
 
             # Preload ontologies
             if not self.disable_graphdb:
@@ -180,6 +201,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 preload_ontologies(
                     config, endpoint, username, password, self.sparql_client
                 )
+            
+            # Update solr index
+            update_solr_maturity_model_fields(config["maturity_model"])
 
             # Do not mutate the vars
             self.all_fields.clear()
@@ -286,6 +310,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return {
             "config": self.maturity_model,
             "facet_titles": self.facet_titles,
+            "maturity_model_text_fields": self.text_fields,
             "get_full_search_facets": get_full_search_facets,
             "get_default_facet_titles": get_default_facet_titles,
             "process_facets_fields": process_facets_fields,
@@ -361,7 +386,15 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
         for name in self.facet_titles:
-            facets_dict[name] = self.facet_titles[name]
+            if name in self.text_fields:
+                # The text fields (solr type=text) can be used as facets
+                # We need to use the builtin facet name
+                # and not the extras_ prefix
+                facets_dict[name] = self.facet_titles[name]
+            else:
+                # We need the extras_ prefix for our custom solr schema
+                facets_dict["extras_" + name] = self.facet_titles[name]
+
         return facets_dict
 
     def group_facets(
@@ -456,6 +489,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         pkg_dict["related_packages"] = related_packages
             
     def before_dataset_search(self, search_params: dict[str, Any]) -> dict[str, Any]:
+        # print(chalk.red("before_dataset_search"))
+        # print(search_params)
         return search_params
 
     def after_dataset_search(
@@ -466,6 +501,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
         # Do not index related packages
         del pkg_dict["related_packages"]
+        print(chalk.red("before_dataset_index"))
+        # Map multiple select fields and covert to array
+        # The field name should be 'extras_' + field_name for using our custom solr schema
+        for field in self.multiple_select_fields:
+            if field in pkg_dict:
+                pkg_dict["extras_" + field] = pkg_dict[field].split(",")
         return pkg_dict
 
     def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:

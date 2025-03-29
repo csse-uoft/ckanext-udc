@@ -41,7 +41,8 @@
                     "ckanField": "tags",
                     "short_description": "Keywords/tags categorizing the dataset.",
                     "long_description": "Keywords/tags categorizing the dataset. Often provided by the creator or publisher. The keywords can be added, but suitable keywords should be selected from existing values, if possible. A controlled vocabulary of keywords, organized as a taxonomy, is created for each domain/topic.",
-                    "category": "content"
+                    "category": "content",
+                    "enable_filter_logic_toggle": true
                 },
                 {
                     "name": "file_format",

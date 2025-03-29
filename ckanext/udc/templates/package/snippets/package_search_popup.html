@@ -1,19 +1,22 @@
 {% import 'macros/form.html' as form %}
 {% import 'package/macros/ckan_filter_fields.html' as ckan_filter %}
 
-{% asset 'udc/package-filter'%}
-{% asset 'udc/udc-css' %}
+<link rel="stylesheet" href="{{ h.url_for_static('/base/css/virtual-select.min.css') }}">
+<script src="{{ h.url_for_static('/base/javascript/modules/virtual-select.min.js') }}" type="text/javascript"></script>
 
 <script type=text/javascript>
   window.facets = {
     data: {{facets_data | tojson}},
     titles: {{facet_titles | tojson}},
-    bsaeURL: {{h.url_for('catalogue.search') | tojson}}
+    bsaeURL: {{h.url_for('catalogue.search') | tojson}},
+    textFields: {{h.maturity_model_text_fields | tojson}},
   };
   window.maturityModel = {{h.config | tojson}};
   
 </script>
 
+{% asset 'udc/package-filter'%}
+{% asset 'udc/udc-css' %}
 
 <div class="modal fade" id="maturityModelFilter" tabindex="-1" data-bs-backdrop="false" aria-labelledby="maturityModelFilter" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="min-width:550px">
@@ -46,30 +49,35 @@
               {% for field in level["fields"] %}
 
                 {% if field.get("ckanField") == none %}
-                  {% if field["name"] in facet_titles %}
+                  {% set has_extras = ("extras_" + field["name"]) in facet_titles %}
+                  {% set title = facet_titles["extras_" + field["name"]] if has_extras else facet_titles[field["name"]] %}
+                  
+                  {% if title %}
+                    {# Our customized field #}
+                    
                     <div class="form-group control-full">
-                      <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(facet_titles[field["name"]]) }}</label>
+                      <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(title) }}</label>
                       <div class="controls">
-                        <input id="filter-{{field["name"]}}" name="{{field["name"]}}" data-module="filter-multiple-select"></input>
+                        <div id="filter-{{field["name"]}}" name="{{field["name"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
                       </div>
                       {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                     </div>
                   {% endif %}
 
                 {% else %}
-
+                  {# CKAN predefined field #}
                   {% if field["ckanField"] in facet_titles %}
 
                     <div class="form-group control-full">
                       <label class="form-label" for="{{'filter-' + field["ckanField"]}}">{{ _(facet_titles[field["ckanField"]]) }}</label>
                       <div class="controls">
-                        <input id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select"></input>
+                        <div id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
                       </div>
                       {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                     </div>
+                
                   {% else %}
                     {{ ckan_filter[field["ckanField"]](field['short_description'], field['long_description']) }}
-                   
                   {% endif %}
                 {% endif %}
                 

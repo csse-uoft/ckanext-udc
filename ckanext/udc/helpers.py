@@ -20,6 +20,7 @@ from .graph.logic import onUpdateCatalogue, onDeleteCatalogue
 from ckanext.udc.file_format.logic import before_package_update as before_package_update_for_file_format
 
 import logging
+import chalk
 
 log = logging.getLogger(__name__)
 
@@ -112,15 +113,22 @@ def get_full_search_facets():
     }
     )
     default_limit: int = ckan.common.config.get('search.facets.default')
-    facets = [*h.facets(), *plugins.get_plugin('udc').facet_titles.keys(), 'author']
+    facets_fields = [*h.facets(), 'author']
+    
+    for plugin in plugins.PluginImplementations(plugins.IFacets):
+        facets_fields.extend(plugin.dataset_facets({}, "catalogue").keys())
+
     data_dict: dict[str, Any] = {
         'q': '*:*',
-        'facet.field': facets,
+        'facet.limit': -1,
+        'facet.field': facets_fields,
         'rows': default_limit,
         'start': 0,
         'sort': 'view_recent desc',
         'fq': 'capacity:"public"'}
     query = logic.get_action('package_search')(context, data_dict)
+    
+    print(chalk.yellow("get_full_search_facets"), (query['search_facets']).keys())
     return query['search_facets']
 
 def get_default_facet_titles():
@@ -144,32 +152,36 @@ def get_default_facet_titles():
     }
     return default_facet_titles
 
-def process_facets_fields(facets_fields):
+def process_facets_fields(facets_fields: dict):
     """For search page displaying search filters"""
-
+    print("facets_fields", facets_fields)
     results = {}
     for field in facets_fields:
+        if field.startswith("filter-logic"):
+            continue
+        
         if field.startswith("extras_"):
-            if field[7:] not in results:
-                results[field[7:]] = []
-
-            for item in facets_fields[field]:
-                results[field[7:]].append({
-                    "ori_field": field,
-                    "ori_value": item,
-                    "value": f'"{item}"'
-                })
-            
+            field_name = field[7:]
+        elif field.endswith("_ngram"):
+            field_name = field[:-6]
         else:
-            if field not in results:
-                results[field] = []
-
-            for item in facets_fields[field]:
-                results[field].append({
-                    "ori_field": field,
-                    "ori_value": item,
-                    "value": item
-                })
+            field_name = field
+        
+        if field_name not in results:
+            results[field_name] = {"logic": "or", "values": []}
+            
+        values = facets_fields[field]['values']
+        is_fts = facets_fields[field].get('fts', False)
+        for item in values:
+            results[field_name]["values"].append({
+                "ori_field": field,
+                "ori_value": item,
+                "value": f'Search for "{item}"' if is_fts else item,
+            })
+        
+        if "filter-logic-" + field in facets_fields and facets_fields["filter-logic-" + field][0] == "and":
+            results[field_name]["logic"] = "and"
+            
     return results
 
 def get_maturity_percentages(config, pkg_dict):
