@@ -2,7 +2,7 @@
 
 {% block package_notes %}
   
-  {% if pkg.chatgpt_summary %}
+  {% if pkg.summary %}
     {# <h2>Summary</h2> #}
     {# {% if pkg.notes %}
     <span class="badge bg-primary">View Original Description</span>
@@ -11,7 +11,7 @@
     </button>
     {% endif %} #}
     <div class="notes embedded-content">
-      {{ h.render_markdown(h.get_translated(pkg, 'chatgpt_summary')) }}
+      {{ h.render_markdown(h.get_translated(pkg, 'summary')) }}
       
       <span class="badge bg-primary float-end d-flex align-items-center"
         data-bs-toggle="tooltip" 

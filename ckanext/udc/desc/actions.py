@@ -61,7 +61,7 @@ def get_catalogue_summary_from_openai(row, mapping, config):
     )
     
     catalogue_summary, field_desc_text = generate_catalogue_summary(
-        row, mapping, column_to_ignore=["chatgpt_summary"]
+        row, mapping, column_to_ignore=["summary"]
     )
     
     prompt = (
@@ -116,7 +116,7 @@ def summary_generate(context: Context, package_id: str):
         "type", # (catalogue) CKAN field, Not used in the maturity model, used for the type of the dataset (dataset, catalogue, etc.)
         "id", # not interested in the package id
         "name", # not interested in the package name
-        "chatgpt_summary", # Previous summary
+        "summary", # Previous summary
         
     ]
     metadata = {}
@@ -251,7 +251,7 @@ def update_summary(context: Context, data: dict):
     if not package:
         raise logic.ValidationError("Package not found")
     
-    package["chatgpt_summary"] = summary
+    package["summary"] = summary
     
     logic.check_access("package_update", context, data_dict=package)
     # print(action, existing_package)

@@ -20,7 +20,7 @@ export interface Package {
   id: string;
   name: string;
   title: string;
-  chatgpt_summary: string;
+  summary: string;
   author: string;
   organization: Organization
   access_category: string;
@@ -41,7 +41,7 @@ const buildFilters = (filterModel: GridFilterModel, emptySummaryOnly: boolean) =
     }
   });
   if (emptySummaryOnly) {
-    fq.push("-chatgpt_summary:[* TO *]");
+    fq.push("-summary:[* TO *]");
   }
   return fq.join(' AND ');
 };
@@ -91,7 +91,7 @@ const PackageSearchTable: React.FC<PackageSearchTableProps> = () => {
         const task: Task = {
           id: id as string,
           title: pkg?.title || '',
-          summary: pkg?.chatgpt_summary || '',
+          summary: pkg?.summary || '',
           status: 'pending'
         }
         newTasks.push(task);
@@ -127,12 +127,12 @@ const PackageSearchTable: React.FC<PackageSearchTableProps> = () => {
         // Update the package in the table
         const pkg_ = packages.find(pkg => pkg.id === job.id);
         if (pkg_) {
-          pkg_.chatgpt_summary = job.summary;
+          pkg_.summary = job.summary;
           setPackages((prevPackages) => [...prevPackages]);
         }
         // Get the package and update the summary
         const pkg = await executeApiCall(() => api.packageShow(job.id));
-        pkg.chatgpt_summary = job.summary;
+        pkg.summary = job.summary;
         await executeApiCall(() => api.updatePackage(job.id, pkg));
 
         job.status = 'success';
@@ -224,7 +224,7 @@ const PackageSearchTable: React.FC<PackageSearchTableProps> = () => {
 
   const handleEditDialogClose = (pkg?: Package) => {
     if (pkg && selectedPackage) {
-      selectedPackage.chatgpt_summary = pkg.chatgpt_summary;
+      selectedPackage.summary = pkg.summary;
       setPackages([...packages]);
     }
     console.log(pkg)
@@ -266,7 +266,7 @@ const PackageSearchTable: React.FC<PackageSearchTableProps> = () => {
       getOptionLabel: (value: Organization) => value.title,
     },
     {
-      field: 'chatgpt_summary',
+      field: 'summary',
       headerName: 'Summary',
       width: 300,
       sortable: false,

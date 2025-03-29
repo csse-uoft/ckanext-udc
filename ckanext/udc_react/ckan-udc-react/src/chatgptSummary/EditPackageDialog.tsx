@@ -26,7 +26,7 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
 
   useEffect(() => {
     setFormData(packageData);
-    setChatgptSummary(packageData?.chatgpt_summary || '');
+    setChatgptSummary(packageData?.summary || '');
     setSummaryOptions([]);
     setError(null);
     setPrompt('');
@@ -51,7 +51,7 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
   const handleSave = async () => {
     if (formData) {
       try {
-        const updatedPkg = { ...formData, chatgpt_summary: chatgptSummary };
+        const updatedPkg = { ...formData, summary: chatgptSummary };
         await executeApiCall(() => api.updatePackage(formData.id, updatedPkg));
         handleClose(updatedPkg);
       } catch (error) {
@@ -167,7 +167,7 @@ const EditPackageDialog: React.FC<EditPackageDialogProps> = ({ open, handleClose
             multiline
             minRows={4}
             label="Summary"
-            name="chatgpt_summary"
+            name="summary"
             value={chatgptSummary}
             onChange={handleSummaryChange}
             sx={{ mb: 2 }}

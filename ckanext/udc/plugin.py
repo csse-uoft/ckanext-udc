@@ -248,7 +248,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     tk.get_converter("convert_to_extras"),
                 ],
                 # ---- chatgpt summary ------
-                "chatgpt_summary": [
+                "summary": [
                     tk.get_validator("ignore_missing"),
                     tk.get_converter("convert_to_extras"),
                 ],
@@ -297,7 +297,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     tk.get_validator("ignore_missing"),
                 ],
                 # ---- chatgpt summary ------
-                "chatgpt_summary": [
+                "summary": [
                     tk.get_converter("convert_from_extras"),
                     tk.get_validator("ignore_missing"),
                 ],
