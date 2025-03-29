@@ -24,6 +24,26 @@ import chalk
 
 log = logging.getLogger(__name__)
 
+
+import time
+from functools import wraps
+
+def cache_for(seconds):
+    def decorator(func):
+        last_run = {"time": 0}
+        cached = {"result": None}
+
+        @wraps(func)
+        def wrapper():
+            now = time.time()
+            if cached["result"] is None or now - last_run["time"] > seconds:
+                cached["result"] = func()
+                last_run["time"] = now
+            return cached["result"]
+
+        return wrapper
+    return decorator
+
 # Register a chained action after `config_option_update(...)` is triggered, i.e. config is saved from the settings page.
 # We need to reload the UDC plugin to make sure the maturity model is up to date.
 @side_effect_free
@@ -104,6 +124,7 @@ def humanize_entity_type(next_helper: Callable[..., Any],
 
 # The home page view does not pass the full search_facets to template.
 # This helper get all search_facets that are required to call `h.get_facet_items_dict(...)`
+@cache_for(600)  # 10 minutes
 def get_full_search_facets():
     context = cast(Context, {
         'model': model,
@@ -218,3 +239,4 @@ def get_maturity_percentages(config, pkg_dict):
 
 def get_system_info(name: str):
     return model.system_info.get_system_info(name)
+
