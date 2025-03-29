@@ -110,7 +110,7 @@ def _get_search_details() -> dict[str, Any]:
     # Solr type = string
     # FTS + exact
     # For FTS match, we need to add suffix `_ngram` to the field name (ckan solr schema is altered to support this)
-    ckan_fields_exact = ["tags"]
+    ckan_fields_exact = ["tags", "organization", "license_id"]
 
     for (param, value) in request.args.items(multi=True):
         # Ignore internal parameters
@@ -323,7 +323,7 @@ def custom_dataset_search():
 
     extra_vars[u'facet_titles'] = facets
     # extra_vars[u'facet_titles'].update(plugins.get_plugin('udc').facet_titles)
-    print(chalk.yellow(f"Facet Titles: {extra_vars[u'facet_titles']}"))
+    # print(chalk.yellow(f"Facet Titles: {extra_vars[u'facet_titles']}"))
     data_dict: dict[str, Any] = {
         u'q': q,
         u'fq': fq.strip(),
@@ -336,7 +336,7 @@ def custom_dataset_search():
         u'include_private': config.get(
             u'ckan.search.default_include_private'),
     }
-    print(chalk.green(f"Data Dict: {data_dict}"))
+    # print(chalk.green(f"Data Dict: {data_dict}"))
     try:
         query = logic.get_action(u'package_search')(context, data_dict)
 

@@ -128,7 +128,7 @@ def get_full_search_facets():
         'fq': 'capacity:"public"'}
     query = logic.get_action('package_search')(context, data_dict)
     
-    print(chalk.yellow("get_full_search_facets"), (query['search_facets']).keys())
+    # print(chalk.yellow("get_full_search_facets"), (query['search_facets']).keys())
     return query['search_facets']
 
 def get_default_facet_titles():
