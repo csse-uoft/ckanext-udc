@@ -148,7 +148,8 @@ def summary_generate(context: Context, package_id: str):
 
     # License
     metadata["license"] = metadata.get("license_title", "")
-    del metadata["license_title"]
+    if "license_title" in metadata:
+        del metadata["license_title"]
     if metadata.get("license_url"):
         metadata["license"] += f" ({metadata['license_url']})"
         del metadata["license_url"]
