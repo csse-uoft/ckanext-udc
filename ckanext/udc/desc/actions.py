@@ -198,7 +198,8 @@ def summary_generate(context: Context, package_id: str):
         "display_name": "License",
         "short_description": mapping.get("license_id", {}).get("short_description", "License used to access the dataset."),
     }
-    del mapping["license_id"]
+    if "license_id" in mapping:
+        del mapping["license_id"]
     
     # Resources
     mapping["Resources"] = {
