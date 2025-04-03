@@ -18,20 +18,10 @@
     </span>
   </form>
       
-      {% set facets_data = {} %}
       {% set facet_titles = {} %}
-
-      {# Get combined facet_titles #}
-      {% set search_facets = h.get_full_search_facets()%}
-      {# {% do facet_titles.update(h.facet_titles)%} #}
       {% do facet_titles.update(h.get_default_facet_titles())%}
 
-
-      {% for facet_title in facet_titles %}
-        {% do facets_data.update({facet_title: h.get_facet_items_dict(facet_title, search_facets)}) %}
-      {% endfor %}
-
-      {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data, facet_titles=facet_titles) }}
+      {{ h.snippet('package/snippets/package_search_popup.html', facet_titles=facet_titles) }}
   <div class="tags">
     <h3>{{ _('Popular tags') }}</h3>
     {% for tag in tags %}

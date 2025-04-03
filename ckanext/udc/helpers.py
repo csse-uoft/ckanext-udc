@@ -153,6 +153,8 @@ def get_full_search_facets():
     return query['search_facets']
 
 def get_default_facet_titles():
+    facets: dict[str, str] = OrderedDict()
+    
     # Copied from ckan.views.dataset.search
     org_label = h.humanize_entity_type(
         u'organization',
@@ -171,7 +173,17 @@ def get_default_facet_titles():
         u'res_format': _(u'Formats'),
         u'license_id': _(u'Licenses'),
     }
-    return default_facet_titles
+    
+    for facet in h.facets():
+        if facet in default_facet_titles:
+            facets[facet] = default_facet_titles[facet]
+        else:
+            facets[facet] = facet
+
+    # Facet titles
+    for plugin in plugins.PluginImplementations(plugins.IFacets):
+        facets = plugin.dataset_facets(facets, "catalogue")
+    return facets
 
 def process_facets_fields(facets_fields: dict):
     """For search page displaying search filters"""
