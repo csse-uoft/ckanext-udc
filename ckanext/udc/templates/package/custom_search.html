@@ -44,13 +44,6 @@
 {% endblock %}
 
 {% block secondary_content %}
-  {% set search_facets_for_popup = h.get_full_search_facets()%}
-  {% set facets_data_for_popup = {} %}
-  {% for facet_title in facet_titles %}
-    {# Need to add limit=0, override the default limit=10 #}
-    {% do facets_data_for_popup.update({facet_title: h.get_facet_items_dict(facet_title, search_facets_for_popup, limit=0)}) %}
-  {% endfor %}
-
   <div class="filters">
     <div>
       <section class="module module-narrow module-shallow">
@@ -62,7 +55,7 @@
         <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
           Show Filter
         </button>
-        {{ h.snippet('package/snippets/package_search_popup.html', facets_data=facets_data_for_popup, facet_titles=facet_titles) }}
+        {{ h.snippet('package/snippets/package_search_popup.html', facet_titles=facet_titles) }}
       </section>
       
       {% for facet in facet_titles %}

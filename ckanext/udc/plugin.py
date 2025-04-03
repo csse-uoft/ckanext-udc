@@ -7,6 +7,8 @@ import chalk
 from collections import OrderedDict
 from typing import Any, Callable, Collection, KeysView, Optional, Union, cast, Iterable, List
 from functools import partial
+
+from ckanext.udc.search.logic.actions import filter_facets_get
 from ckan.types import Schema, Context, CKANApp, Response, SignalMapping
 import ckan
 import ckan.plugins as plugins
@@ -28,7 +30,6 @@ from ckanext.udc.cli import udc as cli_udc
 from ckanext.udc.validator import udc_config_validator
 from ckanext.udc.helpers import (
     config_option_update,
-    get_full_search_facets,
     get_default_facet_titles,
     process_facets_fields,
     humanize_entity_type,
@@ -311,7 +312,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "config": self.maturity_model,
             "facet_titles": self.facet_titles,
             "maturity_model_text_fields": self.text_fields,
-            "get_full_search_facets": get_full_search_facets,
             "get_default_facet_titles": get_default_facet_titles,
             "process_facets_fields": process_facets_fields,
             "humanize_entity_type": humanize_entity_type,
@@ -382,6 +382,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # System actions
             "reload_supervisord": reload_supervisord,
             "get_system_stats": get_system_stats,
+            # Filters
+            "filter_facets_get": filter_facets_get,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

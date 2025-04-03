@@ -6,7 +6,6 @@
 
 <script type=text/javascript>
   window.facets = {
-    data: {{facets_data | tojson}},
     titles: {{facet_titles | tojson}},
     bsaeURL: {{h.url_for('catalogue.search') | tojson}},
     textFields: {{h.maturity_model_text_fields | tojson}},
@@ -25,7 +24,9 @@
         <h5 class="modal-title" id="exampleModalLabel">Maturity Model Filter</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" data-module="advanced-filter">
+        <div id="filter-loader" class="text-center">
+        </div>
         {# The content of the maturity filter popup #}
         <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
           {# <li class="nav-item" role="presentation">

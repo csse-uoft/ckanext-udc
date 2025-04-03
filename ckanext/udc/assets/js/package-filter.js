@@ -21,6 +21,81 @@ function multiSelectLabelRenderer(data) {
 const CKANFields = ["title", "notes", "url", "version",
     "author", "author_email", "maintainer", "maintainer_email"];
 
+this.ckan.module('advanced-filter', function ($) {
+    return {
+        initialize: async function () {
+            const container = this.el[0].querySelector('#filter-loader');
+
+            // Add a loading spinner
+            const loadingSpinner = document.createElement('div');
+            loadingSpinner.className = 'spinner-border';
+            loadingSpinner.setAttribute('role', 'status');
+
+            const spinnerText = document.createElement('span');
+            spinnerText.className = 'visually-hidden';
+            spinnerText.textContent = 'Loading...';
+            loadingSpinner.appendChild(spinnerText);
+
+            // Add error block
+            const errorBlock = document.createElement('span');
+            errorBlock.className = 'error-block';
+            errorBlock.style.display = 'none';
+
+            // Add loading message
+            const loadingMessage = document.createElement('div');
+            loadingMessage.textContent = 'Loading filters...';
+
+            // Append all UI elements
+            container.appendChild(loadingSpinner);
+            container.appendChild(errorBlock);
+            container.appendChild(loadingMessage);
+
+            // Get the facets from the server
+            const facetsData = await fetch("/api/3/action/filter_facets_get")
+                .then(response => {
+                    if (!response.ok) {
+                        errorBlock.textContent = 'Failed to load filters.';
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Sort the facets
+                        const sortedFacets = {};
+                        
+                        for (const [field, {items}] of Object.entries(data.result)) {
+                            const sortedItems = items.sort((a, b) => b.count - a.count);
+                            sortedFacets[field] = sortedItems;
+                        }
+                        window.facets.facetsData = sortedFacets;
+
+                        // Hide the loading spinner and message
+                        container.style.display = 'none';
+
+                        return sortedFacets;
+
+                    } else {
+                        errorBlock.textContent = 'Server error when retrieving filters.';
+                        console.error('API response was not successful');
+
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    errorBlock.textContent = 'Error fetching filter data.';
+                    console.error('Fetch error:', error);
+                });
+
+            // Init the filter-multiple-select module
+            if (facetsData) {
+                this.sandbox.publish('facets-loaded', facetsData);
+            }
+
+        }
+    }
+});
+
 /**
  * For full text search, we add a prefix `fts_` to the field name.
  * For exact match search, we add a prefix `exact_` to the field name.
@@ -31,31 +106,44 @@ const CKANFields = ["title", "notes", "url", "version",
  * 
  */
 this.ckan.module('filter-multiple-select', function ($) {
+
     return {
         options: {
             filterToggle: false,
+            _init: null
         },
 
         initialize: function () {
+            // Keep a reference to the original function
+            this.options._init = this._init.bind(this);
+            this.sandbox.subscribe('facets-loaded', this.options._init);
+        },
+        teardown: function () {
+            // We must always unsubscribe on teardown to prevent memory leaks.
+            this.sandbox.unsubscribe('facets-loaded', this.options._init);
+
+          },
+        _init: function (facetsData) {
+            
             const id = this.el[0].getAttribute("id");
             const fieldName = this.el[0].getAttribute("name");
             let facets;
             let useExtras = false;
-            let allowNewOption = [...window.facets.textFields, ...CKANFields].includes(fieldName);
+            let allowNewOption = [...window.facets.textFields, ...CKANFields, "tags"].includes(fieldName);
 
 
-            if (window.facets.data["extras_" + fieldName]) {
-                facets = window.facets.data["extras_" + fieldName];
+            if (facetsData["extras_" + fieldName]) {
+                facets = facetsData["extras_" + fieldName];
                 useExtras = true;
             } else {
-                facets = window.facets.data[fieldName];
+                facets = facetsData[fieldName];
             }
-           
+
             if (!facets) {
                 console.warn(`No facets found for ${fieldName}`);
                 // return;
             }
-            // console.log(fieldName, this.options, this.el[0])
+            // console.log(fieldName, this.options, this.el[0], facets)
 
             if (this.options.filterToggle) {
                 // Add a filter toggle button after this.el[0]
@@ -65,7 +153,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                         <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${OR_TEXT}</label>
                     </div>`.trim();
                 this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', html);
-                
+
                 // Check if the filter logic is set to "and"
                 if (urlParams.has(`filter-logic-${fieldName}`) && urlParams.get(`filter-logic-${fieldName}`)[0] === "AND") {
                     document.getElementById(`filter-toggle-${fieldName}`).checked = true;
@@ -80,23 +168,20 @@ this.ckan.module('filter-multiple-select', function ($) {
                         label.textContent = OR_TEXT;
                     }
                 });
-                
+
             }
 
             const data = [];
             const optionsKey = new Set();
             const selected = [];
             // console.log(fieldName, facets)
-            for (const { name, display_name, active, count } of facets || []) {
+            for (const { name, display_name, count } of facets || []) {
                 const item = {
                     value: encodeURIComponent(name), // Prevents special characters breaking Virtual Select
                     label: `${display_name} - (${count})`
                 };
                 data.push(item);
                 optionsKey.add(item.value);
-                if (active) {
-                    selected.push(item.value);
-                }
             }
 
             // Add fields that are not in facets (title, description, etc.)
@@ -108,7 +193,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                         label: value,
                         isNew: true,
                     };
-                    
+
                     // Prevent duplicates
                     if (!optionsKey.has(item.value)) {
                         data.push(item);
@@ -148,7 +233,6 @@ this.ckan.module('filter-multiple-select', function ($) {
                 labelRenderer: multiSelectLabelRenderer,
                 selectedLabelRenderer: multiSelectLabelRenderer,
             });
-
         }
     }
 });
@@ -176,23 +260,12 @@ this.ckan.module('filter-apply-button', function ($) {
                         const filterValues = el.getSelectedOptions();
                         for (let { value, label, isNew } of filterValues) {
 
-                            if (!CKANFields.includes(fieldName)) {
-                                if (isNew) {
-                                    params.add(`fts_${encodeURIComponent(fieldName)}=${value}`);
-                                    console.log("Adding fts_", fieldName, value);
-                                } else {
-                                    params.add(`exact_${encodeURIComponent(fieldName)}=${value}`);
-                                    console.log("Adding exact_", fieldName, value);
-                                }
-                            } 
-                            if (CKANFields.includes(fieldName)) {
-                                if (isNew) {
-                                    params.add(`fts_${encodeURIComponent(fieldName)}=${value}`);
-                                    console.log("Adding fts_", fieldName, value);
-                                } else {
-                                    params.add(`exact_${encodeURIComponent(fieldName)}=${value}`);
-                                    console.log("Adding exact_", fieldName, value);
-                                }
+                            if (isNew) {
+                                params.add(`fts_${encodeURIComponent(fieldName)}=${value}`);
+                                console.log("Adding fts_", fieldName, value);
+                            } else {
+                                params.add(`exact_${encodeURIComponent(fieldName)}=${value}`);
+                                console.log("Adding exact_", fieldName, value);
                             }
                         }
                         if (filterToggle && filterToggle.checked) {
@@ -200,7 +273,7 @@ this.ckan.module('filter-apply-button', function ($) {
                         }
                     }
                 }
-                
+
                 // Preserve existing filters and deduplicate
                 console.log(currURLSearchParams.entries())
                 for (const [k, v] of currURLSearchParams.entries()) {
@@ -218,7 +291,7 @@ this.ckan.module('filter-apply-button', function ($) {
                     } else if (!usedNames.has(k)) {
                         params.add(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
                     }
-                  
+
                 }
 
                 // Redirect

@@ -26,23 +26,6 @@ log = logging.getLogger(__name__)
 
 
 import time
-from functools import wraps
-
-def cache_for(seconds):
-    def decorator(func):
-        last_run = {"time": 0}
-        cached = {"result": None}
-
-        @wraps(func)
-        def wrapper():
-            now = time.time()
-            if cached["result"] is None or now - last_run["time"] > seconds:
-                cached["result"] = func()
-                last_run["time"] = now
-            return cached["result"]
-
-        return wrapper
-    return decorator
 
 # Register a chained action after `config_option_update(...)` is triggered, i.e. config is saved from the settings page.
 # We need to reload the UDC plugin to make sure the maturity model is up to date.
@@ -121,36 +104,6 @@ def humanize_entity_type(next_helper: Callable[..., Any],
 
     return original_text
 
-
-# The home page view does not pass the full search_facets to template.
-# This helper get all search_facets that are required to call `h.get_facet_items_dict(...)`
-@cache_for(600)  # 10 minutes
-def get_full_search_facets():
-    context = cast(Context, {
-        'model': model,
-        'session': model.Session,
-        'user': current_user.name,
-        'auth_user_obj': current_user
-    }
-    )
-    default_limit: int = ckan.common.config.get('search.facets.default')
-    facets_fields = [*h.facets(), 'author']
-    
-    for plugin in plugins.PluginImplementations(plugins.IFacets):
-        facets_fields.extend(plugin.dataset_facets({}, "catalogue").keys())
-
-    data_dict: dict[str, Any] = {
-        'q': '*:*',
-        'facet.limit': -1,
-        'facet.field': facets_fields,
-        'rows': default_limit,
-        'start': 0,
-        'sort': 'view_recent desc',
-        'fq': 'capacity:"public"'}
-    query = logic.get_action('package_search')(context, data_dict)
-    
-    # print(chalk.yellow("get_full_search_facets"), (query['search_facets']).keys())
-    return query['search_facets']
 
 def get_default_facet_titles():
     facets: dict[str, str] = OrderedDict()
