@@ -31,6 +31,7 @@ export interface Package {
   license_title: string;
   published_date: string;
   [key: string]: any;
+  related_packages?: {id: string, name: string, title: string}[];
 }
 
 const buildFilters = (filterModel: GridFilterModel, emptySummaryOnly: boolean) => {

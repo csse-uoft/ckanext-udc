@@ -213,6 +213,9 @@ export async function update_summary(id: string, summary: string): Promise<void>
 }
 
 export async function updatePackage(id: string, data: any) {
+  if (data?.related_packages) {
+    delete data.related_packages;
+  }
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/package_update", {
     method: "POST",
     body: JSON.stringify({ id, ...data }),
