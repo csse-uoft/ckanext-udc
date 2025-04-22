@@ -41,5 +41,18 @@ def _filter_facets_get() -> dict[str, Any]:
     }
 
     query = logic.get_action("package_search")({}, data_dict)
-
-    return query["search_facets"]
+    
+    facets: dict[str, list] = query["search_facets"]
+    
+    # Update display_name of the dropdown options
+    dropdown_options = plugins.get_plugin('udc').dropdown_options
+    
+    for facet_name in facets:
+        original_facet_name = facet_name
+        if facet_name.startswith("extras_"):
+            # Remove the extras_ prefix
+            facet_name = facet_name[7:]
+        if facet_name in dropdown_options:
+            for option in facets[original_facet_name]["items"]:
+                option["display_name"] = dropdown_options[facet_name][option["name"]]
+    return facets

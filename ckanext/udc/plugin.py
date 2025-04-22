@@ -98,12 +98,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     text_fields: List[str] = []
     date_fields: List[str] = []
     multiple_select_fields: List[str] = []
+    dropdown_options: dict[str, dict[str, str]] = {}
 
     def update_config(self, config_):
         tk.add_template_directory(config_, "templates")
         tk.add_public_directory(config_, "public")
         tk.add_resource("assets", "udc")
-        
+
     def _cli_configure(self):
         """Partial load for CLI"""
         self.disable_graphdb = True
@@ -114,10 +115,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 self.reload_config(json.loads(existing_config))
             except:
                 log.error
-        
+
         # Load custom licenses
         init_licenses()
-        
 
     def configure(self, config: CKANConfig):
         log.info(sys.argv)
@@ -202,6 +202,17 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 preload_ontologies(
                     config, endpoint, username, password, self.sparql_client
                 )
+
+            # Store dropdown options
+            for level in config["maturity_model"]:
+                for field in level["fields"]:
+                    if field.get("type") == "multiple_select" or field.get("type") == "single_select":
+                        options = self.dropdown_options[field["name"]] = {}
+                        for option in field["options"]:
+                            options[option["value"]] = (
+                                tk._(option["text"])
+                            )
+                        log.info(f"Dropdown options for field {field['name']} loaded: {len(options.keys())}")
             
             # Update solr index
             update_solr_maturity_model_fields(config["maturity_model"])
@@ -382,6 +393,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # System actions
             "reload_supervisord": reload_supervisord,
             "get_system_stats": get_system_stats,
+            # "maturity_model_get": get_maturity_model,
             # Filters
             "filter_facets_get": filter_facets_get,
         }
@@ -440,7 +452,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def after_dataset_show(self, context: Context, pkg_dict: dict[str, Any]) -> None:
         # Add related packages
         related_packages = []
-        
+
         if pkg_dict.get("is_unified"):
             rel = (
                 model.meta.Session.query(model.PackageRelationship)
@@ -461,7 +473,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 .filter(model.PackageRelationship.object_package_id == pkg_dict["id"])
                 .all()
             )
-        
+
             for r in rel:
                 unified_package = model.Package.get(r.subject_package_id)
                 related_packages.append({
@@ -469,14 +481,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     "id": unified_package.id,
                     "name": unified_package.name,
                 })
-            
+
                 rel2 = (
                     model.meta.Session.query(model.PackageRelationship)
                     .filter(model.PackageRelationship.subject_package_id == unified_package.id)
                     .filter(model.PackageRelationship.object_package_id != pkg_dict["id"])
                     .all()
                 )
-                
+
                 for r in rel2:
                     related_package = model.Package.get(r.object_package_id)
                     # Check if exists
@@ -486,10 +498,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                             "id": related_package.id,
                             "name": related_package.name,
                         })
-                
 
         pkg_dict["related_packages"] = related_packages
-            
+
     def before_dataset_search(self, search_params: dict[str, Any]) -> dict[str, Any]:
         # print(chalk.red("before_dataset_search"))
         # print(search_params)
@@ -513,7 +524,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
         return pkg_dict
-    
+
     # IMiddleware
     def make_middleware(self, app: CKANApp, config: CKANConfig) -> CKANApp:
         override_error_handler(app, config)
