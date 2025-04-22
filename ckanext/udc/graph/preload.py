@@ -21,11 +21,24 @@ def preload_ontologies(config, graphdb_endpoint: str, username: str, password: s
         r = requests.get(item["ontology_url"], allow_redirects=True)
         with open(path, 'wb') as f:
             f.write(r.content)
-        try:
-            import_and_wait(path, replace_graph=True, named_graph=item["graph"])
-        except Exception as e:
-            if 'already scheduled for import' not in str(e):
-                raise e
+        
+        # Keep retry for 5 times
+        for cnt in range(5):
+            try:
+                try:
+                    import_and_wait(path, replace_graph=True, named_graph=item["graph"])
+                except Exception as e:
+                    if 'already scheduled for import' not in str(e):
+                        raise e
+                break
+            except Exception as e:
+                print(f"Error importing {path}: {e}")
+                print("Retrying...")
+                if cnt == 4:
+                    # Restart(Exit) the server if it fails 5 times
+                    print("Exiting after 5 retries")
+                    exit(1)
+                
 
     # Preload options for dropdowns
     dropdown_reload(maturity_model=config["maturity_model"])
