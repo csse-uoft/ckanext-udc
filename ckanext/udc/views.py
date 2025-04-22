@@ -101,6 +101,9 @@ def _get_search_details() -> dict[str, Any]:
     # Only the text fields support full text search
     text_fields = plugins.get_plugin('udc').text_fields
     
+    # Get the list of date fields from the udc plugin
+    date_fields = plugins.get_plugin('udc').date_fields
+    
     # Solr type = text_general/text
     # FTS only
     # TODO: If exact match is needed, we need to alter the ckan solr schema
@@ -154,6 +157,23 @@ def _get_search_details() -> dict[str, Any]:
                     }
                 else:
                     fields_grouped[field_name]['values'].append(value)
+            elif param.startswith('min_'):
+                field_name = "extras_" + param[4:]
+                if field_name not in fields_grouped:
+                    fields_grouped[field_name] = {
+                        'min': value,
+                    }
+                else:
+                    fields_grouped[field_name]['min'] = value
+            elif param.startswith('max_'):
+                field_name = "extras_" + param[4:]
+                if field_name not in fields_grouped:
+                    fields_grouped[field_name] = {
+                        'max': value,
+                    }
+                else:
+                    fields_grouped[field_name]['max'] = value
+                
             elif not param.startswith(u'ext_'):
                 # Not sure what is this for
                 fields.append((param, value))
@@ -175,12 +195,35 @@ def _get_search_details() -> dict[str, Any]:
     
     # Build fq from fields_grouped
     for key, options in fields_grouped.items():
-        values = options['values']
-        filter_logic = filter_logics.get(key, 'OR')
-        if len(values) > 1:
-            fq += u' %s:(%s)' % (key, f' {filter_logic} '.join([f'"{v}"' for v in values]))
+        
+        if 'values' in options:
+            values = options['values']
+            filter_logic = filter_logics.get(key, 'OR')
+            if len(values) > 1:
+                fq += u' %s:(%s)' % (key, f' {filter_logic} '.join([f'"{v}"' for v in values]))
+            else:
+                fq += u' %s:"%s"' % (key, values[0])
         else:
-            fq += u' %s:"%s"' % (key, values[0])
+            min = options.get('min')
+            max = options.get('max')
+            if key.startswith("extras") and key[7:] in date_fields:
+                try:
+                    # Convert date to UTC ISO format
+                    if min:
+                        min = datetime.strptime(min, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+                    if max:
+                        max = datetime.strptime(max, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+                except ValueError:
+                    # If the date is not in the correct format, skip it
+                    continue
+            
+            # Handle min and max values for number and date ranges
+            if min and max:
+                fq += u' %s:[%s TO %s]' % (key, min, max)
+            elif min in options:
+                fq += u' %s:[%s TO *]' % (key, min)
+            elif max:
+                fq += u' %s:[* TO %s]' % (key, max)
     
     return {
         u'fields': fields,

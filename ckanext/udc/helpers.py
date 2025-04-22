@@ -155,15 +155,34 @@ def process_facets_fields(facets_fields: dict):
         
         if field_name not in results:
             results[field_name] = {"logic": "or", "values": []}
-            
-        values = facets_fields[field]['values']
-        is_fts = facets_fields[field].get('fts', False)
-        for item in values:
-            results[field_name]["values"].append({
-                "ori_field": field,
-                "ori_value": item,
-                "value": f'Search for "{item}"' if is_fts else item,
-            })
+        
+        if 'values' in facets_fields[field]:
+            values = facets_fields[field]['values']
+            is_fts = facets_fields[field].get('fts', False)
+            for item in values:
+                results[field_name]["values"].append({
+                    "ori_field": field,
+                    "ori_value": item,
+                    "value": f'Search for "{item}"' if is_fts else item,
+                })
+        else:
+            # Date or number ranges
+            min = facets_fields[field].get('min')
+            max = facets_fields[field].get('max')
+
+            if min:
+                results[field_name]["values"].append({
+                    "ori_field": "min_" + field_name,
+                    "ori_value": min,
+                    "value": f"From: {min}",
+                })
+            if max:
+                results[field_name]["values"].append({
+                    "ori_field": "max_" + field_name,
+                    "ori_value": max,
+                    "value": f"To: {max}",
+                })
+           
         
         if "filter-logic-" + field in facets_fields and facets_fields["filter-logic-" + field][0] == "and":
             results[field_name]["logic"] = "and"

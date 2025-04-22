@@ -59,7 +59,11 @@
                     <div class="form-group control-full">
                       <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(title) }}</label>
                       <div class="controls">
-                        <div id="filter-{{field["name"]}}" name="{{field["name"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
+                        <div id="filter-{{field["name"]}}" name="{{field["name"]}}" 
+                          data-module="filter-multiple-select" 
+                          {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}
+                          data-module-type="{{field["type"] or 'text'}}">
+                        </div>
                       </div>
                       {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                     </div>

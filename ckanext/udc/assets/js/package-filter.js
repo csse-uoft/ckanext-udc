@@ -63,8 +63,8 @@ this.ckan.module('advanced-filter', function ($) {
                     if (data.success) {
                         // Sort the facets
                         const sortedFacets = {};
-                        
-                        for (const [field, {items}] of Object.entries(data.result)) {
+
+                        for (const [field, { items }] of Object.entries(data.result)) {
                             const sortedItems = items.sort((a, b) => b.count - a.count);
                             sortedFacets[field] = sortedItems;
                         }
@@ -110,6 +110,7 @@ this.ckan.module('filter-multiple-select', function ($) {
     return {
         options: {
             filterToggle: false,
+            type: "text",
             _init: null
         },
 
@@ -122,9 +123,9 @@ this.ckan.module('filter-multiple-select', function ($) {
             // We must always unsubscribe on teardown to prevent memory leaks.
             this.sandbox.unsubscribe('facets-loaded', this.options._init);
 
-          },
+        },
         _init: function (facetsData) {
-            
+
             const id = this.el[0].getAttribute("id");
             const fieldName = this.el[0].getAttribute("name");
             let facets;
@@ -145,94 +146,174 @@ this.ckan.module('filter-multiple-select', function ($) {
             }
             // console.log(fieldName, this.options, this.el[0], facets)
 
-            if (this.options.filterToggle) {
-                // Add a filter toggle button after this.el[0]
+            // Number filters
+            if (this.options.type === "number") {
+                let min, max;
+                if (urlParams.has(`min_${fieldName}`)) {
+                    min = urlParams.get(`min_${fieldName}`)[0];
+                }
+                if (urlParams.has(`max_${fieldName}`)) {
+                    max = urlParams.get(`max_${fieldName}`)[0];
+                }
+                console.log(fieldName, "min", min, "max", max);
+
+                // Render the HTML for the number filter
                 const html = `
-                    <div class="form-check form-switch mt-1">
-                        <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
-                        <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${OR_TEXT}</label>
-                    </div>`.trim();
-                this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', html);
+                <div class="row g-4">
+                    <div class="col">
+                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">Min</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="${`filter-${fieldName}-min`}"
+                            value="${min ? min : ""}"
+                        />
+                    </div>
+                    <div class="col">
+                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">Max</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="${`filter-${fieldName}-max`}"
+                            value="${max ? max : ""}"
+                        />
+                    </div>
+                </div>
+                    `.trim();
 
-                // Check if the filter logic is set to "and"
-                if (urlParams.has(`filter-logic-${fieldName}`) && urlParams.get(`filter-logic-${fieldName}`)[0] === "AND") {
-                    document.getElementById(`filter-toggle-${fieldName}`).checked = true;
-                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = AND_TEXT;
+                this.el[0].innerHTML = html;
+            }
+            // Date filters
+            else if (this.options.type === "date") {
+                let min, max;
+                if (urlParams.has(`min_${fieldName}`)) {
+                    min = urlParams.get(`min_${fieldName}`)[0];
+                }
+                if (urlParams.has(`max_${fieldName}`)) {
+                    max = urlParams.get(`max_${fieldName}`)[0];
+                }
+                console.log(fieldName, "min", min, "max", max);
+
+                // Render the HTML for the date filter
+                const html = `
+                <div class="row g-4">
+                    <div class="col">
+                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">Start</label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="${`filter-${fieldName}-min`}"
+                            value="${min ? min : ""}"
+                        />
+                    </div>
+                    <div class="col">
+                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">End</label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="${`filter-${fieldName}-max`}"
+                            value="${max ? max : ""}"
+                        />
+                    </div>
+                </div>
+                    `.trim();
+
+                this.el[0].innerHTML = html;
+            }
+            // Other filters
+            else {
+                // Add a toggle for AND/OR logic
+                if (this.options.filterToggle) {
+                    // Add a filter toggle button after this.el[0]
+                    const html = `
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
+                            <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${OR_TEXT}</label>
+                        </div>`.trim();
+                    this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', html);
+
+                    // Check if the filter logic is set to "and"
+                    if (urlParams.has(`filter-logic-${fieldName}`) && urlParams.get(`filter-logic-${fieldName}`)[0] === "AND") {
+                        document.getElementById(`filter-toggle-${fieldName}`).checked = true;
+                        document.getElementById(`filter-toggle-label-${fieldName}`).textContent = AND_TEXT;
+                    }
+
+                    document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
+                        const label = document.getElementById(`filter-toggle-label-${fieldName}`);
+                        if (this.checked) {
+                            label.textContent = AND_TEXT;
+                        } else {
+                            label.textContent = OR_TEXT;
+                        }
+                    });
+
                 }
 
-                document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
-                    const label = document.getElementById(`filter-toggle-label-${fieldName}`);
-                    if (this.checked) {
-                        label.textContent = AND_TEXT;
-                    } else {
-                        label.textContent = OR_TEXT;
-                    }
-                });
-
-            }
-
-            const data = [];
-            const optionsKey = new Set();
-            const selected = [];
-            // console.log(fieldName, facets)
-            for (const { name, display_name, count } of facets || []) {
-                const item = {
-                    value: encodeURIComponent(name), // Prevents special characters breaking Virtual Select
-                    label: `${display_name} - (${count})`
-                };
-                data.push(item);
-                optionsKey.add(item.value);
-            }
-
-            // Add fields that are not in facets (title, description, etc.)
-            if (urlParams.has(`fts_${fieldName}`)) {
-                for (const value of urlParams.get(`fts_${fieldName}`)) {
-                    console.log("Adding fts_", fieldName, value);
-                    let item = {
-                        value: value,
-                        label: value,
-                        isNew: true,
-                    };
-
-                    // Prevent duplicates
-                    if (!optionsKey.has(item.value)) {
-                        data.push(item);
-                    }
-                    selected.push(item.value);
-                }
-            }
-
-            // Add fields beginning with `exact_`
-            if (urlParams.has(`exact_${fieldName}`)) {
-                for (const value of urlParams.get(`exact_${fieldName}`)) {
-                    console.log("Adding exact_", fieldName, value);
+                const data = [];
+                const optionsKey = new Set();
+                const selected = [];
+                // console.log(fieldName, facets)
+                for (const { name, display_name, count } of facets || []) {
                     const item = {
-                        value: value,
-                        label: value,
+                        value: encodeURIComponent(name), // Prevents special characters breaking Virtual Select
+                        label: `${display_name} - (${count})`
                     };
-
-                    // Prevent duplicates
-                    if (!optionsKey.has(item.value)) {
-                        data.push(item);
-                    }
-                    selected.push(item.value);
+                    data.push(item);
+                    optionsKey.add(item.value);
                 }
+
+                // Add fields that are not in facets (title, description, etc.)
+                if (urlParams.has(`fts_${fieldName}`)) {
+                    for (const value of urlParams.get(`fts_${fieldName}`)) {
+                        console.log("Adding fts_", fieldName, value);
+                        let item = {
+                            value: value,
+                            label: value,
+                            isNew: true,
+                        };
+
+                        // Prevent duplicates
+                        if (!optionsKey.has(item.value)) {
+                            data.push(item);
+                        }
+                        selected.push(item.value);
+                    }
+                }
+
+                // Add fields beginning with `exact_`
+                if (urlParams.has(`exact_${fieldName}`)) {
+                    for (const value of urlParams.get(`exact_${fieldName}`)) {
+                        console.log("Adding exact_", fieldName, value);
+                        const item = {
+                            value: value,
+                            label: value,
+                        };
+
+                        // Prevent duplicates
+                        if (!optionsKey.has(item.value)) {
+                            data.push(item);
+                        }
+                        selected.push(item.value);
+                    }
+                }
+
+                // https://sa-si-dev.github.io/virtual-select/#/properties
+                const selectComponent = VirtualSelect.init({
+                    ele: this.el[0],
+                    options: data,
+                    multiple: true,
+                    search: true,
+                    selectedValue: selected,
+                    allowNewOption,
+                    maxWidth: "100%",
+                    showValueAsTags: true,
+                    disabled: false,
+                    labelRenderer: multiSelectLabelRenderer,
+                    selectedLabelRenderer: multiSelectLabelRenderer,
+                });
             }
 
-            // https://sa-si-dev.github.io/virtual-select/#/properties
-            const selectComponent = VirtualSelect.init({
-                ele: this.el[0],
-                options: data,
-                multiple: true,
-                search: true,
-                selectedValue: selected,
-                allowNewOption,
-                maxWidth: "100%",
-                showValueAsTags: true,
-                disabled: false,
-                labelRenderer: multiSelectLabelRenderer,
-                selectedLabelRenderer: multiSelectLabelRenderer,
-            });
+
         }
     }
 });
@@ -253,9 +334,24 @@ this.ckan.module('filter-apply-button', function ($) {
                         fieldName = fieldName.substring(7);
                     }
                     console.log("Field name", fieldName);
+
                     const el = document.querySelector(`#filter-${fieldName}`);
-                    const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
-                    if (el) {
+                    if (!el) continue;
+
+                    const type = el ? el.getAttribute("data-module-type") : null;
+
+                    if (type === "number" || type === "date") {
+                        // We have a number or date filter
+                        const min = document.querySelector(`#filter-${fieldName}-min`);
+                        const max = document.querySelector(`#filter-${fieldName}-max`);
+                        if (min && min.value) {
+                            params.add(`min_${fieldName}=${min.value}`);
+                        }
+                        if (max && max.value) {
+                            params.add(`max_${fieldName}=${max.value}`);
+                        }
+                    } else {
+                        const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
                         usedNames.add(fieldName);
                         const filterValues = el.getSelectedOptions();
                         for (let { value, label, isNew } of filterValues) {
