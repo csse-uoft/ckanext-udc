@@ -54,5 +54,8 @@ def _filter_facets_get() -> dict[str, Any]:
             facet_name = facet_name[7:]
         if facet_name in dropdown_options:
             for option in facets[original_facet_name]["items"]:
-                option["display_name"] = dropdown_options[facet_name][option["name"]]
+                if option["name"] in dropdown_options[facet_name]:
+                    # Update the display name with the corresponding value from dropdown_options
+                    # Only update if the name exists in dropdown_options
+                    option["display_name"] = dropdown_options[facet_name][option["name"]]
     return facets
