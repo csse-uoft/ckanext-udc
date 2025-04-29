@@ -138,15 +138,15 @@
                   <td class="dataset-details" property="foaf:homepage">{{ pkg_dict.url }}</td>
                 {% endif %}
               </tr>
-            {% elif field["ckanField"] == "author_email" and pkg_dict.author_email %}
+            {% elif field["ckanField"] == "author_email" %}
               <tr>
                 <th scope="row" class="dataset-label">{{ _("Author Email") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
-                <td class="dataset-details" property="dc:creator">{{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author_email) }}</td>
+                <td class="dataset-details" property="dc:creator">{{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author_email) if pkg_dict.author_email else "" }}</td>
               </tr>
-            {% elif field["ckanField"] == "author" and pkg_dict.author %}
+            {% elif field["ckanField"] == "author" %}
               <tr>
                 <th scope="row" class="dataset-label">{{ _("Author") }}{{ th_description(field["short_description"], field["long_description"]) }}</th>
-                <td class="dataset-details" property="dc:creator">{{ pkg_dict.author }}</td>
+                <td class="dataset-details" property="dc:creator">{{ pkg_dict.author or "" }}</td>
               </tr>
             {% elif field["ckanField"] == "maintainer_email" and pkg_dict.maintainer_email %}
               <tr>
