@@ -24,73 +24,87 @@
         <h5 class="modal-title" id="exampleModalLabel">Maturity Model Filter</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body" data-module="advanced-filter">
-        <div id="filter-loader" class="text-center">
+        <div id="filter-loader" class="text-center p-4">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading filters...</span>
+          </div>
+          <span class="error-block" style="display:none"></span>
+          <div>Loading filters...</div>
         </div>
+        
         {# The content of the maturity filter popup #}
-        <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
-          {# <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
-          </li> #}
 
-          {% for level in h.config %}
-            <li class="nav-item" role="presentation">
-              <button class="{{'nav-link active' if loop.index == 1 else 'nav-link'}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
-            </li>
-          {% endfor %}
+        <div id="filters-container" style="display:none">
 
-        </ul>
-        <div class="tab-content" style="display:initial;">
-          {# <div class="tab-pane active" id="basic-information" role="tabpanel">
-            {% snippet 'package/snippets/package_search_basic_information.html', data={}, errors="" %}
-          </div> #}
-          {% for level in h.config %}
-            <div class="tab-pane {{'active' if loop.index == 1 else 'fade' }}" id="{{ level["name"] }}" role="tabpanel">
-              <h3 style="padding-top:3px">{{ level["title"] }}</h1>
-              {% for field in level["fields"] %}
+          {# The content of the maturity filter popup #}
+          <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
+            {# <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="basic-information-tab" data-bs-toggle="tab" data-bs-target="#basic-information" type="button" role="tab">Basic Information</button>
+            </li> #}
 
-                {% if field.get("ckanField") == none %}
-                  {% set has_extras = ("extras_" + field["name"]) in facet_titles %}
-                  {% set title = facet_titles["extras_" + field["name"]] if has_extras else facet_titles[field["name"]] %}
-                  
-                  {% if title %}
-                    {# Our customized field #}
+            {% for level in h.config %}
+              <li class="nav-item" role="presentation">
+                <button class="{{'nav-link active' if loop.index == 1 else 'nav-link'}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+              </li>
+            {% endfor %}
+
+          </ul>
+          <div class="tab-content" style="display:initial;">
+            {# <div class="tab-pane active" id="basic-information" role="tabpanel">
+              {% snippet 'package/snippets/package_search_basic_information.html', data={}, errors="" %}
+            </div> #}
+            {% for level in h.config %}
+              <div class="tab-pane {{'active' if loop.index == 1 else 'fade' }}" id="{{ level["name"] }}" role="tabpanel">
+                <h3 style="padding-top:3px">{{ level["title"] }}</h1>
+                {% for field in level["fields"] %}
+
+                  {% if field.get("ckanField") == none %}
+                    {% set has_extras = ("extras_" + field["name"]) in facet_titles %}
+                    {% set title = facet_titles["extras_" + field["name"]] if has_extras else facet_titles[field["name"]] %}
                     
-                    <div class="form-group control-full">
-                      <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(title) }}</label>
-                      <div class="controls">
-                        <div id="filter-{{field["name"]}}" name="{{field["name"]}}" 
-                          data-module="filter-multiple-select" 
-                          {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}
-                          data-module-type="{{field["type"] or 'text'}}">
+                    {% if title %}
+                      {# Our customized field #}
+                      
+                      <div class="form-group control-full">
+                        <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(title) }}</label>
+                        <div class="controls">
+                          <div id="filter-{{field["name"]}}" name="{{field["name"]}}" 
+                            data-module="filter-multiple-select" 
+                            {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}
+                            data-module-type="{{field["type"] or 'text'}}">
+                          </div>
                         </div>
+                        {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
                       </div>
-                      {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
-                    </div>
-                  {% endif %}
+                    {% endif %}
 
-                {% else %}
-                  {# CKAN predefined field #}
-                  {% if field["ckanField"] in facet_titles %}
-
-                    <div class="form-group control-full">
-                      <label class="form-label" for="{{'filter-' + field["ckanField"]}}">{{ _(facet_titles[field["ckanField"]]) }}</label>
-                      <div class="controls">
-                        <div id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
-                      </div>
-                      {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
-                    </div>
-                
                   {% else %}
-                    {{ ckan_filter[field["ckanField"]](field['short_description'], field['long_description']) }}
+                    {# CKAN predefined field #}
+                    {% if field["ckanField"] in facet_titles %}
+
+                      <div class="form-group control-full">
+                        <label class="form-label" for="{{'filter-' + field["ckanField"]}}">{{ _(facet_titles[field["ckanField"]]) }}</label>
+                        <div class="controls">
+                          <div id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
+                        </div>
+                        {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
+                      </div>
+                  
+                    {% else %}
+                      {{ ckan_filter[field["ckanField"]](field['short_description'], field['long_description']) }}
+                    {% endif %}
                   {% endif %}
-                {% endif %}
-                
-              {% endfor %}
-            </div>
-          {% endfor %}
+                  
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
+
       </div>
+        
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" data-module="filter-apply-button">Apply</button>

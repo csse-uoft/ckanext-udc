@@ -29,30 +29,10 @@ this.ckan.module('advanced-filter', function ($) {
     return {
         initialize: async function () {
             const container = this.el[0].querySelector('#filter-loader');
-
-            // Add a loading spinner
-            const loadingSpinner = document.createElement('div');
-            loadingSpinner.className = 'spinner-border';
-            loadingSpinner.setAttribute('role', 'status');
-
-            const spinnerText = document.createElement('span');
-            spinnerText.className = 'visually-hidden';
-            spinnerText.textContent = 'Loading...';
-            loadingSpinner.appendChild(spinnerText);
+            const filterContainer = document.querySelector('#filters-container');
 
             // Add error block
-            const errorBlock = document.createElement('span');
-            errorBlock.className = 'error-block';
-            errorBlock.style.display = 'none';
-
-            // Add loading message
-            const loadingMessage = document.createElement('div');
-            loadingMessage.textContent = 'Loading filters...';
-
-            // Append all UI elements
-            container.appendChild(loadingSpinner);
-            container.appendChild(errorBlock);
-            container.appendChild(loadingMessage);
+            const errorBlock = container.querySelector('.error-block');
 
             // Get the facets from the server
             const facetsData = await fetch("/api/3/action/filter_facets_get")
@@ -76,6 +56,7 @@ this.ckan.module('advanced-filter', function ($) {
 
                         // Hide the loading spinner and message
                         container.style.display = 'none';
+                        filterContainer.style.display = 'block';
 
                         return sortedFacets;
 
