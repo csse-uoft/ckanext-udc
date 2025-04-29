@@ -10,6 +10,10 @@ for (const [k, v] of currURLSearchParams.entries()) {
 
 const AND_TEXT = "Match all selected (AND)";
 const OR_TEXT = "Match any selected (OR)";
+const INCLUDE_UNDEFINED_DATE = 'Include items without a date';
+const EXCLUDE_UNDEFINED_DATE = 'Exclude items without a date';
+const INCLUDE_UNDEFINED_NUMBER = 'Include items without a number';
+const EXCLUDE_UNDEFINED_NUMBER = 'Exclude items without a number';
 
 function multiSelectLabelRenderer(data) {
     if (data.isNew) {
@@ -182,6 +186,29 @@ this.ckan.module('filter-multiple-select', function ($) {
                     `.trim();
 
                 this.el[0].innerHTML = html;
+
+                // Add a filter toggle button after this.el[0]
+                const checkboxHTML  = `
+                <div class="form-check form-switch mt-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
+                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${EXCLUDE_UNDEFINED_NUMBER}</label>
+                </div>`.trim();
+                this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
+
+                // Check if the filter logic is set
+                if (urlParams.has(`filter-logic-${fieldName}`)) {
+                    document.getElementById(`filter-toggle-${fieldName}`).checked = true;
+                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = INCLUDE_UNDEFINED_NUMBER;
+                }
+
+                document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
+                    const label = document.getElementById(`filter-toggle-label-${fieldName}`);
+                    if (this.checked) {
+                        label.textContent = INCLUDE_UNDEFINED_NUMBER;
+                    } else {
+                        label.textContent = EXCLUDE_UNDEFINED_NUMBER;
+                    }
+                });
             }
             // Date filters
             else if (this.options.type === "date") {
@@ -219,6 +246,30 @@ this.ckan.module('filter-multiple-select', function ($) {
                     `.trim();
 
                 this.el[0].innerHTML = html;
+
+                // Add a filter toggle button after this.el[0]
+                const checkboxHTML  = `
+                <div class="form-check form-switch mt-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
+                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${EXCLUDE_UNDEFINED_DATE}</label>
+                </div>`.trim();
+                this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
+
+                // Check if the filter logic is set
+                if (urlParams.has(`filter-logic-${fieldName}`)) {
+                    document.getElementById(`filter-toggle-${fieldName}`).checked = true;
+                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = INCLUDE_UNDEFINED_DATE;
+                }
+
+                document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
+                    const label = document.getElementById(`filter-toggle-label-${fieldName}`);
+                    if (this.checked) {
+                        label.textContent = INCLUDE_UNDEFINED_DATE;
+                    } else {
+                        label.textContent = EXCLUDE_UNDEFINED_DATE;
+                    }
+                });
+            
             }
             // Other filters
             else {
@@ -350,9 +401,14 @@ this.ckan.module('filter-apply-button', function ($) {
                         if (max && max.value) {
                             params.add(`max_${fieldName}=${max.value}`);
                         }
+                        const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
+                        if (filterToggle && filterToggle.checked) {
+                            params.add(`filter-logic-${fieldName}=${type === "date" ? "date" : "number"}`);
+                        }
                     } else {
                         const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
                         usedNames.add(fieldName);
+
                         const filterValues = el.getSelectedOptions();
                         for (let { value, label, isNew } of filterValues) {
 
@@ -372,19 +428,15 @@ this.ckan.module('filter-apply-button', function ($) {
 
                 // Preserve existing filters and deduplicate
                 console.log(currURLSearchParams.entries())
+                console.log("usedNames", usedNames);
                 for (const [k, v] of currURLSearchParams.entries()) {
                     // Add those params that are not covered by the usedNames
-                    if (k.startsWith("exact_")) {
-                        // Remove the "exact_" prefix
-                        if (!usedNames.has(k.substring(7))) {
-                            params.add(`${k}=${v}`);
-                        }
-                    } else if (k.startsWith("fts_")) {
-                        // Remove the "fts_" prefix
-                        if (!usedNames.has(k.substring(4))) {
-                            params.add(`${k}=${v}`);
-                        }
-                    } else if (!usedNames.has(k)) {
+                    if (k.startsWith("filter-logic-") || k.startsWith("min_") || k.startsWith("max_") || k.startsWith("exact_") || k.startsWith("fts_")) {
+                        // Skip these params
+                        continue;
+                    }
+                    if (!usedNames.has(k)) {
+                        console.log("Adding back", k, v);
                         params.add(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
                     }
 

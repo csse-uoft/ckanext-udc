@@ -95,6 +95,7 @@ def _get_search_details() -> dict[str, Any]:
     fields = []
     fields_grouped = {}
     filter_logics = {}
+    include_undefined = []
     search_extras: 'MultiDict[str, Any]' = MultiDict()
     
     # Get the list of text fields from the udc plugin
@@ -121,7 +122,15 @@ def _get_search_details() -> dict[str, Any]:
             print(chalk.green(f"Param: {param}, Value: {value}"))
             
             if param.startswith('filter-logic-'):
-                filter_logics[param[13:]] = 'AND'
+                if value.lower() == 'and':
+                    filter_logics[param[13:]] = 'AND'
+                elif value == 'date':
+                    # Date filter logic, include undefined date
+                    include_undefined.append('extras_' + param[13:])
+                elif value == 'number':
+                    # Number filter logic, include undefined number
+                    include_undefined.append('extras_' + param[13:])
+                    
             elif param.startswith('fts_'):
                 field_name = param[4:]
                 # For text fields, we need to add `extras_` prefix to make solr do full text search
@@ -212,18 +221,26 @@ def _get_search_details() -> dict[str, Any]:
                     if min:
                         min = datetime.strptime(min, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
                     if max:
-                        max = datetime.strptime(max, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+                        maxDate = datetime.strptime(max, '%Y-%m-%d')
+                        # Add 23:59:59 to the max date to include the whole day
+                        max = maxDate.replace(hour=23, minute=59, second=59).strftime('%Y-%m-%dT%H:%M:%SZ')
                 except ValueError:
                     # If the date is not in the correct format, skip it
                     continue
             
             # Handle min and max values for number and date ranges
+            range_query = ""
             if min and max:
-                fq += u' %s:[%s TO %s]' % (key, min, max)
-            elif min in options:
-                fq += u' %s:[%s TO *]' % (key, min)
+                range_query = u' %s:[%s TO %s]' % (key, min, max)
+            elif min:
+                range_query = u' %s:[%s TO *]' % (key, min)
             elif max:
-                fq += u' %s:[* TO %s]' % (key, max)
+                range_query = u' %s:[* TO %s]' % (key, max)
+                
+            # Handle undefined date and number ranges
+            if (key in include_undefined) and range_query:
+                range_query = f'({range_query} OR (*:* -{key}:[* TO *]))'
+            fq += range_query
     
     return {
         u'fields': fields,
@@ -262,7 +279,7 @@ def custom_dataset_search():
 
     limit = config.get(u'ckan.datasets_per_page')
     
-    print(chalk.green(f"Page: {page}, Limit: {limit}, Query: {q}, Package Type: {package_type}, Current User: {current_user.name}"))
+    # print(chalk.green(f"Page: {page}, Limit: {limit}, Query: {q}, Package Type: {package_type}, Current User: {current_user.name}"))
 
     # most search operations should reset the page counter:
     params_nopage = [(k, v) for k, v in request.args.items(multi=True)
@@ -273,13 +290,13 @@ def custom_dataset_search():
     # remove a field from the search results.
     extra_vars[u'remove_field'] = partial(remove_field, package_type)
     
-    print("Remove field: ", extra_vars[u'remove_field'])
+    # print("Remove field: ", extra_vars[u'remove_field'])
 
     sort_by = request.args.get(u'sort', None)
     params_nosort = [(k, v) for k, v in params_nopage if k != u'sort']
 
     extra_vars[u'sort_by'] = partial(_sort_by, params_nosort, package_type)
-    print("Sort by: ", sort_by)
+    # print("Sort by: ", sort_by)
 
     if not sort_by:
         sort_by_fields = []
