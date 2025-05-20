@@ -67,13 +67,31 @@ class CKANBasedImport(BaseImport):
                 # In the CKAN based import, we only care about the ids
                 if self.import_config.other_data.get("imported_ids"):
                     imported_ids = self.import_config.other_data.get("imported_ids")
+                    
+                    if self.import_config.other_data.get("delete_previously_imported"):
+                        # Get all packages that are deleted from the remote server, Remove them in ours
+                        for package_id_to_remove in [item for item in imported_ids]:
+                            try:
+                                package_to_delete = get_self_package(package_id_to_remove, base_api=self.base_api)
+                                delete_package(self.build_context(), package_id_to_remove)   
+                                self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
+                            except Exception as e:
+                                package_to_delete = {}
+                                self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
+                                self.logger.exception(e)
+                    
+                    else:
+                        # Get all packages that are deleted from the remote server, Remove them in ours
+                        for package_id_to_remove in [item for item in imported_ids if item not in self.packages_ids]:
+                            try:
+                                package_to_delete = get_package(package_id_to_remove, base_api=self.base_api)
+                                delete_package(self.build_context(), package_id_to_remove)   
+                                self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
+                            except Exception as e:
+                                package_to_delete = {}
+                                self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
+                                self.logger.exception(e)
 
-                    # Get all packages that are deleted from the remote server, Remove them in ours
-                    for package_id_to_remove in [item for item in imported_ids if item not in self.packages_ids]:
-                        self.logger.info(f"Removed {package_id_to_remove}")                        
-                        package_to_delete = get_self_package(self.build_context(), package_id_to_remove)
-                        self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
-                        delete_package(self.build_context(), package_id_to_remove)
                             
                 # Iterate remote packages
                 base_logger.info("Starting iteration")
