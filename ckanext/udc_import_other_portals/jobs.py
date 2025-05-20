@@ -119,7 +119,7 @@ def delete_organization_packages(userid: str, organization_id: str):
     packages = logic.get_action("package_search")(
         context, {"q": f"organization:{organization_id}", "rows": 50000}
     )
-    while len(packages) > 0:
+    while len(packages["results"]) > 0:
         number_of_packages = len(packages["results"])
         print("number of packages to delete", number_of_packages)
         for package in packages["results"]:
