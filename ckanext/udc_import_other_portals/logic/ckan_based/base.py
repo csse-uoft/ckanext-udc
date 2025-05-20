@@ -39,6 +39,10 @@ class CKANBasedImport(BaseImport):
         self.logger = ImportLogger(base_logger, 0, self.socket_client)
         
         self.all_packages = get_all_packages(self.base_api, cb=lambda x: self.logger.info(x))
+        
+        # Preprocess the packages, includes filtering and adding extra data
+        self.all_packages = [*self.iterate_imports()]
+        
         self.packages_ids = [p['id'] for p in self.all_packages]
         # Set the import size for reporting in the frontend
         self.logger.total = self.import_size = len(self.packages_ids)
@@ -53,11 +57,13 @@ class CKANBasedImport(BaseImport):
         # Check if packages are deleted from the remote since last import
         if self.import_config.other_data is None:
             self.import_config.other_data = {}
+            
     
         try:
             # Make sure remote endpoint is alive
             base_logger.info("Make sure remote endpoint is alive")
             if check_site_alive(self.base_api):
+                
                 # In the CKAN based import, we only care about the ids
                 if self.import_config.other_data.get("imported_ids"):
                     imported_ids = self.import_config.other_data.get("imported_ids")
@@ -74,7 +80,7 @@ class CKANBasedImport(BaseImport):
                 imported_ids = []
                 with ThreadPoolExecutor(max_workers=10) as executor:
                     self.socket_client.executor = executor
-                    futures = {executor.submit(self.process_package, src): src for src in self.iterate_imports()}
+                    futures = {executor.submit(self.process_package, src): src for src in self.all_packages}
                     for future in as_completed(futures):
                         try:
                             mapped_id, name = future.result()
