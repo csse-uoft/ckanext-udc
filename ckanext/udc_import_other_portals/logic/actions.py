@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, List, Dict
 
 from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportJob
-from ckanext.udc_import_other_portals.jobs import job_run_import
+from ckanext.udc_import_other_portals.jobs import job_run_import, delete_organization_packages
 
 from ckan.types import Context
 import ckan.logic as logic
@@ -247,7 +247,6 @@ def cudc_import_log_delete(context: Context, data: Dict[str, Any]):
     Raises:
         logic.NotAuthorized
         logic.ValidationError
-        logic.ValidationError
     """
     model = context["model"]
     user = context["user"]
@@ -263,3 +262,36 @@ def cudc_import_log_delete(context: Context, data: Dict[str, Any]):
 
     CUDCImportJob.delete_by_id(id_to_delete)
     model.Session.commit()
+
+def cudc_clear_organization(context: Context, data: Dict[str, Any]):
+    """
+    Clear all packages for a specific organization
+    {
+        "organization": "organization_id"
+    }
+
+    Raises:
+        logic.NotAuthorized
+        logic.ValidationError
+        
+    e.g.
+    await (await fetch("/api/3/action/cudc_clear_organization", {method: 'post', headers: {"Content-Type": "application/json"}, body: JSON.stringify({organization: 'open-alberta'})})).json()
+    """
+    model = context["model"]
+    user = context["user"]
+    userobj = model.User.get(user)
+
+    # If not sysadmin.
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    # Checks
+    org_id = data.get("organization")
+    if not org_id:
+        raise logic.ValidationError("organization missing.")
+    
+    jobs.enqueue(delete_organization_packages, [userobj.id, org_id])
+    
+    # delete_organization_packages(context, org_id)
+    
+    return {"success": True, "message": "Organization packages deleted."}

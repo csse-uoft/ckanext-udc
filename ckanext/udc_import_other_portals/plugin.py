@@ -13,6 +13,7 @@ from .logic.actions import (
     cudc_import_run,
     cudc_import_logs_get,
     cudc_import_log_delete,
+    cudc_clear_organization,
 )
 from .logic.relationships import init_relationships
 
@@ -42,4 +43,5 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
             "cudc_import_config_delete": cudc_import_config_delete,
             "cudc_import_logs_get": cudc_import_logs_get,
             "cudc_import_log_delete": cudc_import_log_delete,
+            "cudc_clear_organization": cudc_clear_organization,
         }

@@ -275,7 +275,7 @@ def initSocketIO(app):
 
         # Log the progress update to the server logs
         progress = f"Progress for job {job_id}: {current}/{total}"
-        # log.info(progress)
+        log.info(progress)
         
     @socketio.event(namespace="/import-worker")
     def finish_one(data):

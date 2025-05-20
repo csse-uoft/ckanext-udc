@@ -224,6 +224,11 @@ class BaseImport:
                 f"Failed to map package from source.\n{generate_trace(e)}",
             )
             raise
+        
+        if not mapped:
+            self.logger.info(
+                f"INFO: Skipped {src['name']} ({src['id']}) - map_to_cudc_package returned None"
+            )
 
         try:
             action_done, duplications_log, err_msg = self.import_to_cudc(mapped)

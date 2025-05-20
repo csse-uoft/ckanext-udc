@@ -2,6 +2,7 @@ from typing import Any, List, Dict, cast
 from datetime import datetime
 
 from ckanext.udc_import_other_portals.logger import ImportLogger
+from ckanext.udc_import_other_portals.logic.base import delete_package
 
 from ckan.types import Context
 import ckan.logic as logic
@@ -96,3 +97,35 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
         
         model.Session.add(import_log)
         model.Session.commit()
+
+
+def delete_organization_packages(userid: str, organization_id: str):
+    """
+    Delete all packages for the given organization.
+    """
+
+    userobj = model.User.get(userid)
+
+    context = cast(
+        Context,
+        {
+            "model": model,
+            "session": model.Session,
+            "user": userobj.name,
+            "auth_user_obj": userobj,
+        },
+    )
+
+    packages = logic.get_action("package_search")(
+        context, {"q": f"organization:{organization_id}", "rows": 50000}
+    )
+    while len(packages) > 0:
+        number_of_packages = len(packages["results"])
+        print("number of packages to delete", number_of_packages)
+        for package in packages["results"]:
+            delete_package(context, package["id"])
+
+        packages = logic.get_action("package_search")(
+            context, {"q": f"organization:{organization_id}", "rows": 50000}
+        )
+    
