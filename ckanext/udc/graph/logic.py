@@ -206,6 +206,11 @@ def onDeleteCatalogue(context, data_dict):
         """Normalize a URI into a QName(short name) and store the prefix."""
         prefix, uri, val = g.compute_qname(uri)
         prefixes[prefix] = str(uri)
+        
+        # Sometimes the uri ends with a dot, this will result in a wrong prefix when using the prefixed name
+        if val.endswith('.'): 
+            return f"<{uri}>"
+        
         return f"{prefix}:{val}"
 
     def generate_delete_sparql():
