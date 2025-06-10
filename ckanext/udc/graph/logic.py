@@ -203,7 +203,9 @@ def onDeleteCatalogue(context, data_dict):
     catalogue_uri = compiled_template["@id"]
 
     g = Graph()
+    logging.getLogger("rdflib.term").setLevel(logging.ERROR)
     g.parse(data=compiled_template, format='json-ld')
+    logging.getLogger("rdflib.term").setLevel(logging.WARNING)
 
     prefixes = {}
 
