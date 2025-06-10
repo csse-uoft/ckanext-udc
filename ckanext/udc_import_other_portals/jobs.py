@@ -2,7 +2,7 @@ from typing import Any, List, Dict, cast
 from datetime import datetime
 
 from ckanext.udc_import_other_portals.logger import ImportLogger
-from ckanext.udc_import_other_portals.logic.base import delete_package
+from ckanext.udc_import_other_portals.logic.base import delete_package, purge_package
 
 from ckan.types import Context
 import ckan.logic as logic
@@ -124,6 +124,7 @@ def delete_organization_packages(userid: str, organization_id: str):
         print("number of packages to delete", number_of_packages)
         for package in packages["results"]:
             delete_package(context, package["id"])
+            purge_package(context, package["id"])
 
         packages = logic.get_action("package_search")(
             context, {"q": f"organization:{organization_id}", "rows": 50000}
