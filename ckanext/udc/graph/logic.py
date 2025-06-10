@@ -6,6 +6,7 @@ from rdflib.namespace import split_uri
 from rdflib.plugins.serializers.turtle import TurtleSerializer
 from rdflib.serializer import Serializer
 import pyld
+import logging
 
 from .serializer import *
 from .template import compile_template, compile_with_temp_value
@@ -27,7 +28,11 @@ def find_existing_instance_uris(data_dict) -> list:
                                                 {**data_dict, "ckanField": ckanField})
     catalogue_uri = compiled_template["@id"]
     # print("compiled_template", compiled_template)
+    
+    # Ignore warnings from rdflib.term when parsing the template with temp values
+    logging.getLogger("rdflib.term").setLevel(logging.ERROR)
     g.parse(data=compiled_template, format='json-ld')
+    logging.getLogger("rdflib.term").setLevel(logging.WARNING)
 
     # Get all uris that is used as subject (s, any, any)
     subjects = set(g.subjects(None, None))
