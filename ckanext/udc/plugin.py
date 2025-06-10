@@ -529,3 +529,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def make_middleware(self, app: CKANApp, config: CKANConfig) -> CKANApp:
         override_error_handler(app, config)
         return app
+    
+    def make_error_log_middleware(self, app, config: CKANConfig) -> CKANApp:
+        return app
