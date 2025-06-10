@@ -74,7 +74,7 @@ class CKANBasedImport(BaseImport):
                         for package_id_to_remove in [item for item in imported_ids]:
                             try:
                                 package_to_delete = get_self_package(package_id_to_remove)
-                                delete_package(self.build_context(), package_id_to_remove)
+                                # delete_package(self.build_context(), package_id_to_remove)
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
                                 imported_ids_cp.discard(package_id_to_remove)
@@ -88,7 +88,7 @@ class CKANBasedImport(BaseImport):
                         for package_id_to_remove in [item for item in imported_ids if item not in self.packages_ids]:
                             try:
                                 package_to_delete = get_self_package(package_id_to_remove)
-                                delete_package(self.build_context(), package_id_to_remove)
+                                # delete_package(self.build_context(), package_id_to_remove)
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
                                 imported_ids_cp.discard(package_id_to_remove)

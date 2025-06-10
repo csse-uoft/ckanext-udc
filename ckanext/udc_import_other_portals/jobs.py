@@ -21,7 +21,7 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
     """
     logger = ImportLogger()
     userobj = model.User.get(run_by)
-    
+
     import_instance = None
     try:
         if not import_config_id:
@@ -29,7 +29,7 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
                 logic.ValidationError("import_config_id should be provided.")
             )
 
-        import_config: 'CUDCImportConfig' = CUDCImportConfig.get(import_config_id)
+        import_config: "CUDCImportConfig" = CUDCImportConfig.get(import_config_id)
 
         if not import_config:
             raise logger.exception(
@@ -54,7 +54,6 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
 
         DefaultImportClass = locals.get("DefaultImportClass")
 
-        
         if not DefaultImportClass:
             raise logic.ValidationError("DefaultImportClass is not defined.")
 
@@ -86,7 +85,9 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
 
         if import_instance:
             import_log.has_error = logger.has_error or import_instance.logger.has_error
-            import_log.has_warning = logger.has_warning or import_instance.logger.has_warning
+            import_log.has_warning = (
+                logger.has_warning or import_instance.logger.has_warning
+            )
             import_log.logs = "\n".join([*logger.logs, *import_instance.logger.logs])
         else:
             import_log.has_error = logger.has_error
@@ -94,7 +95,7 @@ def job_run_import(import_config_id: str, run_by: str, job_id: str):
             import_log.logs = "\n".join([*logger.logs])
         import_log.finished_at = datetime.utcnow()
         print(import_log.logs)
-        
+
         model.Session.add(import_log)
         model.Session.commit()
 
@@ -119,14 +120,15 @@ def delete_organization_packages(userid: str, organization_id: str):
     packages = logic.get_action("package_search")(
         context, {"q": f"organization:{organization_id}", "rows": 50000}
     )
+    print("number of packages to delete", len(packages["results"]))
     while len(packages["results"]) > 0:
         number_of_packages = len(packages["results"])
         print("number of packages to delete", number_of_packages)
         for package in packages["results"]:
-            delete_package(context, package["id"])
+            print(f"Deleting package {package['id']} - {package['title']}")
+            # delete_package(context, package["id"])
             purge_package(context, package["id"])
 
         packages = logic.get_action("package_search")(
             context, {"q": f"organization:{organization_id}", "rows": 50000}
         )
-    
