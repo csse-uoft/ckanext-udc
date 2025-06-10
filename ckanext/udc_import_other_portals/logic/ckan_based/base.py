@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from ckanext.udc_import_other_portals.logger import ImportLogger
 
 from ckanext.udc_import_other_portals.logic.ckan_based.api import get_package_ids, get_package, check_site_alive, get_all_packages
-from ckanext.udc_import_other_portals.logic.base import BaseImport, delete_package, get_package as get_self_package
+from ckanext.udc_import_other_portals.logic.base import BaseImport, delete_package, get_package as get_self_package, purge_package
 
 
 base_logger = logging.getLogger(__name__)
@@ -67,14 +67,17 @@ class CKANBasedImport(BaseImport):
                 # In the CKAN based import, we only care about the ids
                 if self.import_config.other_data.get("imported_ids"):
                     imported_ids = self.import_config.other_data.get("imported_ids")
+                    imported_ids_cp = set(imported_ids)
                     
                     if self.import_config.other_data.get("delete_previously_imported"):
-                        # Get all packages that are deleted from the remote server, Remove them in ours
+                        # Delete all packages that were previously imported
                         for package_id_to_remove in [item for item in imported_ids]:
                             try:
-                                package_to_delete = get_self_package(package_id_to_remove, base_api=self.base_api)
-                                delete_package(self.build_context(), package_id_to_remove)   
+                                package_to_delete = get_self_package(package_id_to_remove)
+                                delete_package(self.build_context(), package_id_to_remove)
+                                purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
+                                imported_ids_cp.discard(package_id_to_remove)
                             except Exception as e:
                                 package_to_delete = {}
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
@@ -84,9 +87,11 @@ class CKANBasedImport(BaseImport):
                         # Get all packages that are deleted from the remote server, Remove them in ours
                         for package_id_to_remove in [item for item in imported_ids if item not in self.packages_ids]:
                             try:
-                                package_to_delete = get_package(package_id_to_remove, base_api=self.base_api)
-                                delete_package(self.build_context(), package_id_to_remove)   
+                                package_to_delete = get_self_package(package_id_to_remove)
+                                delete_package(self.build_context(), package_id_to_remove)
+                                purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
+                                imported_ids_cp.discard(package_id_to_remove)
                             except Exception as e:
                                 package_to_delete = {}
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
@@ -113,7 +118,7 @@ class CKANBasedImport(BaseImport):
                     # Cleanup
                     self.socket_client.executor = None
                         
-                self.import_config.other_data["imported_ids"] = imported_ids
+                self.import_config.other_data["imported_ids"] = [*imported_ids_cp.union(imported_ids)]
             else:
                 self.logger.error(f'ERROR: Remote endpoint is not alive!')
             

@@ -93,7 +93,14 @@ def import_package(context: Context, package: dict, merge: bool = False):
 def delete_package(context: Context, package_id: str):
     logic.check_access("package_delete", context, data_dict={"id": package_id})
     logic.get_action("package_delete")(context, {"id": package_id})
+    
 
+def purge_package(context: Context, package_id: str):
+    """
+    Purge a package from the database and search index.
+    """
+    logic.check_access("dataset_purge", context, data_dict={"id": package_id})
+    logic.get_action("dataset_purge")(context, {"id": package_id})
 
 def get_organization(context: Context, organization_id: str = None):
     data_dict = {"id": organization_id}
