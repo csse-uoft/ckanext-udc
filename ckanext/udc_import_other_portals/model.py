@@ -147,6 +147,19 @@ class CUDCImportJob(Base):
         )
 
 
+def init_startup():
+    # On CKAN startup, we need to ensure every CUDCImportConfig.is_running is False
+    model.Session.query(CUDCImportConfig) \
+        .filter(CUDCImportConfig.is_running == True) \
+        .update({CUDCImportConfig.is_running: False}
+    )
+    model.Session.query(CUDCImportJob) \
+        .filter(CUDCImportJob.is_running == True) \
+        .update({CUDCImportJob.is_running: False}
+    )
+    model.Session.commit()
+
+
 def init_tables():
     # Uncomment the following two lines to clear the tables
     # CUDCImportJob.__table__.drop(model.meta.engine)

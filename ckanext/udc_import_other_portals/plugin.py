@@ -1,5 +1,7 @@
 import logging
 import sys
+
+from ckanext.udc_import_other_portals.model import init_startup
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.types import Action, AuthFunction, Schema
@@ -32,6 +34,12 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
         #     # Do not load the plugin if we are running the CLI
         #     return
         init_relationships()
+        
+        if ("run" in sys.argv or "uwsgi" in sys.argv) and not ("worker" in sys.argv):
+            # We want the main CKAN instance to run startup tasks
+            init_startup()
+            log.info("Udc ImportOtherPortals DB startup!")
+ 
         log.info("Udc ImportOtherPortals Plugin Loaded!")
 
     # IActions
