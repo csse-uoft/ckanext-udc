@@ -64,10 +64,11 @@ class CKANBasedImport(BaseImport):
             base_logger.info("Make sure remote endpoint is alive")
             if check_site_alive(self.base_api):
                 
+                imported_ids_previous = set()
                 # In the CKAN based import, we only care about the ids
                 if self.import_config.other_data.get("imported_ids"):
                     imported_ids = self.import_config.other_data.get("imported_ids")
-                    imported_ids_cp = set(imported_ids)
+                    imported_ids_previous = set(imported_ids)
                     
                     if self.import_config.other_data.get("delete_previously_imported"):
                         # Delete all packages that were previously imported
@@ -77,7 +78,7 @@ class CKANBasedImport(BaseImport):
                                 # delete_package(self.build_context(), package_id_to_remove)
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
-                                imported_ids_cp.discard(package_id_to_remove)
+                                imported_ids_previous.discard(package_id_to_remove)
                             except Exception as e:
                                 package_to_delete = {}
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
@@ -91,7 +92,7 @@ class CKANBasedImport(BaseImport):
                                 # delete_package(self.build_context(), package_id_to_remove)
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
-                                imported_ids_cp.discard(package_id_to_remove)
+                                imported_ids_previous.discard(package_id_to_remove)
                             except Exception as e:
                                 package_to_delete = {}
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
@@ -101,7 +102,7 @@ class CKANBasedImport(BaseImport):
                 # Iterate remote packages
                 base_logger.info("Starting iteration")
                 imported_ids = []
-                with ThreadPoolExecutor(max_workers=10) as executor:
+                with ThreadPoolExecutor(max_workers=4) as executor:
                     self.socket_client.executor = executor
                     futures = {executor.submit(self.process_package, src): src for src in self.all_packages}
                     for future in as_completed(futures):
@@ -118,7 +119,7 @@ class CKANBasedImport(BaseImport):
                     # Cleanup
                     self.socket_client.executor = None
                         
-                self.import_config.other_data["imported_ids"] = [*imported_ids_cp.union(imported_ids)]
+                self.import_config.other_data["imported_ids"] = [*imported_ids_previous.union(imported_ids)]
             else:
                 self.logger.error(f'ERROR: Remote endpoint is not alive!')
             

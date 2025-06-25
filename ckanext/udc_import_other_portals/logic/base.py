@@ -242,6 +242,7 @@ class BaseImport:
             self.logger.info(f'INFO: Updated {mapped["name"]} ({mapped["id"]})')
             if err_msg:
                 # Package is imported but deduplications run into issues
+                self.logger.error("Package is imported but deduplications run into issues." + err_msg)
                 self.logger.finished_one(
                     "errored",
                     mapped["id"],

@@ -77,7 +77,7 @@ class ImportLogger:
             self.socket_client.finish_one(type, data)
             self.current += 1
         else:
-            self.error(f"Unknow message type: {type}, uuid={uuid} name={name}")
+            self.error(f"Unknow message type: {type}, uuid={id} name={name}")
             
         self.socket_client.update_progress(self.current, self.total)
     
