@@ -33,6 +33,10 @@
     <h2>Related Catalogue Entries:</h2>
     <div id="related-packages">
       {% for package in pkg_dict.get("related_packages") %}
+        {% if package.get("name").startswith("unified-") %}
+          {% continue %}
+        {% endif %}
+        {# Display the related package link #}
         <a href="{{ h.url_for('catalogue.read', id=package.get("name")) }}" class="d-flex align-items-center mb-2" target="_blank" style="width:fit-content">
           <i class="fas fa-up-right-from-square me-2"></i>
           <span>{{ package.get("title") }}</span>
