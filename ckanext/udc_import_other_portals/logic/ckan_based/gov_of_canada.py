@@ -127,6 +127,8 @@ class GovOfCanadaImport(CKANBasedImport):
 
         # name
         target["name"] = "gov-canada-" + src["name"]
+        if len(target["name"]) > 100:
+            target["name"] = target["name"][:100]
 
         # source
         target["url"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"

@@ -154,6 +154,9 @@ def create_unified_package(
     Create a new unified package, override the existing one if the name collides.
 
     """
+    if len(unified_package_data["name"]) > 100:
+        unified_package_data["name"] = unified_package_data["name"][:100]
+
     unified_name = unified_package_data["name"]
 
     log.info("Create a new unified package " + unified_name)
