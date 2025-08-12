@@ -3,6 +3,7 @@ from sqlalchemy import types
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.orm import load_only
 
 import ckan.model as model
 import ckan.model.types as _types
@@ -79,7 +80,12 @@ class CUDCImportConfig(Base):
 
     @classmethod
     def get_all_configs(cls):
-        return model.Session.query(cls).order_by(cls.created_at).all()
+        # remove other_data
+        col_names = [c.name for c in cls.__table__.columns if c.name != "other_data"]
+        return model.Session.query(cls).options(
+            load_only(*col_names)
+        ).order_by(cls.created_at).all()
+
 
 
 class CUDCImportJob(Base):
