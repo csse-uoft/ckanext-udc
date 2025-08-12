@@ -7,6 +7,7 @@ import ckan.logic as logic
 import ckan.model as model
 from ckan.common import current_user
 from ckan.lib.search.common import SearchIndexError
+from sqlalchemy.exc import IntegrityError
 
 import threading
 from typing import List, Dict, cast
@@ -85,8 +86,13 @@ def import_package(context: Context, package: dict, merge: bool = False):
     logic.check_access("package_show", context, data_dict=existing_package)
     logic.check_access(action, context, data_dict=existing_package)
     # print(action, existing_package)
-
-    logic.get_action(action)(context, existing_package)
+    try:
+        logic.get_action(action)(context, existing_package)
+    except IntegrityError as e:
+        base_logger.error(f"IntegrityError: {e}")
+        # Rollback session to make sure future transactions are not affected
+        model.Session.rollback()
+        raise e
     return "created" if action == "package_create" else "updated"
 
 
