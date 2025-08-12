@@ -9,6 +9,7 @@ import ckan.lib.search as search
 
 from typing import List, Dict, cast
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 import logging
 import time
@@ -168,7 +169,7 @@ def create_unified_package(
         "is_unified": True,
     }
 
-    print("Create", unified_package_data)
+    # print("Create", unified_package_data)
 
     logic.check_access("package_show", context, {"id": unified_name})
     action = "package_create"
@@ -180,7 +181,14 @@ def create_unified_package(
     
     logic.check_access("package_show", context, unified_package_data)
     logic.check_access(action, context, unified_package_data)
-    result = logic.get_action(action)(context, unified_package_data)
+    try:
+        result = logic.get_action(action)(context, unified_package_data)
+    except IntegrityError as e:
+        # Rollback changes
+        model.Session.rollback()
+        raise e
+    except Exception as e:
+        raise e
 
     # Create relations with other linked packages
     relationships_as_subject = [
