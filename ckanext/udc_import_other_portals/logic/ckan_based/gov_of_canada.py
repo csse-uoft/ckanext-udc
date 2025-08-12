@@ -288,6 +288,9 @@ if __name__ == "__main__":
         "id": str(uuid.uuid4()),
         "owner_org": "government-of-canada",
         "run_by": "admin",
+        "other_config": {
+            "base_api": "https://open.canada.ca/data/api/",
+        }
     }
     import_log = CUDCImportConfig(**import_log_data)
     import_ = DefaultImportClass(None, import_log, None)

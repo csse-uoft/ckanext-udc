@@ -136,7 +136,7 @@ class AlbertaImport(CKANBasedImport):
             target["time_span_start"] = src["time_coverage_from"]
         
         if src.get("time_coverage_to"):
-            target["time_span_start"] = src["time_coverage_to"]
+            target["time_span_end"] = src["time_coverage_to"]
             
         # spatialcoverage -> geo_span
         if src.get("spatialcoverage"):
