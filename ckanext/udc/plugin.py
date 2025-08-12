@@ -250,6 +250,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                     tk.get_validator("ignore_missing"),
                     tk.get_converter("convert_to_extras"),
                 ],
+                # Keep track of the remote ID from the source portal
+                "cudc_import_remote_id": [
+                    tk.get_validator("ignore_missing"),
+                    tk.get_converter("convert_to_extras"),
+                ],
                 "is_unified": [
                     tk.get_validator("ignore_missing"),
                     tk.get_validator("boolean_validator"),
@@ -294,6 +299,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             {
                 # For import from other portals plugin
                 "cudc_import_config_id": [
+                    tk.get_converter("convert_from_extras"),
+                    tk.get_validator("ignore_missing"),
+                ],
+                # Keep track of the remote ID from the source portal
+                "cudc_import_remote_id": [
                     tk.get_converter("convert_from_extras"),
                     tk.get_validator("ignore_missing"),
                 ],

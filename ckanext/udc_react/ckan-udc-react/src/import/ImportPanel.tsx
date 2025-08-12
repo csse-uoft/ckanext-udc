@@ -20,6 +20,7 @@ export interface ImportPanelProps {
       org_import_mode?: string;
       base_api?: string;
       org_mapping?: { [k: string]: string };
+      delete_previously_imported?: boolean;
     };
     cron_schedule?: string;
     platform?: string;
@@ -84,6 +85,16 @@ export default function ImportPanel(props: ImportPanelProps) {
     setImportConfig(initials => ({
       ...initials,
       stop_on_error: e.target.checked
+    }));
+  }
+
+  const handleSwitchChangeDelete = (e: any) => {
+    setImportConfig(initials => ({
+      ...initials,
+      other_config: {
+        ...initials.other_config,
+        delete_previously_imported: e.target.checked
+      }
     }));
   }
 
@@ -175,6 +186,18 @@ export default function ImportPanel(props: ImportPanelProps) {
                 helperText="e.g. https://open.canada.ca/data/api/"
                 fullWidth
               />
+            </Grid>
+
+            <Grid xs={12} sx={{ mt: 2 }}>
+              <FormControl fullWidth variant="standard">
+                <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600, mb: 10 }}>
+                  Delete previously imported packages
+                </InputLabel>
+                <Box sx={{ pt: 3 }}>
+                  <Switch color="primary" checked={importConfig.other_config.delete_previously_imported} onChange={handleSwitchChangeDelete} />
+                </Box>
+              </FormControl>
+
             </Grid>
 
             <Grid xs={12}>

@@ -14,6 +14,7 @@ from typing import List, Dict, cast
 from .deduplication import find_duplicated_packages, process_duplication
 
 import logging
+import uuid
 
 base_logger = logging.getLogger(__name__)
 
@@ -40,6 +41,32 @@ def get_package(context: Context, package_id: str = None, package_name: str = No
         raise ValueError(f"Package id={package_id} is not found.")
 
     return package_dict
+
+def iterate_package_by_import_config_id(context: Context, import_id: str):
+    """
+    Search for a package by its import config ID.
+    """
+    def _get_package(rows, offset):
+        fq = f'cudc_import_config_id:"{import_id}"'
+        logic.check_access("package_search", context, {"fq": fq, "start": offset, "rows": rows})
+        package = logic.get_action("package_search")(context, {"fq": fq, "start": offset, "rows": rows})
+        return package["results"]
+
+    # Get all packages
+    rows = 500
+    offset = 0
+    while True:
+        packages = _get_package(rows, offset)
+        if not packages:
+            break
+        yield from packages
+        offset += rows
+
+def get_package_ids_by_import_config_id(context: Context, import_id: str):
+    """
+    Get all package IDs by import config ID.
+    """
+    return [pkg["id"] for pkg in iterate_package_by_import_config_id(context, import_id)]
 
 
 def check_existing_package_id_or_name(context, id: str = None, name: str = None):
@@ -242,6 +269,10 @@ class BaseImport:
             self.logger.info(
                 f"INFO: Skipped {src['name']} ({src['id']}) - map_to_cudc_package returned None"
             )
+            
+        # Replace with a new UUID
+        mapped["cudc_import_remote_id"] = mapped["id"]
+        mapped["id"] = str(uuid.uuid4())
 
         try:
             action_done, duplications_log, err_msg = self.import_to_cudc(mapped)
@@ -266,7 +297,7 @@ class BaseImport:
                     duplications=duplications_log,
                 )
 
-            return mapped["id"], mapped["name"]
+            return src["id"], mapped["id"], mapped["name"]
         except Exception as e:
             self.logger.error(
                 f'ERROR: Failed to update {mapped["name"]} ({mapped["id"]})'
