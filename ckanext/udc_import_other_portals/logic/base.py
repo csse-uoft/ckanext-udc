@@ -201,7 +201,7 @@ class BaseImport:
         """
         raise NotImplementedError()
 
-    def process_package(self, src):
+    def process_package(self, src, mapped_id=None):
         """
         Process a single package: map it to cudc package and import it.
 
@@ -272,7 +272,10 @@ class BaseImport:
             
         # Replace with a new UUID
         mapped["cudc_import_remote_id"] = mapped["id"]
-        mapped["id"] = str(uuid.uuid4())
+        # Preserve the ID if exists
+        mapped["id"] = mapped_id if mapped_id else str(uuid.uuid4())
+        # if mapped_id:
+        #     print("Mapped ID:", mapped_id)
 
         try:
             action_done, duplications_log, err_msg = self.import_to_cudc(mapped)

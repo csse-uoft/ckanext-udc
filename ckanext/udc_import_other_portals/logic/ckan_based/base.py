@@ -82,7 +82,7 @@ class CKANBasedImport(BaseImport):
                 if self.import_config.other_data.get("imported_id_map"):
                     imported_id_map = self.import_config.other_data["imported_id_map"]
 
-                elif self.import_config.other_data.get("imported_ids"):
+                else:
                     # Backward compatibility without imported_id_map
                     # Delete all previous imports
                     _delete_all_imports()
@@ -112,7 +112,7 @@ class CKANBasedImport(BaseImport):
                 base_logger.info("Starting iteration")
                 with ThreadPoolExecutor(max_workers=4) as executor:
                     self.socket_client.executor = executor
-                    futures = {executor.submit(self.process_package, src): src for src in self.all_packages}
+                    futures = {executor.submit(self.process_package, src, imported_id_map.get(src.get("id"))): src for src in self.all_packages}
                     for future in as_completed(futures):
                         try:
                             remote_id, mapped_id, name = future.result()
@@ -128,6 +128,8 @@ class CKANBasedImport(BaseImport):
                     self.socket_client.executor = None
                         
                 self.import_config.other_data["imported_id_map"] = imported_id_map
+                if self.import_config.other_data.get("imported_ids"):
+                    del self.import_config.other_data["imported_ids"]
             else:
                 self.logger.error(f'ERROR: Remote endpoint is not alive!')
             
