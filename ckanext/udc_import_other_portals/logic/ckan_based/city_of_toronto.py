@@ -5,6 +5,11 @@ from ckanext.udc_import_other_portals.logic.ckan_based.api import (
     get_package,
 )
 
+# Updates:
+# 2025-10-19:
+# - topics mapping handled separately, it is now a list of strings
+# - formats is now a list of strings
+
 # Map city of toronto -> UDC
 # one-to-one mapping without modification
 package_mapping = {
@@ -17,7 +22,7 @@ package_mapping = {
     "metadata_modified": "metadata_modified",
     "notes": "notes",
     "title": "title",
-    "topics": "theme",
+    #"topics": "theme",
     "version": "version",
     # CKAN Fields but not used in CUDC
     "maintainer": "maintainer",
@@ -95,6 +100,10 @@ class CityOfTorontoImport(CKANBasedImport):
         # name
         target["name"] = "city-toronto-" + src["name"]
 
+        # topics
+        if src.get("topics") and len(src.get("topics")) > 0:
+            target["theme"] = ", ".join(src.get("topics"))
+
         # Tags
         if src.get("tags"):
             tags = [re.sub(r"[^a-zA-Z0-9 ._-]", "", tag["name"]) for tag in src["tags"]]
@@ -125,10 +134,10 @@ class CityOfTorontoImport(CKANBasedImport):
         # File formats
         global format_mapping
         if src.get("formats"):
-            formats = src["formats"].split(",")
+            formats = src["formats"]
             formats_iana = []
             for format in formats:
-                mime_type = format_mapping.get(format)
+                mime_type = format_mapping.get(format.lower())
                 if mime_type:
                     formats_iana.append(
                         "https://www.iana.org/assignments/media-types/" + mime_type
@@ -238,7 +247,7 @@ class CityOfTorontoImport(CKANBasedImport):
                         if len(src[key]) > 0:
                             example[key] = src[key]
                 if key == "formats":
-                    all_formats.update(src[key].split(","))
+                    all_formats.update(src[key])
                 if key == "license_id":
                     all_licenses.add(src[key])
         del example["resources"]
@@ -247,9 +256,13 @@ class CityOfTorontoImport(CKANBasedImport):
         print(all_licenses)
 
         for src in self.all_packages:
-            #
-            mapped = self.map_to_cudc_package(src)
-            # print("mapped", json.dumps(mapped, indent=2))
+            target = {
+                "owner_org": self.import_config.owner_org,
+                "type": "catalogue",
+                "license_id": "notspecified",
+            }
+            mapped = self.map_to_cudc_package(src, target)
+            print("mapped", json.dumps(mapped, indent=2))
             # break
 
 
@@ -266,6 +279,9 @@ if __name__ == "__main__":
         "id": str(uuid.uuid4()),
         "owner_org": "city-of-toronto",
         "run_by": "admin",
+        "other_config": {
+            "base_api": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api",
+        }
     }
     import_log = CUDCImportConfig(**import_log_data)
     import_ = DefaultImportClass(None, import_log, None)

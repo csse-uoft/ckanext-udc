@@ -2,6 +2,9 @@ from ckanext.udc_import_other_portals.logic import CKANBasedImport
 
 from datetime import datetime
 
+# 2025-10-19 Updates:
+# - URL source (level 3) moved to location (level 2)
+
 
 # Map gov of canada -> UDC
 # one-to-one mapping without modification
@@ -129,30 +132,41 @@ class GovOfCanadaImport(CKANBasedImport):
         target["name"] = "gov-canada-" + src["name"]
         if len(target["name"]) > 100:
             target["name"] = target["name"][:100]
+            
+        # title_translated
+        if src.get("title_translated"):
+            target["title_translated"] = src["title_translated"]
 
-        # source
-        target["url"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"
+        # notes_translated
+        if src.get("notes_translated"):
+            target["notes_translated"] = src["notes_translated"]
+
+        # location
+        target["location"] = f"https://open.canada.ca/data/en/dataset/{src['name']}"
 
         # Tags
-        tags = []
+        tags = {"en": [], "fr": []}
         kw = src.get("keywords") or {}
         # not sure what `en-t-fr` means but it is english, could be english translated from french
         keywords_en = kw.get("en") or kw.get("en-t-fr")
         if isinstance(keywords_en, list) and len(keywords_en) > 0:
-            tags = keywords_en
+            tags["en"] = keywords_en
+        keywords_fr = kw.get("fr") or kw.get("fr-t-en")
+        if isinstance(keywords_fr, list) and len(keywords_fr) > 0:
+            tags["fr"] = keywords_fr
 
         # Add subject to tags
         if src.get("subject"):
             for subject in src["subject"]:
                 if subject in subject_mapping:
-                    tags.append(subject_mapping[subject])
+                    tags["en"].append(subject_mapping[subject])
 
         # Remove special characters from tags,
         # can only contain alphanumeric characters, spaces (" "), hyphens ("-"), underscores ("_") or dots (".")'
-        tags = [re.sub(r"[^a-zA-Z0-9 ._-]", "", tag) for tag in tags]
+        tags = {lang: [re.sub(r"[^a-zA-Z0-9 ._-]", "", tag) for tag in tags[lang]] for lang in tags}
         # Remove tags that are longer than 100 characters
-        tags = [tag for tag in tags if len(tag) <= 100]
-        target["tags"] = [{"name": tag} for tag in tags]
+        tags = {lang: [tag for tag in tags[lang] if len(tag) <= 100] for lang in tags}
+        target["tags_translated"] = tags
 
         # topic -> theme
         theme = []
@@ -177,12 +191,18 @@ class GovOfCanadaImport(CKANBasedImport):
         metadata_contact_en = metadata_contact.get("en") or metadata_contact.get(
             "en-t-fr"
         )
+        metadata_contact_fr = metadata_contact.get("fr") or metadata_contact.get(
+            "fr-t-en"
+        )
         if metadata_contact_en:
             # split and remove empty strings
             metadata_contact_en = [
                 x.strip() for x in metadata_contact_en.split(",") if x.strip()
             ]
-            target["access_steward"] = ", ".join(metadata_contact_en)
+            target["access_steward"] = {
+                "en": ", ".join(metadata_contact_en),
+                "fr": ", ".join(metadata_contact_fr)
+            }
 
         # DOI -> unique_identifier
         if src.get("digital_object_identifier"):
