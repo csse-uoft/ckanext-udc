@@ -2,7 +2,8 @@ import cProfile
 import pstats
 import io
 import time
-from functools import wraps, lru_cache
+from functools import wraps
+from typing import Any
 
 
 def profile_func(func):
@@ -24,18 +25,30 @@ def profile_func(func):
     return wrapper
 
 
-def cache_for(seconds):
+def cache_for(seconds, key_func=None):
+    """Cache function results for ``seconds`` based on an optional key."""
+
     def decorator(func):
-        last_run = {"time": 0}
-        cached = {"result": None}
+        cached: dict[Any, dict[str, Any]] = {}
 
         @wraps(func)
-        def wrapper():
+        def wrapper(*args, **kwargs):
+            if key_func:
+                cache_key = key_func(*args, **kwargs)
+            else:
+                if not args and not kwargs:
+                    cache_key = "__default__"
+                else:
+                    cache_key = repr((args, sorted(kwargs.items())))
+
+            if cache_key is None:
+                cache_key = "__default__"
+
             now = time.time()
-            if cached["result"] is None or now - last_run["time"] > seconds:
-                cached["result"] = func()
-                last_run["time"] = now
-            return cached["result"]
+            entry = cached.get(cache_key)
+            if not entry or now - entry["time"] > seconds:
+                cached[cache_key] = {"time": now, "result": func(*args, **kwargs)}
+            return cached[cache_key]["result"]
 
         return wrapper
 

@@ -72,3 +72,8 @@ input.form-check-input {
 label.form-check-label:after {
     content: "";
 }
+
+
+.udc-level-toggle { vertical-align: middle; }
+.udc-lang-toggle { margin: .25rem 0 .5rem 0; }
+.d-none { display: none !important; } 

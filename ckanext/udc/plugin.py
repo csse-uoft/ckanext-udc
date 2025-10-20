@@ -5,7 +5,17 @@ import json
 import traceback
 import chalk
 from collections import OrderedDict
-from typing import Any, Callable, Collection, KeysView, Optional, Union, cast, Iterable, List
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    KeysView,
+    Optional,
+    Union,
+    cast,
+    Iterable,
+    List,
+)
 from functools import partial
 
 from ckanext.udc.search.logic.actions import filter_facets_get
@@ -20,7 +30,6 @@ from ckan.plugins.toolkit import chained_action, side_effect_free
 import ckan.lib.helpers as h
 from ckan.lib.helpers import Page
 from ckan.common import asbool, current_user, CKANConfig, request, g, config, _
-from ckan.views.dataset import _get_search_details, remove_field, _sort_by, _pager_url, _setup_template_variables, _get_pkg_template
 from ckan.lib.search import SearchQueryError, SearchError
 
 from flask import Blueprint
@@ -38,8 +47,10 @@ from ckanext.udc.helpers import (
     package_delete,
     get_system_info,
 )
+from ckanext.udc.solr.config import pick_locale, get_udc_langs, get_current_lang
 from ckanext.udc.graph.sparql_client import SparqlClient
 from ckanext.udc.graph.preload import preload_ontologies
+from babel import Locale
 
 from ckanext.udc.licenses.logic.action import (
     license_create,
@@ -55,11 +66,30 @@ from ckanext.udc.file_format.logic import (
     file_format_delete,
     file_formats_get,
 )
-from ckanext.udc.desc.actions import summary_generate, update_summary, default_ai_summary_config
+from ckanext.udc.desc.actions import (
+    summary_generate,
+    update_summary,
+    default_ai_summary_config,
+)
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
 from ckanext.udc.system.actions import reload_supervisord, get_system_stats
-from ckanext.udc.solr import update_solr_maturity_model_fields
+from ckanext.udc.solr.solr import update_solr_maturity_model_fields
+from ckanext.udc.solr.index import before_dataset_index as _before_dataset_index
+
+from ckanext.udc.search.logic.actions import filter_facets_get
+from .i18n import (
+    udc_lang_object,
+    udc_json_dump,
+    udc_json_load,
+    udc_core_translated_to_extras,
+    udc_set_core_from_translated,
+    udc_lang_string_list,
+    udc_set_core_tags_from_translated,
+    udc_fill_tags_translated_from_core,
+    udc_seed_translated_from_core,
+    udc_fill_translated_from_core_on_show,
+)
 
 
 """
@@ -88,13 +118,15 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IPackageController)
     plugins.implements(plugins.IMiddleware)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IValidators)
 
     disable_graphdb = False
     maturity_model = []
     mappings = {}
     preload_ontologies = {}
-    all_fields: List[str] = []
+    all_fields: List[str] = []  # This does not contain core CKAN fields
     facet_titles = {}
+    facet_titles_raw = {}  # multilingual titles, not picked to current locale
     text_fields: List[str] = []
     date_fields: List[str] = []
     multiple_select_fields: List[str] = []
@@ -121,7 +153,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
     def configure(self, config: CKANConfig):
         log.info(sys.argv)
-        if not ("run" in sys.argv or "uwsgi" in sys.argv or ("jobs" in sys.argv and "worker" in sys.argv)):
+        if not (
+            "run" in sys.argv
+            or "uwsgi" in sys.argv
+            or ("jobs" in sys.argv and "worker" in sys.argv)
+            or ("search-index" in sys.argv)
+        ):
             log.info("Skipping UDC Plugin Configuration")
             # Do not load the plugin if we are running the CLI
             self._cli_configure()
@@ -170,6 +207,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # log.info(config)
             all_fields = []
             self.facet_titles.clear()
+            self.facet_titles_raw.clear()
+            self.text_fields.clear()
+            self.date_fields.clear()
+            self.multiple_select_fields.clear()
+            self.dropdown_options.clear()
             for level in config["maturity_model"]:
                 for field in level["fields"]:
                     if field.get("name"):
@@ -184,7 +226,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                         or type == "number"
                         or type == "date"
                     ):
-                        self.facet_titles[field["name"]] = tk._(field["label"])
+                        self.facet_titles[field["name"]] = tk._(pick_locale(field["label"], 'en'))
+                        self.facet_titles_raw[field["name"]] = field["label"]
                     if field.get("name") and (type == "text" or type is None):
                         self.text_fields.append(field["name"])
                     if field.get("type") == "date":
@@ -206,14 +249,17 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             # Store dropdown options
             for level in config["maturity_model"]:
                 for field in level["fields"]:
-                    if field.get("type") == "multiple_select" or field.get("type") == "single_select":
+                    if (
+                        field.get("type") == "multiple_select"
+                        or field.get("type") == "single_select"
+                    ):
                         options = self.dropdown_options[field["name"]] = {}
                         for option in field["options"]:
-                            options[option["value"]] = (
-                                tk._(option["text"])
-                            )
-                        log.info(f"Dropdown options for field {field['name']} loaded: {len(options.keys())}")
-            
+                            options[option["value"]] = tk._(option["text"])
+                        log.info(
+                            f"Dropdown options for field {field['name']} loaded: {len(options.keys())}"
+                        )
+
             # Update solr index
             update_solr_maturity_model_fields(config["maturity_model"])
 
@@ -232,16 +278,76 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             traceback.print_exc()
 
     def _modify_package_schema(self, schema: Schema) -> Schema:
-        # our custom field
+        """
+        Wire CUDC custom fields into CKAN:
+        - For type="text" custom fields: accept multilingual {lang: value} and store as JSON string in extras.
+        - For other types (date/number/select/etc.): keep original convert_to_extras for now.
+        """
+        # our custom fields
         for field in self.all_fields:
-            schema.update(
-                {
-                    field: [
-                        tk.get_validator("ignore_missing"),
-                        tk.get_converter("convert_to_extras"),
-                    ],
-                }
-            )
+            if field in self.text_fields:
+                # Multilingual text: validate object -> dump JSON -> extras
+                schema.update(
+                    {
+                        field: [
+                            tk.get_validator("ignore_missing"),
+                            udc_json_load,
+                            udc_lang_object,  # expects {"en": "...", "fr": "..."} (fr optional)
+                            udc_json_dump,  # store as JSON string in extras
+                            tk.get_converter("convert_to_extras"),
+                        ],
+                    }
+                )
+            else:
+                # Non-text
+                schema.update(
+                    {
+                        field: [
+                            tk.get_validator("ignore_missing"),
+                            tk.get_converter("convert_to_extras"),
+                        ],
+                    }
+                )
+
+        # ---- Multilingual core fields (replicate fluent_core_translated) ----
+        # title_translated / notes_translated store {lang: value} as JSON in extras,
+        # and keep `title` / `notes` as the default-locale strings.
+
+        schema.update(
+            {
+                "title_translated": [
+                    tk.get_validator("ignore_missing"),
+                    udc_json_load,
+                    udc_seed_translated_from_core(
+                        "title"
+                    ),  # seed from core title if missing
+                    udc_lang_object,
+                    udc_core_translated_to_extras("title"),
+                    udc_json_dump,
+                    tk.get_converter("convert_to_extras"),
+                ],
+                "notes_translated": [
+                    tk.get_validator("ignore_missing"),
+                    udc_json_load,
+                    udc_seed_translated_from_core(
+                        "notes"
+                    ),  # seed from core notes if missing
+                    udc_lang_object,
+                    udc_core_translated_to_extras("notes"),
+                    udc_json_dump,
+                    tk.get_converter("convert_to_extras"),
+                ],
+                # Accept: {"en": ["roads","transport"], "fr": ["routes","transport"]}
+                "tags_translated": [
+                    tk.get_validator("ignore_missing"),
+                    udc_json_load,
+                    udc_lang_string_list,
+                    udc_set_core_tags_from_translated,  # set core 'tags' from tags_translated[default_lang]
+                    udc_json_dump,
+                    tk.get_converter("convert_to_extras"),
+                ],
+            }
+        )
 
         schema.update(
             {
@@ -286,14 +392,55 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def show_package_schema(self) -> Schema:
         schema: Schema = super(UdcPlugin, self).show_package_schema()
         for field in self.all_fields:
-            schema.update(
-                {
-                    field: [
-                        tk.get_converter("convert_from_extras"),
-                        tk.get_validator("ignore_missing"),
-                    ],
-                }
-            )
+            if field in self.text_fields:
+                # Multilingual text: load JSON from extras
+                schema.update(
+                    {
+                        field: [
+                            tk.get_converter("convert_from_extras"),
+                            udc_json_load,  # load JSON string from extras
+                            tk.get_validator("ignore_missing"),
+                        ],
+                    }
+                )
+            else:
+                # Non-text: load directly from extras
+                schema.update(
+                    {
+                        field: [
+                            tk.get_converter("convert_from_extras"),
+                            tk.get_validator("ignore_missing"),
+                        ],
+                    }
+                )
+
+        # bring translated JSON back and ensure core fields are present
+        schema.update(
+            {
+                "title_translated": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    udc_fill_translated_from_core_on_show("title"),
+                    tk.get_validator("ignore_missing"),
+                ],
+                "notes_translated": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    udc_fill_translated_from_core_on_show("notes"),
+                    tk.get_validator("ignore_missing"),
+                ],
+                # Return tags_translated as a dict; if missing, seed from core tags
+                "tags_translated": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    udc_fill_tags_translated_from_core,
+                    tk.get_validator("ignore_missing"),
+                ],
+            }
+        )
+        # ensure title/notes fallback to default locale from *_translated on show
+        schema.setdefault("title", []).append(udc_set_core_from_translated("title"))
+        schema.setdefault("notes", []).append(udc_set_core_from_translated("notes"))
 
         schema.update(
             {
@@ -329,10 +476,22 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return schema
 
     def get_helpers(self):
+        langs = get_udc_langs()
+        language_labels = {}
+
+        for code in langs:
+            label = self._language_label(code, langs[0] if langs else "en")
+            language_labels[code] = label
+
         return {
             "config": self.maturity_model,
+            "maturity_model": self.maturity_model,
             "facet_titles": self.facet_titles,
+            "facet_titles_raw": self.facet_titles_raw,
             "maturity_model_text_fields": self.text_fields,
+            "udc_languages": langs,
+            "udc_default_lang": langs[0] if langs else "en",
+            "udc_language_labels": language_labels,
             "get_default_facet_titles": get_default_facet_titles,
             "process_facets_fields": process_facets_fields,
             "humanize_entity_type": humanize_entity_type,
@@ -340,6 +499,22 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             "get_system_info": get_system_info,
             "license_options_details": license_options_details,
         }
+
+    def _language_label(self, code: str, fallback: str) -> str:
+        """Return a human readable language name for templates."""
+
+        default_lang = (fallback or tk.config.get("ckan.locale_default", "en") or "en").replace("-", "_")
+
+        try:
+            display_locale = Locale.parse(default_lang)
+            target = Locale.parse(code.replace("-", "_"))
+            label = target.get_display_name(display_locale)
+            if isinstance(label, str) and label:
+                return label[0].upper() + label[1:]
+        except Exception:
+            pass
+
+        return code.upper()
 
     def is_fallback(self):
         # Return True to register this plugin as the default handler for
@@ -414,10 +589,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
                 # The text fields (solr type=text) can be used as facets
                 # We need to use the builtin facet name
                 # and not the extras_ prefix
-                facets_dict[name] = self.facet_titles[name]
+                facets_dict[name] = pick_locale(self.facet_titles_raw[name])
             else:
                 # We need the extras_ prefix for our custom solr schema
-                facets_dict["extras_" + name] = self.facet_titles[name]
+                facets_dict["extras_" + name] = pick_locale(self.facet_titles_raw[name])
 
         return facets_dict
 
@@ -471,11 +646,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             )
             for r in rel:
                 related_package = model.Package.get(r.object_package_id)
-                related_packages.append({
-                    "title": related_package.title,
-                    "id": related_package.id,
-                    "name": related_package.name,
-                })
+                related_packages.append(
+                    {
+                        "title": related_package.title,
+                        "id": related_package.id,
+                        "name": related_package.name,
+                    }
+                )
         else:
             # Non-unified package need to get the unified package and then get the related packages
             rel = (
@@ -486,35 +663,71 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
             for r in rel:
                 unified_package = model.Package.get(r.subject_package_id)
-                related_packages.append({
-                    "title": unified_package.title,
-                    "id": unified_package.id,
-                    "name": unified_package.name,
-                })
+                related_packages.append(
+                    {
+                        "title": unified_package.title,
+                        "id": unified_package.id,
+                        "name": unified_package.name,
+                    }
+                )
 
                 rel2 = (
                     model.meta.Session.query(model.PackageRelationship)
-                    .filter(model.PackageRelationship.subject_package_id == unified_package.id)
-                    .filter(model.PackageRelationship.object_package_id != pkg_dict["id"])
+                    .filter(
+                        model.PackageRelationship.subject_package_id
+                        == unified_package.id
+                    )
+                    .filter(
+                        model.PackageRelationship.object_package_id != pkg_dict["id"]
+                    )
                     .all()
                 )
 
                 for r in rel2:
                     related_package = model.Package.get(r.object_package_id)
                     # Check if exists
-                    if related_package.id not in set([p["id"] for p in related_packages]):
-                        related_packages.append({
-                            "title": related_package.title,
-                            "id": related_package.id,
-                            "name": related_package.name,
-                        })
+                    if related_package.id not in set(
+                        [p["id"] for p in related_packages]
+                    ):
+                        related_packages.append(
+                            {
+                                "title": related_package.title,
+                                "id": related_package.id,
+                                "name": related_package.name,
+                            }
+                        )
 
         pkg_dict["related_packages"] = related_packages
 
-    def before_dataset_search(self, search_params: dict[str, Any]) -> dict[str, Any]:
+    def before_dataset_search(self, params: dict[str, Any]) -> dict[str, Any]:
         # print(chalk.red("before_dataset_search"))
         # print(search_params)
-        return search_params
+        # L = get_current_lang()
+        # default = get_udc_langs()[0]
+
+        # qf = [
+        #     f"title_{L}_txt^6",
+        #     f"notes_{L}_txt^3",
+        #     # include if you indexed tags_{L}_txt in index.py:
+        #     f"tags_{L}_txt^1",
+        # ]
+        # for name in self.text_fields:
+        #     qf.append(f"{name}_{L}_txt^2")
+
+        # if L != default:
+        #     qf += [
+        #         f"title_{default}_txt^2",
+        #         f"notes_{default}_txt^1",
+        #         # f"tags_{default}_txt^0.5",
+        #     ]
+        #     for name in self.text_fields:
+        #         qf.append(f"{name}_{default}_txt^1")
+
+        # params['defType'] = 'edismax'
+        # params['qf'] = ' '.join(qf)
+        # params.setdefault('pf', f"title_{L}_txt^8")
+        # params.setdefault('qs', '2')
+        return params
 
     def after_dataset_search(
         self, search_results: dict[str, Any], search_params: dict[str, Any]
@@ -522,15 +735,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         return search_results
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
-        # Do not index related packages
-        del pkg_dict["related_packages"]
-        print(chalk.red("before_dataset_index"))
-        # Map multiple select fields and covert to array
-        # The field name should be 'extras_' + field_name for using our custom solr schema
-        for field in self.multiple_select_fields:
-            if field in pkg_dict:
-                pkg_dict["extras_" + field] = pkg_dict[field].split(",")
-        return pkg_dict
+        return _before_dataset_index(pkg_dict)
 
     def before_dataset_view(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
         return pkg_dict
@@ -539,6 +744,13 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     def make_middleware(self, app: CKANApp, config: CKANConfig) -> CKANApp:
         override_error_handler(app, config)
         return app
-    
+
     def make_error_log_middleware(self, app, config: CKANConfig) -> CKANApp:
         return app
+
+    def get_validators(self):
+        return {
+            "udc_lang_object": udc_lang_object,
+            "udc_json_dump": udc_json_dump,
+            "udc_json_load": udc_json_load,
+        }

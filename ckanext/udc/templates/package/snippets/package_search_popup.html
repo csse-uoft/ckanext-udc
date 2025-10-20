@@ -1,4 +1,5 @@
 {% import 'macros/form.html' as form %}
+{% import 'macros/locales.html' as locales with context %}
 {% import 'package/macros/ckan_filter_fields.html' as ckan_filter %}
 
 <link rel="stylesheet" href="{{ h.url_for_static('/base/css/virtual-select.min.css') }}">
@@ -7,8 +8,9 @@
 <script type=text/javascript>
   window.facets = {
     titles: {{facet_titles | tojson}},
-    bsaeURL: {{h.url_for('catalogue.search') | tojson}},
+    baseURL: {{h.url_for('catalogue.search') | tojson}},
     textFields: {{h.maturity_model_text_fields | tojson}},
+    currentLang: "{{h.lang()}}"
   };
   window.maturityModel = {{h.config | tojson}};
   
@@ -61,14 +63,21 @@
                 {% for field in level["fields"] %}
 
                   {% if field.get("ckanField") == none %}
-                    {% set has_extras = ("extras_" + field["name"]) in facet_titles %}
-                    {% set title = facet_titles["extras_" + field["name"]] if has_extras else facet_titles[field["name"]] %}
+
+                    {% set extras_key = 'extras_' ~ field['name'] %}
+                    {% set has_extras = extras_key in facet_titles %}
+                    {% set title_from_facets = facet_titles[extras_key] if has_extras else facet_titles.get(field['name']) %}
+                    {% set local_label = locales.pick_locale(field.get('label'), __lang) %}
+                    {% set label_to_use = title_from_facets or local_label %}
+
+                    {# {% set has_extras = ("extras_" + field["name"]) in facet_titles %}
+                    {% set title = facet_titles["extras_" + field["name"]] if has_extras else facet_titles[field["name"]] %} #}
                     
-                    {% if title %}
+                    {% if label_to_use %}
                       {# Our customized field #}
                       
                       <div class="form-group control-full">
-                        <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(title) }}</label>
+                        <label class="form-label" for="{{'filter-' + field["name"]}}">{{ _(label_to_use) }}</label>
                         <div class="controls">
                           <div id="filter-{{field["name"]}}" name="{{field["name"]}}" 
                             data-module="filter-multiple-select" 
@@ -76,7 +85,7 @@
                             data-module-type="{{field["type"] or 'text'}}">
                           </div>
                         </div>
-                        {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
+                        {{ ckan_filter.field_descriptions(locales.pick_locale(field['short_description'], __lang), locales.pick_locale(field['long_description'], __lang)) }}
                       </div>
                     {% endif %}
 
@@ -89,11 +98,11 @@
                         <div class="controls">
                           <div id="filter-{{field["ckanField"]}}" name="{{field["ckanField"]}}" data-module="filter-multiple-select" {{"data-module-filter-toggle" if field['enable_filter_logic_toggle'] else '' }}></div>
                         </div>
-                        {{ ckan_filter.field_descriptions(field['short_description'], field['long_description']) }}
+                        {{ ckan_filter.field_descriptions(locales.pick_locale(field['short_description'], __lang), locales.pick_locale(field['long_description'], __lang)) }}
                       </div>
                   
                     {% else %}
-                      {{ ckan_filter[field["ckanField"]](field['short_description'], field['long_description']) }}
+                      {{ ckan_filter[field["ckanField"]](locales.pick_locale(field['short_description'], __lang), locales.pick_locale(field['long_description'], __lang)) }}
                     {% endif %}
                   {% endif %}
                   

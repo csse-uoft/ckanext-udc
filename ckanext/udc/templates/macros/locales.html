@@ -1,0 +1,23 @@
+{% macro pick_locale(val, lang='en') -%}
+  {%- if val is mapping -%}
+    {%- set requested = lang or h.lang() or h.udc_default_lang or 'en' -%}
+    {%- set out = val.get(requested) -%}
+    {%- if not out and h.udc_default_lang -%}
+      {%- set out = val.get(h.udc_default_lang) -%}
+    {%- endif -%}
+    {%- if not out -%}
+      {%- for code in h.udc_languages -%}
+        {%- if val.get(code) -%}
+          {%- set out = val.get(code) -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if not out -%}
+      {%- for _k, _v in val.items() -%}{%- set out = _v -%}{%- break -%}{%- endfor -%}
+    {%- endif -%}
+    {{ out }}
+  {%- else -%}
+    {{ val }}
+  {%- endif -%}
+{%- endmacro %}

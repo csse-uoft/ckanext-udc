@@ -31,6 +31,7 @@ from ckan.types import Context, Response
 import chalk
 import re
 from urllib.parse import urlencode
+from ckanext.udc.solr.config import get_current_lang
 
 log = logging.getLogger(__name__)
 bp = Blueprint("catalogue_search", __name__)
@@ -86,6 +87,64 @@ def remove_field(package_type: Optional[str],
     return url + u'?' + urlencode(params)
 
 
+# Solr type = text_general/text
+# FTS only
+# TODO: If exact match is needed, we need to alter the ckan solr schema
+CKAN_FTS_FIELDS = ["title", "notes", "url", "version",
+                   "author", "author_email", "maintainer", "maintainer_email"]
+
+# Core string facets: exact match; optional _ngram if you enable Option B
+CORE_STRING_FACETS = ["organization", "license_id"]
+
+def _solr_field_for(param_kind: str, ui_field: str, lang: str,
+                    text_fields: set[str]) -> str | None:
+    """
+    Map stable UI field names to concrete Solr fields.
+      param_kind: 'fts' | 'exact' | 'min' | 'max'
+    """
+    # Text maturity fields (multilingual)
+    if ui_field in text_fields:
+        if param_kind == 'fts':
+            return f"{ui_field}_{lang}_txt"
+        if param_kind == 'exact':
+            return f"{ui_field}_{lang}_f"
+        if param_kind in ('min', 'max'):
+            return f"extras_{ui_field}"
+
+    # Tags are multilingual too
+    if ui_field == "tags":
+        if param_kind == 'fts':
+            return f"tags_{lang}_txt"
+        if param_kind == 'exact':
+            return f"tags_{lang}_f"
+
+    # CKAN core text fields: fts only
+    if ui_field in CKAN_FTS_FIELDS:
+        if param_kind == 'fts':
+            return f"{ui_field}_{lang}_txt"
+        # ignore exact_ for these
+        return None
+    
+    # Core string facets
+    if ui_field in CORE_STRING_FACETS:
+        if param_kind == 'exact':
+            return ui_field
+        # enable FTS via _ngram (Not supported in current schema)
+        # if param_kind == 'fts': 
+        #     return f"{ui_field}_ngram"
+
+    # Everything else (selects / numbers / dates etc) use extras_*
+    if param_kind in ('min', 'max'):
+        return f"extras_{ui_field}"
+    # exact match for non-text -> extras_*
+    if param_kind == 'exact':
+        return f"extras_{ui_field}"
+    # fts on non-text: allow user-entered terms as exact values on extras_*
+    if param_kind == 'fts':
+        return f"extras_{ui_field}"
+
+    return None
+
 def _get_search_details() -> dict[str, Any]:
     fq = u''
 
@@ -93,23 +152,21 @@ def _get_search_details() -> dict[str, Any]:
     # a list of values eg {u'tags':[u'tag1', u'tag2']}
 
     fields = []
-    fields_grouped = {}
-    filter_logics = {}
-    include_undefined = []
+    fields_grouped = {}      # key: solr_field -> { ui, values|min|max, fts:bool }
+    filter_logics = {}       # key: ui_field -> 'AND' or 'OR'
+    include_undefined = set()  # set of solr field names for date/number 'include empty'
     search_extras: 'MultiDict[str, Any]' = MultiDict()
     
+    udc = plugins.get_plugin('udc')
     # Get the list of text fields from the udc plugin
     # Only the text fields support full text search
-    text_fields = plugins.get_plugin('udc').text_fields
-    
+    text_fields = udc.text_fields
+
     # Get the list of date fields from the udc plugin
-    date_fields = plugins.get_plugin('udc').date_fields
+    date_fields = udc.date_fields
     
-    # Solr type = text_general/text
-    # FTS only
-    # TODO: If exact match is needed, we need to alter the ckan solr schema
-    ckan_fields_fts = ["title", "notes", "url", "version", 
-                   "author", "author_email", "maintainer", "maintainer_email"]
+    lang = request.args.get('lang') or get_current_lang()
+
     
     # Solr type = string
     # FTS + exact
@@ -121,127 +178,119 @@ def _get_search_details() -> dict[str, Any]:
         if param not in [u'q', u'page', u'sort'] and len(value) and not param.startswith(u'_'):
             print(chalk.green(f"Param: {param}, Value: {value}"))
             
-            if param.startswith('filter-logic-'):
-                if value.lower() == 'and':
-                    filter_logics[param[13:]] = 'AND'
-                elif value == 'date':
-                    # Date filter logic, include undefined date
-                    include_undefined.append('extras_' + param[13:])
-                elif value == 'number':
-                    # Number filter logic, include undefined number
-                    include_undefined.append('extras_' + param[13:])
-                    
-            elif param.startswith('fts_'):
-                field_name = param[4:]
-                # For text fields, we need to add `extras_` prefix to make solr do full text search
-                # Text fields (in the maturity model) and CKAN Fields are the only fields that support full text search
-                # CKAN Fields does not need to add `extras_` prefix except for `tags`
-                if field_name in text_fields:
-                    field_name = "extras_" + field_name
-                if field_name in ckan_fields_exact:
-                    field_name = field_name + "_ngram"
-                    
-                if field_name not in fields_grouped:
-                    fields_grouped[field_name] = {
-                        'values': [value],
-                        'fts': True,
-                    }
-                else:
-                    fields_grouped[field_name]['values'].append(value)
-            elif param.startswith('exact_'):
-                field_name = param[6:]
-                # For exact matches, we do not add `extras_` prefix for CKAN fields and text fields
-                # For all other fields, we need to add `extras_` prefix to make solr do exact search
-                if field_name in ckan_fields_fts:
-                    # Exaxt match is not available for FTS fields
-                    print(chalk.red(f"Exact match is not available for FTS fields: {field_name}"))
-                    continue
-                if not (field_name in text_fields or field_name in ckan_fields_fts or field_name in ckan_fields_exact):
-                    field_name = "extras_" + field_name
-                    
-                if field_name not in fields_grouped:
-                    fields_grouped[field_name] = {
-                        'values': [value],
-                        'fts': False
-                    }
-                else:
-                    fields_grouped[field_name]['values'].append(value)
-            elif param.startswith('min_'):
-                field_name = "extras_" + param[4:]
-                if field_name not in fields_grouped:
-                    fields_grouped[field_name] = {
-                        'min': value,
-                    }
-                else:
-                    fields_grouped[field_name]['min'] = value
-            elif param.startswith('max_'):
-                field_name = "extras_" + param[4:]
-                if field_name not in fields_grouped:
-                    fields_grouped[field_name] = {
-                        'max': value,
-                    }
-                else:
-                    fields_grouped[field_name]['max'] = value
-                
-            elif not param.startswith(u'ext_'):
-                # Not sure what is this for
-                fields.append((param, value))
-                # fq += u' %s:"%s"' % (param, value)
-                if param not in fields_grouped:
-                    fields_grouped[param] = {
-                        'values': [value],
-                        'fts': False
-                    }
-                else:
-                    fields_grouped[param]['values'].append(value)
-            else:
-                search_extras.update({param: value})
+        # Toggle logic
+        if param.startswith('filter-logic-'):
+            ui_name = param[13:]
+            if value.lower() == 'and':
+                filter_logics[ui_name] = 'AND'
+            elif value == 'date':
+                # include undefined date
+                solr_key = _solr_field_for('min', ui_name, lang, text_fields)  # same base field
+                if solr_key:
+                    include_undefined.add(solr_key)
+            elif value == 'number':
+                solr_key = _solr_field_for('min', ui_name, lang, text_fields)
+                if solr_key:
+                    include_undefined.add(solr_key)
+            continue
 
-    extras = dict([
-        (k, v[0]) if len(v) == 1 else (k, v)
-        for k, v in search_extras.lists()
-    ])
-    
-    # Build fq from fields_grouped
-    for key, options in fields_grouped.items():
-        
-        if 'values' in options:
-            values = options['values']
-            filter_logic = filter_logics.get(key, 'OR')
-            if len(values) > 1:
-                fq += u' %s:(%s)' % (key, f' {filter_logic} '.join([f'"{v}"' for v in values]))
-            else:
-                fq += u' %s:"%s"' % (key, values[0])
+        # fts_*
+        if param.startswith('fts_'):
+            ui_name = param[4:]
+            solr_key = _solr_field_for('fts', ui_name, lang, text_fields)
+            if not solr_key:
+                continue
+            fields_grouped.setdefault(solr_key, {'ui': ui_name, 'fts': True, 'values': []})
+            fields_grouped[solr_key]['values'].append(value)
+            continue
+
+        # exact_*
+        if param.startswith('exact_'):
+            ui_name = param[6:]
+            solr_key = _solr_field_for('exact', ui_name, lang, text_fields)
+            if not solr_key:
+                continue
+            fields_grouped.setdefault(solr_key, {'ui': ui_name, 'fts': False, 'values': []})
+            fields_grouped[solr_key]['values'].append(value)
+            continue
+
+        # min_/max_ (numbers/dates on extras_*)
+        if param.startswith('min_'):
+            ui_name = param[4:]
+            solr_key = _solr_field_for('min', ui_name, lang, text_fields)
+            if not solr_key:
+                continue
+            fields_grouped.setdefault(solr_key, {'ui': ui_name})
+            fields_grouped[solr_key]['min'] = value
+            continue
+
+        if param.startswith('max_'):
+            ui_name = param[4:]
+            solr_key = _solr_field_for('max', ui_name, lang, text_fields)
+            if not solr_key:
+                continue
+            fields_grouped.setdefault(solr_key, {'ui': ui_name})
+            fields_grouped[solr_key]['max'] = value
+            continue
+
+        # legacy / unknown -> pass-through as extras
+        if not param.startswith(u'ext_'):
+            fields.append((param, value))
         else:
-            min = options.get('min')
-            max = options.get('max')
-            if key.startswith("extras") and key[7:] in date_fields:
-                try:
-                    # Convert date to UTC ISO format
-                    if min:
-                        min = datetime.strptime(min, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
-                    if max:
-                        maxDate = datetime.strptime(max, '%Y-%m-%d')
-                        # Add 23:59:59 to the max date to include the whole day
-                        max = maxDate.replace(hour=23, minute=59, second=59).strftime('%Y-%m-%dT%H:%M:%SZ')
-                except ValueError:
-                    # If the date is not in the correct format, skip it
-                    continue
+            search_extras.update({param: value})
             
-            # Handle min and max values for number and date ranges
+    # Build fq
+    from datetime import datetime
+    for solr_key, opts in fields_grouped.items():
+        # values group
+        if 'values' in opts:
+            vals = opts['values']
+            ui_name = opts.get('ui', solr_key)
+            logic_op = filter_logics.get(ui_name, 'OR')
+            if len(vals) > 1:
+                joined = f' {logic_op} '.join([f'"{v}"' for v in vals])
+                fq += f' {solr_key}:({joined})'
+            else:
+                fq += f' {solr_key}:"{vals[0]}"'
+            continue
+
+        # range group (dates / numbers on extras_*)
+        _min = opts.get('min')
+        _max = opts.get('max')
+        # Date normalization if the underlying UI field was a date field
+        ui_name = opts.get('ui')
+        if ui_name and solr_key.startswith("extras_") and ui_name in date_fields:
+            try:
+                # Convert date to UTC ISO format
+                if _min:
+                    _min = datetime.strptime(_min, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+                if _max:
+                    d = datetime.strptime(_max, '%Y-%m-%d')
+                    # Add 23:59:59 to the max date to include the whole day
+                    _max = d.replace(hour=23, minute=59, second=59).strftime('%Y-%m-%dT%H:%M:%SZ')
+            except ValueError:
+                # If the date is not in the correct format, skip it
+                continue
+
+        # Handle min and max values for number and date ranges
+        if _min and _max:
+            range_query = f' {solr_key}:[{_min} TO {_max}]'
+        elif _min:
+            range_query = f' {solr_key}:[{_min} TO *]'
+        elif _max:
+            range_query = f' {solr_key}:[* TO {_max}]'
+        else:
             range_query = ""
-            if min and max:
-                range_query = u' %s:[%s TO %s]' % (key, min, max)
-            elif min:
-                range_query = u' %s:[%s TO *]' % (key, min)
-            elif max:
-                range_query = u' %s:[* TO %s]' % (key, max)
-                
-            # Handle undefined date and number ranges
-            if (key in include_undefined) and range_query:
-                range_query = f'({range_query} OR (*:* -{key}:[* TO *]))'
+
+        # Handle undefined date and number ranges
+        if range_query:
+            if solr_key in include_undefined:
+                range_query = f'({range_query} OR (*:* -{solr_key}:[* TO *]))'
             fq += range_query
-    
+
+    extras = dict((k, v[0]) if len(v) == 1 else (k, v)
+                  for k, v in search_extras.lists())
+
     return {
         u'fields': fields,
         u'fields_grouped': fields_grouped,
@@ -250,6 +299,30 @@ def _get_search_details() -> dict[str, Any]:
         'filter_logics': filter_logics
     }
 
+
+def _facet_alias_map(facet_keys: list[str], lang: str) -> tuple[list[str], dict[str, str]]:
+    """
+    Given stable facet keys, return (solr_facet_fields, alias_to_solr_map).
+    - text maturity fields in udc.text_fields -> <name>_<lang>_f
+    - tags -> tags_<lang>_f
+    - extras_* and other core facets -> as-is
+    """
+    udc = plugins.get_plugin('udc')
+    text_fields = set(udc.text_fields or [])
+
+    alias_to_solr = OrderedDict()
+    for key in facet_keys:
+        if key == "tags":
+            alias_to_solr[key] = f"tags_{lang}_f"
+        elif key.startswith("extras_"):
+            alias_to_solr[key] = key
+        elif key in text_fields:
+            alias_to_solr[key] = f"{key}_{lang}_f"
+        else:
+            alias_to_solr[key] = key
+
+    solr_fields = list(dict.fromkeys(alias_to_solr.values()))
+    return solr_fields, alias_to_solr
 
 
 @bp.route(
@@ -384,10 +457,15 @@ def custom_dataset_search():
     extra_vars[u'facet_titles'] = facets
     # extra_vars[u'facet_titles'].update(plugins.get_plugin('udc').facet_titles)
     # print(chalk.yellow(f"Facet Titles: {extra_vars[u'facet_titles']}"))
+    
+    lang = request.args.get('lang') or get_current_lang()
+    facet_fields_stable = list(facets.keys())
+    solr_facet_fields, alias_to_solr = _facet_alias_map(facet_fields_stable, lang)
+
     data_dict: dict[str, Any] = {
         u'q': q,
         u'fq': fq.strip(),
-        u'facet.field': facet_fields,
+        u'facet.field': solr_facet_fields,
         # u'facet.limit': -1,
         u'rows': limit,
         u'start': (page - 1) * limit,
@@ -410,7 +488,15 @@ def custom_dataset_search():
             items_per_page=limit
         )
         # print(chalk.red("search_facets"), query[u'search_facets'])
-        extra_vars[u'search_facets'] = query[u'search_facets']
+        
+        raw_facets = query.get('search_facets', {})
+        search_facets_stable = {}
+        for alias, solr_name in alias_to_solr.items():
+            if solr_name in raw_facets:
+                search_facets_stable[alias] = raw_facets[solr_name]
+
+        extra_vars[u'search_facets'] = search_facets_stable
+        # extra_vars[u'search_facets'] = query[u'search_facets']
         extra_vars[u'page'].items = query[u'results']
     except SearchQueryError as se:
         # User's search parameters are invalid, in such a way that is not

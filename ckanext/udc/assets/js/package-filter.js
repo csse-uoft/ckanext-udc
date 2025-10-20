@@ -35,7 +35,7 @@ this.ckan.module('advanced-filter', function ($) {
             const errorBlock = container.querySelector('.error-block');
 
             // Get the facets from the server
-            const facetsData = await fetch("/api/3/action/filter_facets_get")
+            const facetsData = await fetch("/api/3/action/filter_facets_get?lang=" + (window.facets.currentLang || "en"))
                 .then(response => {
                     if (!response.ok) {
                         errorBlock.textContent = 'Failed to load filters.';
@@ -424,7 +424,7 @@ this.ckan.module('filter-apply-button', function ($) {
                 }
 
                 // Redirect
-                window.location.href = window.facets.bsaeURL + "?" + [...params].join('&');
+                window.location.href = window.facets.baseURL + "?" + [...params].join('&');
             };
         }
     }

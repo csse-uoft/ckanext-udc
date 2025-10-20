@@ -16,16 +16,35 @@
             "fields": [
                 {
                     "name": "theme",
-                    "label": "Domain / Topic",
+                    "label": {
+                        "en": "Domain / Topic",
+                        "fr": "Domaine / Sujet"
+                    },
                     "type": "text",
-                    "short_description": "Domain or topic of the dataset being cataloged.",
-                    "long_description": "The theme or topic of the catalogue entry. Please select from an existing topic, such as Transportation, Housing, etc. Please refer to the taxonomy of topics available.",
+                    "short_description": {
+                        "en": "Domain or topic of the dataset being cataloged.",
+                        "fr": "Domaine ou sujet du jeu de données catalogué."
+                    },
+                    "long_description": {
+                        "en": "The theme or topic of the catalogue entry. Please select from an existing topic, such as Transportation, Housing, etc. Please refer to the taxonomy of topics available.",
+                        "fr": "Le thème ou le sujet de l'entrée du catalogue. Veuillez sélectionner un sujet existant, tel que les transports, le logement, etc. Veuillez vous référer à la taxonomie des sujets disponibles."
+                    },
                     "category": "content"
                 },
                 {
                     "ckanField": "title",
-                    "short_description": "Title for the Dataset.",
-                    "long_description": "Title for the dataset. The value should be descriptive of the dataset. Vague or general terms should be avoided. Duplicate titles in a series should be postfixed with a counter. Often assigned by the creator or publisher.",
+                    "label": {
+                        "en": "Title",
+                        "fr": "Titre"
+                    },
+                    "short_description": {
+                        "en": "Title for the Dataset.",
+                        "fr": "Titre du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Title for the dataset. The value should be descriptive of the dataset. Vague or general terms should be avoided. Duplicate titles in a series should be postfixed with a counter. Often assigned by the creator or publisher.",
+                        "fr": "Titre du jeu de données. La valeur doit décrire le jeu de données. Les termes vagues ou généraux doivent être évités. Les titres en double dans une série doivent être suffixés d’un compteur. Souvent attribué par le créateur ou l’éditeur."
+                    },
                     "category": "content"
                 },
                 {
@@ -33,22 +52,47 @@
                 },
                 {
                     "ckanField": "description",
-                    "short_description": "A description of the dataset.",
-                    "long_description": "This property holds a descriptive text introducing the dataset, context, and if applicable, stakeholders. Often provided by the creator or publisher.",
+                    "short_description": {
+                        "en": "A description of the dataset.",
+                        "fr": "Une description du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "This property holds a descriptive text introducing the dataset, context, and if applicable, stakeholders. Often provided by the creator or publisher.",
+                        "fr": "Cette propriété contient un texte descriptif présentant le jeu de données, le contexte et, le cas échéant, les parties prenantes. Souvent fourni par le créateur ou l’éditeur."
+                    },
                     "category": "content"
                 },
                 {
                     "ckanField": "tags",
-                    "short_description": "Keywords/tags categorizing the dataset.",
-                    "long_description": "Keywords/tags categorizing the dataset. Often provided by the creator or publisher. The keywords can be added, but suitable keywords should be selected from existing values, if possible. A controlled vocabulary of keywords, organized as a taxonomy, is created for each domain/topic.",
+                    "label": {
+                        "en": "Tags / Keywords",
+                        "fr": "Étiquettes / Mots-clés"
+                    },
+                    "short_description": {
+                        "en": "Keywords/tags categorizing the dataset.",
+                        "fr": "Mots-clés/étiquettes catégorisant le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Keywords/tags categorizing the dataset. Often provided by the creator or publisher. The keywords can be added, but suitable keywords should be selected from existing values, if possible. A controlled vocabulary of keywords, organized as a taxonomy, is created for each domain/topic.",
+                        "fr": "Mots-clés/étiquettes catégorisant le jeu de données. Souvent fournis par le créateur ou l’éditeur. De nouveaux mots-clés peuvent être ajoutés, mais il convient de sélectionner des mots-clés appropriés parmi les valeurs existantes lorsque c’est possible. Un vocabulaire contrôlé de mots-clés, organisé en taxonomie, est créé pour chaque domaine/sujet."
+                    },
                     "category": "content",
                     "enable_filter_logic_toggle": true
                 },
                 {
                     "name": "file_format",
-                    "label": "Format (CSV, XLS, TXT, PDF, etc)",
-                    "short_description": "File format of the dataset.",
-                    "long_description": "Format of the dataset file can indicate its file type (e.g. csv, pdf, ttl). If multiple types are available, the types are separated by commas (“csv, ttl, pdf”).",
+                    "label": {
+                        "en": "Format (CSV, XLS, TXT, PDF, etc)",
+                        "fr": "Format (CSV, XLS, TXT, PDF, etc.)"
+                    },
+                    "short_description": {
+                        "en": "File format of the dataset.",
+                        "fr": "Format de fichier du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Format of the dataset file can indicate its file type (e.g. csv, pdf, ttl). If multiple types are available, the types are separated by commas (“csv, ttl, pdf”).",
+                        "fr": "Le format du fichier du jeu de données peut indiquer son type (p. ex., csv, pdf, ttl). Si plusieurs types sont disponibles, séparez-les par des virgules (« csv, ttl, pdf »)."
+                    },
                     "type": "multiple_select",
                     "optionsFromQuery": {
                         "text": "label",
@@ -60,150 +104,311 @@
                 },
                 {
                     "name": "file_size",
-                    "label": "Dataset Size",
+                    "label": {
+                        "en": "Dataset Size",
+                        "fr": "Taille du jeu de données"
+                    },
                     "type": "number",
-                    "short_description": "Dataset size in megabytes.",
-                    "long_description": "Total size of the datasets in this catalogue entry Saved as a decimal of megabtyes (MB).",
+                    "short_description": {
+                        "en": "Dataset size in megabytes.",
+                        "fr": "Taille du jeu de données en mégaoctets."
+                    },
+                    "long_description": {
+                        "en": "Total size of the datasets in this catalogue entry Saved as a decimal of megabtyes (MB).",
+                        "fr": "Taille totale des jeux de données de cette entrée du catalogue. Enregistrée comme un nombre décimal de mégaoctets (Mo)."
+                    },
                     "category": "content"
                 },
                 {
                     "name": "unique_metadata_identifier",
-                    "label": "Metadata Identifier",
-                    "short_description": "Metadata identifier – can be used as the unique identifier for catalogue entry",
-                    "long_description": "Unique identifier for the metadata catalogue. Often assigned by the creator or publisher.",
+                    "label": {
+                        "en": "Metadata Identifier",
+                        "fr": "Identifiant des métadonnées"
+                    },
+                    "short_description": {
+                        "en": "Metadata identifier – can be used as the unique identifier for catalogue entry",
+                        "fr": "Identifiant des métadonnées — peut être utilisé comme identifiant unique pour l’entrée du catalogue."
+                    },
+                    "long_description": {
+                        "en": "Unique identifier for the metadata catalogue. Often assigned by the creator or publisher.",
+                        "fr": "Identifiant unique pour le catalogue de métadonnées. Souvent attribué par le créateur ou l’éditeur."
+                    },
                     "type": "text",
                     "category": "content"
                 },
                 {
                     "name": "published_date",
-                    "label": "Published Date",
+                    "label": {
+                        "en": "Published Date",
+                        "fr": "Date de publication"
+                    },
                     "type": "date",
-                    "short_description": "Published date of the dataset.",
-                    "long_description": "Published date of the dataset is the data when the dataset was first made accessible to the public. Often provided by the creator or publisher.",
+                    "short_description": {
+                        "en": "Published date of the dataset.",
+                        "fr": "Date de publication du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Published date of the dataset is the data when the dataset was first made accessible to the public. Often provided by the creator or publisher.",
+                        "fr": "La date de publication du jeu de données correspond au moment où il a été rendu accessible au public pour la première fois. Souvent fournie par le créateur ou l’éditeur."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "time_span_start",
-                    "label": "Time Period Data Span (start date)",
+                    "label": {
+                        "en": "Time Period Data Span (start date)",
+                        "fr": "Période temporelle des données (date de début)"
+                    },
                     "type": "date",
-                    "short_description": "Start date of the data in the dataset.",
-                    "long_description": "First date the data was collected for. This is not the date it was collected but the earliest date of the data values.",
+                    "short_description": {
+                        "en": "Start date of the data in the dataset.",
+                        "fr": "Date de début des données dans le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "First date the data was collected for. This is not the date it was collected but the earliest date of the data values.",
+                        "fr": "Première date à laquelle les données sont couvertes. Il ne s’agit pas de la date de collecte, mais de la date la plus ancienne des valeurs de données."
+                    },
                     "category": "tempo_geo"
                 },
                 {
                     "name": "time_span_end",
-                    "label": "Time Period Data Span (end date)",
+                    "label": {
+                        "en": "Time Period Data Span (end date)",
+                        "fr": "Période temporelle des données (date de fin)"
+                    },
                     "type": "date",
-                    "short_description": "End date of time data in the dataset.",
-                    "long_description": "Last date the data was collected for. This is not the date it was collected but the latest date of the data values.",
+                    "short_description": {
+                        "en": "End date of time data in the dataset.",
+                        "fr": "Date de fin des données temporelles du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Last date the data was collected for. This is not the date it was collected but the latest date of the data values.",
+                        "fr": "Dernière date couverte par les données. Il ne s’agit pas de la date de collecte, mais de la date la plus récente des valeurs de données."
+                    },
                     "category": "tempo_geo"
                 },
                 {
                     "name": "geo_span",
-                    "label": "GeoSpatial Area Data Span",
+                    "label": {
+                        "en": "GeoSpatial Area Data Span",
+                        "fr": "Zone géospatiale couverte"
+                    },
                     "type": "text",
-                    "short_description": "A spatial region or named place the dataset covers.",
-                    "long_description": "This data represents the geospatial area the dataset covers. This may be captured as a data column or simply defined by the creator or publisher.",
+                    "short_description": {
+                        "en": "A spatial region or named place the dataset covers.",
+                        "fr": "Région spatiale ou lieu nommé couvert par le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "This data represents the geospatial area the dataset covers. This may be captured as a data column or simply defined by the creator or publisher.",
+                        "fr": "Cette donnée représente la zone géospatiale couverte par le jeu de données. Elle peut provenir d’une colonne de données ou être simplement définie par le créateur ou l’éditeur."
+                    },
                     "category": "tempo_geo"
                 }
             ]
         },
-
         {
             "title": "Maturity Level 2 (Access)",
             "name": "maturity_level_2",
             "fields": [
                 {
                     "name": "access_category",
-                    "label": "Access category",
-                    "short_description": "Type of access granted for the dataset (open, closed, service, etc).",
-                    "long_description": "Access category provides a description of the licensing rights for accessing the dataset. If the dataset is avaialble through a web service (e.g. API), state \"Service\" Often provided by the rights owner, creator or publisher.",
+                    "label": {
+                        "en": "Access category",
+                        "fr": "Catégorie d’accès"
+                    },
+                    "short_description": {
+                        "en": "Type of access granted for the dataset (open, closed, service, etc).",
+                        "fr": "Type d’accès accordé pour le jeu de données (ouvert, restreint, service, etc.)."
+                    },
+                    "long_description": {
+                        "en": "Access category provides a description of the licensing rights for accessing the dataset. If the dataset is avaialble through a web service (e.g. API), state \"Service\" Often provided by the rights owner, creator or publisher.",
+                        "fr": "La catégorie d’accès décrit les droits de licence pour accéder au jeu de données. Si le jeu de données est disponible via un service Web (p. ex., API), indiquez « Service ». Généralement fourni par le détenteur des droits, le créateur ou l’éditeur."
+                    },
                     "type": "text",
                     "category": "access"
                 },
                 {
                     "ckanField": "license_id",
-                    "short_description": "License used to access the dataset.",
-                    "long_description": "License used to access the dataset. Often provided by the creator or publisher. A license should be selected from existing licenses.  A custom license can be added if an applicable license is not available. The licenses must be defined externally, meaning, a temporary or placeholder license or  should not be added. ",
+                    "short_description": {
+                        "en": "License used to access the dataset.",
+                        "fr": "Licence utilisée pour accéder au jeu de données."
+                    },
+                    "long_description": {
+                        "en": "License used to access the dataset. Often provided by the creator or publisher. A license should be selected from existing licenses.  A custom license can be added if an applicable license is not available. The licenses must be defined externally, meaning, a temporary or placeholder license or  should not be added. ",
+                        "fr": "Licence utilisée pour accéder au jeu de données. Souvent fournie par le créateur ou l’éditeur. Une licence doit être sélectionnée parmi les licences existantes. Une licence personnalisée peut être ajoutée si aucune licence applicable n’est disponible. Les licences doivent être définies de manière externe; une licence temporaire ou de remplacement ne doit pas être ajoutée."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "limits_on_use",
-                    "label": "Limits on use",
+                    "label": {
+                        "en": "Limits on use",
+                        "fr": "Restrictions d’utilisation"
+                    },
                     "type": "text",
-                    "short_description": "Limits on use of data.",
-                    "long_description": "Limits on use (e.g., academic purposes). Information provided generally provides more detail on the terms and access rights beyond the license. Usually provided by the rights owner, creator, or publisher.",
+                    "short_description": {
+                        "en": "Limits on use of data.",
+                        "fr": "Restrictions d’utilisation des données."
+                    },
+                    "long_description": {
+                        "en": "Limits on use (e.g., academic purposes). Information provided generally provides more detail on the terms and access rights beyond the license. Usually provided by the rights owner, creator, or publisher.",
+                        "fr": "Restrictions d’utilisation (p. ex., fins académiques). Ces informations fournissent des détails supplémentaires sur les conditions et droits d’accès au-delà de la licence. Généralement fourni par le détenteur des droits, le créateur ou l’éditeur."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "location",
-                    "label": "Location",
-                    "short_description": "Location of the dataset.",
-                    "long_description": "Location where the dataset can be accessed, such as a URL.",
+                    "label": {
+                        "en": "Location",
+                        "fr": "Emplacement"
+                    },
+                    "short_description": {
+                        "en": "Location of the dataset.",
+                        "fr": "Emplacement du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Location where the dataset can be accessed, such as a URL.",
+                        "fr": "Endroit où le jeu de données peut être consulté, par exemple une URL."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "data_service",
-                    "label": "Data Service",
-                    "short_description": "Data service for accessing a dataset.",
-                    "long_description": "Data service for accessing a dataset. This references the architecture being used to host and manage access to the datasets, such as CKAN, Dataverse, etc.",
+                    "label": {
+                        "en": "Data Service",
+                        "fr": "Service de données"
+                    },
+                    "short_description": {
+                        "en": "Data service for accessing a dataset.",
+                        "fr": "Service de données pour accéder à un jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Data service for accessing a dataset. This references the architecture being used to host and manage access to the datasets, such as CKAN, Dataverse, etc.",
+                        "fr": "Service de données permettant d’accéder à un jeu de données. Fait référence à l’architecture utilisée pour héberger et gérer l’accès (p. ex., CKAN, Dataverse, etc.)."
+                    },
                     "category": "ownership"
                 },
                 {
                     "name": "owner",
-                    "label": "Owner",
+                    "label": {
+                        "en": "Owner",
+                        "fr": "Propriétaire"
+                    },
                     "type": "text",
-                    "short_description": "Owner of the dataset.",
-                    "long_description": "Owner's name or authoring organization for the dataset.",
+                    "short_description": {
+                        "en": "Owner of the dataset.",
+                        "fr": "Propriétaire du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Owner's name or authoring organization for the dataset.",
+                        "fr": "Nom du propriétaire ou organisation à l’origine du jeu de données."
+                    },
                     "category": "ownership"
                 },
                 {
                     "name": "access_steward",
-                    "label": "Contact Point",
+                    "label": {
+                        "en": "Contact Point",
+                        "fr": "Point de contact"
+                    },
                     "type": "text",
-                    "short_description": "Who to contact regarding access?",
-                    "long_description": "The access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
+                    "short_description": {
+                        "en": "Who to contact regarding access?",
+                        "fr": "Qui contacter concernant l’accès ?"
+                    },
+                    "long_description": {
+                        "en": "The access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
+                        "fr": "Le responsable des droits d’accès est le point de contact (personne ou organisation) pour obtenir l’accès au jeu de données. Généralement fourni par le détenteur des droits, le créateur ou l’éditeur."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "access_steward_email",
-                    "label": "Contact Point Email",
+                    "label": {
+                        "en": "Contact Point Email",
+                        "fr": "Courriel du point de contact"
+                    },
                     "type": "text",
-                    "short_description": "The email to contact regarding access?",
-                    "long_description": "The access rights steward is the point of contact (email of either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
+                    "short_description": {
+                        "en": "The email to contact regarding access?",
+                        "fr": "Courriel à utiliser pour l’accès ?"
+                    },
+                    "long_description": {
+                        "en": "The access rights steward is the point of contact (email of either a person or an organization) to gain access to the dataset. Usually provided by the rights owner, creator, or publisher.",
+                        "fr": "Le responsable des droits d’accès est le point de contact (adresse courriel d’une personne ou d’une organisation) pour obtenir l’accès au jeu de données. Généralement fourni par le détenteur des droits, le créateur ou l’éditeur."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "publisher",
-                    "label": "Publisher",
-                    "short_description": "Publisher of the dataset.",
-                    "long_description": "Publisher's name or authoring organization for the dataset.",
+                    "label": {
+                        "en": "Publisher",
+                        "fr": "Éditeur"
+                    },
+                    "short_description": {
+                        "en": "Publisher of the dataset.",
+                        "fr": "Éditeur du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Publisher's name or authoring organization for the dataset.",
+                        "fr": "Nom de l’éditeur ou organisation à l’origine du jeu de données."
+                    },
                     "category": "ownership"
                 },
                 {
                     "name": "publisher_email",
-                    "label": "Publisher Email",
-                    "short_description": "Email of the publisher.",
-                    "long_description": "Email of the dataset's publisher. Can be used to contact the author directly.",
+                    "label": {
+                        "en": "Publisher Email",
+                        "fr": "Courriel de l’éditeur"
+                    },
+                    "short_description": {
+                        "en": "Email of the publisher.",
+                        "fr": "Adresse courriel de l’éditeur."
+                    },
+                    "long_description": {
+                        "en": "Email of the dataset's publisher. Can be used to contact the author directly.",
+                        "fr": "Adresse courriel de l’éditeur du jeu de données. Peut être utilisée pour contacter l’auteur directement."
+                    },
                     "category": "ownership"
                 },
                 {
                     "ckanField": "author",
-                    "short_description": "Author of the dataset.",
-                    "long_description": "Author's name or authoring organization for the dataset.",
+                    "short_description": {
+                        "en": "Author of the dataset.",
+                        "fr": "Auteur du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Author's name or authoring organization for the dataset.",
+                        "fr": "Nom de l’auteur ou organisation à l’origine du jeu de données."
+                    },
                     "category": "ownership"
                 },
                 {
                     "ckanField": "author_email",
-                    "short_description": "Email of the author.",
-                    "long_description": "Email of the dataset's author. Can be used to contact the author directly.",
+                    "short_description": {
+                        "en": "Email of the author.",
+                        "fr": "Adresse courriel de l’auteur."
+                    },
+                    "long_description": {
+                        "en": "Email of the dataset's author. Can be used to contact the author directly.",
+                        "fr": "Adresse courriel de l’auteur du jeu de données. Peut être utilisée pour contacter l’auteur directement."
+                    },
                     "category": "ownership"
                 },
                 {
                     "name": "accessed_date",
-                    "label": "Accessed At",
-                    "short_description": "Date the data and metadata was accessed.",
-                    "long_description": "Date the data and metadata was accessed. This date identifies when the dataset and metadata were reviewed for entry into CUDC. Usually, this is provided by data curator or the data owner if provided indirectly from the owner.",
+                    "label": {
+                        "en": "Accessed At",
+                        "fr": "Date d’accès"
+                    },
+                    "short_description": {
+                        "en": "Date the data and metadata was accessed.",
+                        "fr": "Date à laquelle les données et métadonnées ont été consultées."
+                    },
+                    "long_description": {
+                        "en": "Date the data and metadata was accessed. This date identifies when the dataset and metadata were reviewed for entry into CUDC. Usually, this is provided by data curator or the data owner if provided indirectly from the owner.",
+                        "fr": "Date à laquelle les données et métadonnées ont été consultées. Cette date indique quand le jeu de données et les métadonnées ont été examinés pour l’entrée dans le CUDC. Habituellement fournie par le curateur des données ou le propriétaire des données."
+                    },
                     "type": "date",
                     "category": "content"
                 }
@@ -215,38 +420,74 @@
             "fields": [
                 {
                     "name": "unique_identifier",
-                    "label": "Identifier",
-                    "short_description": "Unique identifier for the dataset.",
-                    "long_description": "Unique identifier for the dataset. Often assigned by the creator or publisher. Not necessarily persistent or globally unique.",
+                    "label": {
+                        "en": "Identifier",
+                        "fr": "Identifiant"
+                    },
+                    "short_description": {
+                        "en": "Unique identifier for the dataset.",
+                        "fr": "Identifiant unique du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Unique identifier for the dataset. Often assigned by the creator or publisher. Not necessarily persistent or globally unique.",
+                        "fr": "Identifiant unique du jeu de données. Souvent attribué par le créateur ou l’éditeur. Pas nécessairement persistant ou globalement unique."
+                    },
                     "type": "text",
                     "category": "content"
                 },
                 {
                     "name": "language",
-                    "label": "Language",
+                    "label": {
+                        "en": "Language",
+                        "fr": "Langue"
+                    },
                     "type": "multiple_select",
                     "optionsFromQuery": {
                         "text": "label",
                         "value": "s",
                         "query": "select * from <http://id.loc.gov/vocabulary/iso639-1> where {?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label. FILTER (lang(?label) = 'en')}"
                     },
-                    "short_description": "Language(s) of the dataset",
-                    "long_description": "Language(s) of the dataset capture what language the data is in. It does not reflect the language o the metadata associated with it.",
+                    "short_description": {
+                        "en": "Language(s) of the dataset",
+                        "fr": "Langue(s) du jeu de données"
+                    },
+                    "long_description": {
+                        "en": "Language(s) of the dataset capture what language the data is in. It does not reflect the language o the metadata associated with it.",
+                        "fr": "La ou les langues du jeu de données indiquent la langue des données. Cela ne reflète pas la langue des métadonnées associées."
+                    },
                     "category": "content"
                 },
                 {
                     "name": "description_document",
-                    "label": "Link to dataset description",
+                    "label": {
+                        "en": "Link to dataset description",
+                        "fr": "Lien vers la description du jeu de données"
+                    },
                     "type": "text",
-                    "short_description": "A URL to an external document describing the dataset.",
-                    "long_description": "A URL to an external document describing the dataset. Often this would be a website that provides additional details about the dataset. It can also link to a document (e.g. PDF) or a resource of some sort (e.g. LinkedData object).",
+                    "short_description": {
+                        "en": "A URL to an external document describing the dataset.",
+                        "fr": "Une URL vers un document externe décrivant le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "A URL to an external document describing the dataset. Often this would be a website that provides additional details about the dataset. It can also link to a document (e.g. PDF) or a resource of some sort (e.g. LinkedData object).",
+                        "fr": "Une URL vers un document externe décrivant le jeu de données. Il s’agit souvent d’un site Web fournissant des détails supplémentaires. Peut également renvoyer vers un document (p. ex., PDF) ou une ressource (p. ex., objet LinkedData)."
+                    },
                     "category": "content"
                 },
                 {
                     "name": "persistent_identifier",
-                    "label": "Persistent Identifier",
-                    "short_description": "Data is identified by a persistent identifier.",
-                    "long_description": "Data is identified by a persistent identifier. A unique identifier can be in any format, as long as it is unique within some context. Often, this is stored as a unique resource identifier (URI).",
+                    "label": {
+                        "en": "Persistent Identifier",
+                        "fr": "Identifiant persistant"
+                    },
+                    "short_description": {
+                        "en": "Data is identified by a persistent identifier.",
+                        "fr": "Les données sont identifiées par un identifiant persistant."
+                    },
+                    "long_description": {
+                        "en": "Data is identified by a persistent identifier. A unique identifier can be in any format, as long as it is unique within some context. Often, this is stored as a unique resource identifier (URI).",
+                        "fr": "Les données sont identifiées par un identifiant persistant. Un identifiant unique peut être dans n’importe quel format, pourvu qu’il soit unique dans un certain contexte. Souvent stocké sous forme d’URI (identifiant de ressource)."
+                    },
                     "category": "content",
                     "type": "single_select",
                     "options": [
@@ -266,9 +507,18 @@
                 },
                 {
                     "name": "global_unique_identifier",
-                    "label": "Globally Unique Identifier",
-                    "short_description": "Data is identified by a persistent and globally unique identifier.",
-                    "long_description": "Data is identified by a persistent and globally unique identifier. A unique identifier can be in any format as long as it is globally unique. Often, this is stored as a unique resource identifier (URI).",
+                    "label": {
+                        "en": "Globally Unique Identifier",
+                        "fr": "Identifiant globalement unique"
+                    },
+                    "short_description": {
+                        "en": "Data is identified by a persistent and globally unique identifier.",
+                        "fr": "Les données sont identifiées par un identifiant persistant et globalement unique."
+                    },
+                    "long_description": {
+                        "en": "Data is identified by a persistent and globally unique identifier. A unique identifier can be in any format as long as it is globally unique. Often, this is stored as a unique resource identifier (URI).",
+                        "fr": "Les données sont identifiées par un identifiant persistant et unique à l’échelle mondiale. Un identifiant peut être dans n’importe quel format tant qu’il est globalement unique. Souvent stocké comme une URI."
+                    },
                     "category": "content",
                     "type": "single_select",
                     "options": [
@@ -288,9 +538,18 @@
                 },
                 {
                     "name": "contains_individual_data",
-                    "label": "Contains data about individuals",
-                    "short_description": "Does the data hold data about individuals?",
-                    "long_description": "Captures whether the dataset holds data about individuals in a population? If yes, the dataset is aggregated at the individual level. If not, the data is aggregated. This does not mean the individuals cannot be inferred from the dataset. Other metadata properties are required to indicate whether individuals can be inferred from the dataset or not.",
+                    "label": {
+                        "en": "Contains data about individuals",
+                        "fr": "Contient des données sur des individus"
+                    },
+                    "short_description": {
+                        "en": "Does the data hold data about individuals?",
+                        "fr": "Le jeu de données contient-il des données sur des individus ?"
+                    },
+                    "long_description": {
+                        "en": "Captures whether the dataset holds data about individuals in a population? If yes, the dataset is aggregated at the individual level. If not, the data is aggregated. This does not mean the individuals cannot be inferred from the dataset. Other metadata properties are required to indicate whether individuals can be inferred from the dataset or not.",
+                        "fr": "Indique si le jeu de données contient des données sur des individus d’une population. Si oui, le jeu de données est agrégé au niveau individuel; sinon, les données sont agrégées. Cela ne signifie pas qu’il est impossible d’inférer des individus à partir du jeu de données; d’autres propriétés de métadonnées sont nécessaires pour l’indiquer."
+                    },
                     "category": "content",
                     "type": "single_select",
                     "options": [
@@ -310,10 +569,19 @@
                 },
                 {
                     "name": "contains_identifiable_individual_data",
-                    "label": "Contains data about identifiable individuals",
+                    "label": {
+                        "en": "Contains data about identifiable individuals",
+                        "fr": "Contient des données identifiables sur des individus"
+                    },
                     "type": "single_select",
-                    "short_description": "Does the data hold identifiable data about individual?",
-                    "long_description": "Does the data hold identifiable individual data that can be used to uniquely identify an individual data was collected about? If yes, the dataset is not anonymized.",
+                    "short_description": {
+                        "en": "Does the data hold identifiable data about individual?",
+                        "fr": "Le jeu de données contient-il des données identifiables sur des individus ?"
+                    },
+                    "long_description": {
+                        "en": "Does the data hold identifiable individual data that can be used to uniquely identify an individual data was collected about? If yes, the dataset is not anonymized.",
+                        "fr": "Le jeu de données contient-il des données identifiables pouvant servir à identifier de manière unique une personne à propos de laquelle des données ont été collectées ? Si oui, le jeu de données n’est pas anonymisé."
+                    },
                     "category": "content",
                     "options": [
                         {
@@ -332,10 +600,19 @@
                 },
                 {
                     "name": "contains_indigenous_data",
-                    "label": "Contains Indigenous Data",
+                    "label": {
+                        "en": "Contains Indigenous Data",
+                        "fr": "Contient des données autochtones"
+                    },
                     "type": "single_select",
-                    "short_description": "Does the data hold data about Indigenous communities?",
-                    "long_description": "Does the data hold data about Indigenous communities? If yes, the dataset should comply with OCAP principles (Ownership, Control, Access, Possession). See https://fnigc.ca/ocap-training/ for more information.",
+                    "short_description": {
+                        "en": "Does the data hold data about Indigenous communities?",
+                        "fr": "Le jeu de données contient-il des données sur des communautés autochtones ?"
+                    },
+                    "long_description": {
+                        "en": "Does the data hold data about Indigenous communities? If yes, the dataset should comply with OCAP principles (Ownership, Control, Access, Possession). See https://fnigc.ca/ocap-training/ for more information.",
+                        "fr": "Le jeu de données contient-il des données sur des communautés autochtones ? Le cas échéant, il doit respecter les principes PCAP (Propriété, Contrôle, Accès, Possession). Voir https://fnigc.ca/ocap-training/ pour plus d’informations."
+                    },
                     "category": "content",
                     "options": [
                         {
@@ -360,78 +637,162 @@
             "fields": [
                 {
                     "ckanField": "version",
-                    "short_description": "Version of the datatset",
-                    "long_description": "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a date (e.g. Jan 1, 2022) or a textual description (e.g. 'First version published for public use').",
+                    "short_description": {
+                        "en": "Version of the datatset",
+                        "fr": "Version du jeu de données"
+                    },
+                    "long_description": {
+                        "en": "A literal representing the version of this dataset. It can be a number (e.g. v1.1) a date (e.g. Jan 1, 2022) or a textual description (e.g. 'First version published for public use').",
+                        "fr": "Une valeur littérale représentant la version de ce jeu de données. Cela peut être un nombre (p. ex., v1.1), une date (p. ex., 1 janv. 2022) ou une description textuelle (p. ex., « Première version publiée pour usage public »)."
+                    },
                     "category": "content"
                 },
                 {
                     "ckanField": "source",
-                    "short_description": "Source of the dataset.",
-                    "long_description": "Source where the dataset can be accessed, such as a URL.",
+                    "short_description": {
+                        "en": "Source of the dataset.",
+                        "fr": "Source du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Source where the dataset can be accessed, such as a URL.",
+                        "fr": "Source où le jeu de données peut être consulté, comme une URL."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "version_info",
-                    "label": "Version notes",
+                    "label": {
+                        "en": "Version notes",
+                        "fr": "Notes de version"
+                    },
                     "type": "text",
-                    "short_description": "Version notes about the dataset.",
-                    "long_description": "Additional information about the version, such as date the dataset was published, reasons for publishing, changes from previous version, etc.",
+                    "short_description": {
+                        "en": "Version notes about the dataset.",
+                        "fr": "Notes de version à propos du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Additional information about the version, such as date the dataset was published, reasons for publishing, changes from previous version, etc.",
+                        "fr": "Informations supplémentaires sur la version, telles que la date de publication du jeu de données, les raisons de la publication, les changements par rapport à la version précédente, etc."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "version_dataset",
-                    "label": "Is version of another dataset",
+                    "label": {
+                        "en": "Is version of another dataset",
+                        "fr": "Est une version d’un autre jeu de données"
+                    },
                     "type": "text",
-                    "short_description": "Link to dataset that it is a version of.",
-                    "long_description": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is an updated version of.",
+                    "short_description": {
+                        "en": "Link to dataset that it is a version of.",
+                        "fr": "Lien vers le jeu de données dont celui-ci est une version."
+                    },
+                    "long_description": {
+                        "en": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is an updated version of.",
+                        "fr": "Un jeu de données est souvent une version d’un autre. Cette nouvelle version peut être une mise à jour ou une révision d’une autre manière (traitement, analyse supplémentaire, niveau d’agrégation, amélioration de la qualité). Cette propriété est un lien vers le jeu de données dont celui-ci est une version mise à jour."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "dataset_versions",
-                    "label": "Other versions",
+                    "label": {
+                        "en": "Other versions",
+                        "fr": "Autres versions"
+                    },
                     "type": "text",
-                    "short_description": "Link to datasets that are versions of it.",
-                    "long_description": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is the original version of.",
+                    "short_description": {
+                        "en": "Link to datasets that are versions of it.",
+                        "fr": "Lien vers les jeux de données qui en sont des versions."
+                    },
+                    "long_description": {
+                        "en": "Often a dataset is a version of another dataset. This new version may be an updated or revised in some other way, such as a processed version with additional analysis, aggregation level, or quality improvements. This property is a link to a dataset the catalogued dataset is the original version of.",
+                        "fr": "Un jeu de données est souvent une version d’un autre. Cette nouvelle version peut être mise à jour ou révisée d’une autre manière (traitement, analyses supplémentaires, niveau d’agrégation, améliorations de qualité). Cette propriété est un lien vers un jeu de données dont le jeu de données catalogué est la version originale."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "provenance",
-                    "label": "Provenance Text",
+                    "label": {
+                        "en": "Provenance Text",
+                        "fr": "Texte de provenance"
+                    },
                     "type": "text",
-                    "short_description": "Provenance Text of the data.",
-                    "long_description": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
+                    "short_description": {
+                        "en": "Provenance Text of the data.",
+                        "fr": "Texte de provenance des données."
+                    },
+                    "long_description": {
+                        "en": "Provenance of the data, identifying who created the previous versions, who has used them, etc.",
+                        "fr": "Provenance des données, identifiant qui a créé les versions précédentes, qui les a utilisées, etc."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "provenance_url",
-                    "label": "Provenance URL",
+                    "label": {
+                        "en": "Provenance URL",
+                        "fr": "URL de provenance"
+                    },
                     "type": "text",
-                    "short_description": "Provenance URL of the data.",
-                    "long_description": "If there is additional documentation about the provenance of the catalogued dataset, this property stores a URL to the external location where this information is available.",
+                    "short_description": {
+                        "en": "Provenance URL of the data.",
+                        "fr": "URL de provenance des données."
+                    },
+                    "long_description": {
+                        "en": "If there is additional documentation about the provenance of the catalogued dataset, this property stores a URL to the external location where this information is available.",
+                        "fr": "S’il existe une documentation supplémentaire sur la provenance du jeu de données catalogué, cette propriété stocke l’URL de l’emplacement externe où cette information est disponible."
+                    },
                     "category": "provenance"
                 },
                 {
                     "name": "temporal_resolution",
-                    "label": "Temporal resolution",
+                    "label": {
+                        "en": "Temporal resolution",
+                        "fr": "Résolution temporelle"
+                    },
                     "type": "text",
-                    "short_description": "Describes how granular the date/time data in the dataset is.",
-                    "long_description": "Describes how granular the date/time data in the dataset is. Usually, this explains the level of aggregation provided by the dataset. For example, time-series data can be by minute, hour, year, or season.",
+                    "short_description": {
+                        "en": "Describes how granular the date/time data in the dataset is.",
+                        "fr": "Décrit la granularité des données temporelles dans le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Describes how granular the date/time data in the dataset is. Usually, this explains the level of aggregation provided by the dataset. For example, time-series data can be by minute, hour, year, or season.",
+                        "fr": "Décrit la granularité des données temporelles dans le jeu de données. Cela explique généralement le niveau d’agrégation fourni. Par exemple, des séries chronologiques peuvent être à la minute, à l’heure, à l’année ou à la saison."
+                    },
                     "category": "tempo_geo"
                 },
                 {
                     "name": "geospatial_resolution_in_meters",
-                    "label": "GeoSpatial resolution in meters",
+                    "label": {
+                        "en": "GeoSpatial resolution in meters",
+                        "fr": "Résolution géospatiale en mètres"
+                    },
                     "type": "text",
-                    "short_description": "Describes how granular (in meters) geospatial data is in the dataset.",
-                    "long_description": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
+                    "short_description": {
+                        "en": "Describes how granular (in meters) geospatial data is in the dataset.",
+                        "fr": "Décrit la granularité (en mètres) des données géospatiales dans le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Describes how granular (in meters) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be stored in 1 meter detail, 5 meters, 1000 meters, etc.",
+                        "fr": "Décrit la granularité (en mètres) des données géospatiales. Cela explique généralement le niveau d’agrégation fourni. Par exemple, l’information géospatiale peut être disponible au détail de 1 m, 5 m, 1000 m, etc."
+                    },
                     "category": "tempo_geo"
                 },
                 {
                     "name": "geospatial_resolution",
-                    "label": "GeoSpatial resolution (in regions)",
+                    "label": {
+                        "en": "GeoSpatial resolution (in regions)",
+                        "fr": "Résolution géospatiale (par régions)"
+                    },
                     "type": "text",
-                    "short_description": "Describes how granular (in regions) geospatial data is in the dataset.",
-                    "long_description": "Describes how granular (in regions) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be at the city, province, region, or country level. It can also be stored as a polygon defined by longitude/latitude coordinates.",
+                    "short_description": {
+                        "en": "Describes how granular (in regions) geospatial data is in the dataset.",
+                        "fr": "Décrit la granularité (par régions) des données géospatiales dans le jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Describes how granular (in regions) geospatial data is in the dataset. Usually, this explains the level of aggregation provided by the dataset. For example, geospatial information can be at the city, province, region, or country level. It can also be stored as a polygon defined by longitude/latitude coordinates.",
+                        "fr": "Décrit la granularité (par régions) des données géospatiales. Cela explique généralement le niveau d’agrégation fourni : ville, province, région, pays. Les données peuvent aussi être stockées sous forme de polygones définis par des coordonnées de longitude/latitude."
+                    },
                     "category": "tempo_geo"
                 }
             ]
@@ -442,27 +803,53 @@
             "fields": [
                 {
                     "name": "indigenous_community_permission",
-                    "label": "Indigenous Community Permission",
+                    "label": {
+                        "en": "Indigenous Community Permission",
+                        "fr": "Permission de la communauté autochtone"
+                    },
                     "type": "text",
-                    "short_description": "Who holds the Indigenous Community Permission. Who to contact regarding access to a dataset that has data about Indigenous communities.",
-                    "long_description": "Who holds the Indigenous Community Permission. The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
+                    "short_description": {
+                        "en": "Who holds the Indigenous Community Permission. Who to contact regarding access to a dataset that has data about Indigenous communities.",
+                        "fr": "Qui détient la permission de la communauté autochtone. Qui contacter pour l’accès à un jeu de données concernant des communautés autochtones."
+                    },
+                    "long_description": {
+                        "en": "Who holds the Indigenous Community Permission. The Indigenous access rights steward is the point of contact (either a person or an organization) to gain access to the dataset. It is an agent that has the right to manage access rights to Indigenous data. That person can be Indigenous themselves or a non-Indigenous agent that acts as the steward for access rights to the data. Usually provided by the previous rights owner, creator, or publisher.",
+                        "fr": "Qui détient la permission de la communauté autochtone. Le responsable des droits d’accès autochtones est le point de contact (personne ou organisation) pour obtenir l’accès au jeu de données. Il s’agit d’un agent ayant le droit de gérer les droits d’accès aux données autochtones. Cette personne peut être autochtone ou non autochtone agissant comme responsable des droits d’accès. Généralement fourni par le précédent détenteur des droits, le créateur ou l’éditeur."
+                    },
                     "category": "access"
                 },
                 {
                     "name": "community_steward",
-                    "label": "Community Permission",
+                    "label": {
+                        "en": "Community Permission",
+                        "fr": "Permission communautaire"
+                    },
                     "type": "text",
-                    "short_description": "Community permission (who gave permission).",
-                    "long_description": "Community permission identifies the person or contact information indicating who tocontact about gaining permission to use the data that belongs to an entire comunity. This comunity steward speaks on behalf of the enture community regarding access to the dataset.",
+                    "short_description": {
+                        "en": "Community permission (who gave permission).",
+                        "fr": "Permission communautaire (qui a accordé la permission)."
+                    },
+                    "long_description": {
+                        "en": "Community permission identifies the person or contact information indicating who tocontact about gaining permission to use the data that belongs to an entire comunity. This comunity steward speaks on behalf of the enture community regarding access to the dataset.",
+                        "fr": "La permission communautaire identifie la personne ou les coordonnées indiquant qui contacter pour obtenir la permission d’utiliser des données appartenant à une communauté entière. Ce responsable communautaire parle au nom de toute la communauté concernant l’accès au jeu de données."
+                    },
                     "category": "ownership"
                 },
-
                 {
                     "name": "indigenous_span",
-                    "label": "The Indigenous communities the dataset is about",
+                    "label": {
+                        "en": "The Indigenous communities the dataset is about",
+                        "fr": "Les communautés autochtones concernées par le jeu de données"
+                    },
                     "type": "text",
-                    "short_description": "Indigenous communities from which data is derived.",
-                    "long_description": "Indigenous communities from which data is derived. this represents the community coverage of the communities that provided the data or are the subject of data stored in the dataset.",
+                    "short_description": {
+                        "en": "Indigenous communities from which data is derived.",
+                        "fr": "Communautés autochtones dont sont issues les données."
+                    },
+                    "long_description": {
+                        "en": "Indigenous communities from which data is derived. this represents the community coverage of the communities that provided the data or are the subject of data stored in the dataset.",
+                        "fr": "Communautés autochtones dont proviennent les données. Cela représente la couverture des communautés ayant fourni les données ou faisant l’objet des données stockées dans le jeu de données."
+                    },
                     "category": "tempo_geo"
                 }
             ]
@@ -473,59 +860,131 @@
             "fields": [
                 {
                     "name": "number_of_rows",
-                    "label": "Number of data rows",
-                    "short_description": "If tabular dataset, total number of rows.",
-                    "long_description": "If tabular dataset, total number of data rows. Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                    "label": {
+                        "en": "Number of data rows",
+                        "fr": "Nombre de lignes de données"
+                    },
+                    "short_description": {
+                        "en": "If tabular dataset, total number of rows.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de lignes."
+                    },
+                    "long_description": {
+                        "en": "If tabular dataset, total number of data rows. Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de lignes de données. « Tabulaire » peut être un fichier CSV, un fichier Excel, une base de données relationnelle, etc."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "number_of_columns",
-                    "label": "Number of data columns",
-                    "short_description": "If tabular dataset, total number of unique columns.",
-                    "long_description": "If tabular dataset, total number of unique columns, across all sheets (if an Excel type file). Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                    "label": {
+                        "en": "Number of data columns",
+                        "fr": "Nombre de colonnes de données"
+                    },
+                    "short_description": {
+                        "en": "If tabular dataset, total number of unique columns.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de colonnes uniques."
+                    },
+                    "long_description": {
+                        "en": "If tabular dataset, total number of unique columns, across all sheets (if an Excel type file). Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de colonnes uniques, sur toutes les feuilles (s’il s’agit d’un fichier de type Excel). « Tabulaire » peut être un CSV, un fichier Excel, une base de données relationnelle, etc."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "number_of_cells",
-                    "label": "Number of data cells",
-                    "short_description": "If tabular dataset, total number of cells with data.",
-                    "long_description": "If tabular dataset, total number of data cells with data, i.e. not empty cells. Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                    "label": {
+                        "en": "Number of data cells",
+                        "fr": "Nombre de cellules de données"
+                    },
+                    "short_description": {
+                        "en": "If tabular dataset, total number of cells with data.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de cellules contenant des données."
+                    },
+                    "long_description": {
+                        "en": "If tabular dataset, total number of data cells with data, i.e. not empty cells. Tabular could be a CSV file, an Excel file, a relational database, etc.",
+                        "fr": "Pour un jeu de données tabulaire, nombre total de cellules de données contenant des valeurs (non vides). « Tabulaire » peut être un fichier CSV, un fichier Excel, une base de données relationnelle, etc."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "number_of_triples",
-                    "label": "Number of data relations",
-                    "short_description": "If RDF dataset, total number of triples.",
-                    "long_description": "If RDF dataset, total number of triples.",
+                    "label": {
+                        "en": "Number of data relations",
+                        "fr": "Nombre de relations de données"
+                    },
+                    "short_description": {
+                        "en": "If RDF dataset, total number of triples.",
+                        "fr": "Pour un jeu de données RDF, nombre total de triplets."
+                    },
+                    "long_description": {
+                        "en": "If RDF dataset, total number of triples.",
+                        "fr": "Pour un jeu de données RDF, nombre total de triplets."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "number_of_entities",
-                    "label": "Number of entities",
-                    "short_description": "If RDF dataset, total number of entities.",
-                    "long_description": "If RDF dataset, total number of entities (i.e. concepts used in the dataset).",
+                    "label": {
+                        "en": "Number of entities",
+                        "fr": "Nombre d’entités"
+                    },
+                    "short_description": {
+                        "en": "If RDF dataset, total number of entities.",
+                        "fr": "Pour un jeu de données RDF, nombre total d’entités."
+                    },
+                    "long_description": {
+                        "en": "If RDF dataset, total number of entities (i.e. concepts used in the dataset).",
+                        "fr": "Pour un jeu de données RDF, nombre total d’entités (c.-à-d. les concepts utilisés dans le jeu de données)."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "number_of_properties",
-                    "label": "Number of data properties",
-                    "short_description": "If RDF dataset, total number of unique properties used by the triples.",
-                    "long_description": "If RDF dataset, total number of unique properties used in this dataset.",
+                    "label": {
+                        "en": "Number of data properties",
+                        "fr": "Nombre de propriétés de données"
+                    },
+                    "short_description": {
+                        "en": "If RDF dataset, total number of unique properties used by the triples.",
+                        "fr": "Pour un jeu de données RDF, nombre total de propriétés uniques utilisées par les triplets."
+                    },
+                    "long_description": {
+                        "en": "If RDF dataset, total number of unique properties used in this dataset.",
+                        "fr": "Pour un jeu de données RDF, nombre total de propriétés uniques utilisées dans ce jeu de données."
+                    },
                     "category": "statistical"
                 },
                 {
                     "name": "quality_annotation",
-                    "label": "Data quality",
-                    "short_description": "Describes the quality of the data in the dataset.",
-                    "long_description": "Quality of the data can be a simple description (e.g. \"high quality for 80%\"), a simple scale (e.g. \"3 out of 4\") or specific values and metrics (e.g. \"80% of cells re missing\").",
+                    "label": {
+                        "en": "Data quality",
+                        "fr": "Qualité des données"
+                    },
+                    "short_description": {
+                        "en": "Describes the quality of the data in the dataset.",
+                        "fr": "Décrit la qualité des données du jeu de données."
+                    },
+                    "long_description": {
+                        "en": "Quality of the data can be a simple description (e.g. \"high quality for 80%\"), a simple scale (e.g. \"3 out of 4\") or specific values and metrics (e.g. \"80% of cells re missing\").",
+                        "fr": "La qualité des données peut être une description simple (p. ex., « haute qualité à 80 % »), une échelle simple (p. ex., « 3 sur 4 ») ou des valeurs et métriques spécifiques (p. ex., « 80 % des cellules sont manquantes »)."
+                    },
                     "category": "statistical",
                     "type": "text"
                 },
                 {
                     "name": "quality_dimension_metric",
-                    "label": "Metric for data quality",
-                    "short_description": "A metric used to measure the quality of the data, such as missing values or invalid formats.",
-                    "long_description": "Quality metrics can be any metrics used to measure the quality of the dataset as a whole. For example, the VIMO metrics are used to measure how many cells are valid, invalid, missing, or outliers.",
+                    "label": {
+                        "en": "Metric for data quality",
+                        "fr": "Métrique de qualité des données"
+                    },
+                    "short_description": {
+                        "en": "A metric used to measure the quality of the data, such as missing values or invalid formats.",
+                        "fr": "Une métrique utilisée pour mesurer la qualité des données, telle que les valeurs manquantes ou les formats invalides."
+                    },
+                    "long_description": {
+                        "en": "Quality metrics can be any metrics used to measure the quality of the dataset as a whole. For example, the VIMO metrics are used to measure how many cells are valid, invalid, missing, or outliers.",
+                        "fr": "Les métriques de qualité peuvent être toute mesure utilisée pour évaluer la qualité globale du jeu de données. Par exemple, les métriques VIMO mesurent le nombre de cellules valides, invalides, manquantes ou aberrantes."
+                    },
                     "category": "statistical",
                     "type": "text"
                 }
@@ -556,8 +1015,6 @@
         },
         "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.id}",
         "@type": "http://data.urbandatacentre.ca/catalogue",
-
-
         "dcat:theme": {
             "@type": "skos:Concept",
             "@id": "http://data.urbandatacentre.ca/theme/{quote_url(theme.lower())}",
@@ -586,10 +1043,6 @@
             "@id": "http://data.urbandatacentre.ca/geo/{quote_url(geo_span.lower())}",
             "locn:geometry": "{geo_span}"
         },
-
-
-
-
         "dct:identifier": "{unique_identifier}",
         "cudr:accessCategory": "{access_category}",
         "dct:license": "eval(mapFromCKANLicense(license_id))",
@@ -615,7 +1068,7 @@
         },
         "dcat:contactPoint": {
             "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
-            "@type":"vcard:Individual",
+            "@type": "vcard:Individual",
             "vcard:fn": "{access_steward}",
             "vcard:hasEmail": "{access_steward_email}"
         },
@@ -639,10 +1092,6 @@
             "@type": "xsd:date",
             "@value": "{to_date(accessed_date)}"
         },
-
-
-
-
         "dcat:landingPage": {
             "@id": "{quote_url(description_document)}"
         },
@@ -676,13 +1125,9 @@
         },
         "cudr:spatialResolutionInRegion": {
             "@id": "http://data.urbandatacentre.ca/administrativeArea/{generate_uuid()}",
-            "@type" : "sc:AdministrativeArea",
+            "@type": "sc:AdministrativeArea",
             "sc:name": "{geospatial_resolution}"
         },
-
-
-
-
         "cudr:containsIndividualData": {
             "@type": "xsd:boolean",
             "@value": "{to_bool(contains_individual_data)}"
@@ -696,8 +1141,8 @@
             "@value": "{to_bool(contains_indigenous_data)}"
         },
         "odrl:hasPolicy": {
-            "@type"     : "odrl:Policy",
-            "@value"    : "{limits_on_use}"
+            "@type": "odrl:Policy",
+            "@value": "{limits_on_use}"
         },
         "cudr:indigenousRightsHolder": {
             "@id": "http://data.urbandatacentre.ca/indigenousRightsHolder/{generate_uuid()}",
@@ -718,10 +1163,6 @@
             "@id": "http://data.urbandatacentre.ca/geo/{quote_url(indigenous_span.lower())}",
             "locn:geometry": "{indigenous_span}"
         },
-
-
-
-
         "fair:rda-r1.3-01d": {
             "@type": "xsd:boolean",
             "@value": "{to_bool(fair_rda_r1_3_01d)}"
@@ -766,9 +1207,6 @@
             "@type": "xsd:boolean",
             "@value": "{to_bool(fair_rda_a1_1_01d)}"
         },
-
-
-
         "cudr:rows": {
             "@type": "xsd:integer",
             "@value": "{number_of_rows}"
@@ -793,7 +1231,6 @@
             "@type": "xsd:integer",
             "@value": "{number_of_properties}"
         },
-
         "dqv:hasQualityAnnotation": {
             "@id": "http://data.urbandatacentre.ca/qualityAnnotation/{generate_uuid()}",
             "@type": "dqv:QualityAnnotation",
@@ -807,6 +1244,5 @@
             }
         },
         "dqv:inDimension": "TODO"
-
     }
 }
