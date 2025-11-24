@@ -3,6 +3,7 @@
 # ckanext-udc
 
 ## [Developer Manual](./DEV.md)
+## [Testing Instructions](./TESTING.md)
 ## Config Schema
 ```js
 [   
