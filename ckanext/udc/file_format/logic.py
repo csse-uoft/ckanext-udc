@@ -33,7 +33,7 @@ def file_format_create(context, data_dict):
     
     if not id:
         # Replace whitespaces
-        id = re.sub('\s', '-', label)
+        id = re.sub(r'\s', '-', label)
         # Remove unsafe characters in URL
         id = re.sub(r'[<>#%\{\}|\^~\[\]]/', '', id)
         

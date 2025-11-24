@@ -4,19 +4,13 @@ import logging
 from typing import Dict, List, Any
 import ckan.plugins.toolkit as tk
 from ckan.lib.navl.dictization_functions import Missing, missing
+
 log = logging.getLogger(__name__)
 
 
 def _is_missing(v):
-    return v is missing or isinstance(v, Missing) or v is None or v == ''
+    return v is missing or isinstance(v, Missing) or v is None or v == ""
 
-def _langs_from_config():
-    default = tk.config.get('ckan.locale_default', 'en') or 'en'
-    multilingual_langs = tk.config.get('udc.multilingual.languages', 'en').split(' ')
-    
-    # Merge and deduplicate, ensuring default is first
-    multilingual_langs = [lang for lang in multilingual_langs if lang and lang != default]
-    return multilingual_langs
 
 def udc_lang_object(value, context):
     """
@@ -28,20 +22,20 @@ def udc_lang_object(value, context):
         return None
     if isinstance(value, str):
         # Coerce a bare string to the default locale
-        default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+        default_lang = tk.config.get("ckan.locale_default", "en") or "en"
         return {default_lang: value}
     if not isinstance(value, dict):
-        raise tk.Invalid('Expected an object of {lang: string} for localized text.')
+        raise tk.Invalid("Expected an object of {lang: string} for localized text.")
     # Validate entries
     for k, v in list(value.items()):
         if _is_missing(v):
             value.pop(k, None)
         elif not isinstance(v, str):
-            raise tk.Invalid('Localized text values must be strings.')
+            raise tk.Invalid("Localized text values must be strings.")
     if not value:
         return None
     # Ensure default language exists by seeding from any available value
-    default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+    default_lang = tk.config.get("ckan.locale_default", "en") or "en"
     if default_lang not in value:
         # pick one existing language to seed default
         first = next(iter(value.values()))
@@ -61,7 +55,7 @@ def udc_json_dump(value, context):
         try:
             return json.dumps(value, ensure_ascii=False)
         except Exception:
-            log.debug('udc_json_dump: could not dump (leaving as-is): %r', value)
+            log.debug("udc_json_dump: could not dump (leaving as-is): %r", value)
             return value
     return value
 
@@ -85,15 +79,17 @@ def udc_json_load(value, context):
             return json.loads(s)
         except Exception:
             # Soft-fail: leave it as-is so subsequent validators can decide.
-            log.debug('udc_json_load: not JSON (leaving as-is): %r', value)
+            log.debug("udc_json_load: not JSON (leaving as-is): %r", value)
             return value
     # Unknown type; pass through
     return value
+
 
 def udc_core_translated_to_extras(core_field: str):
     """
     INPUT: when receiving <core_field>_translated, copy default-locale value into core_field.
     """
+
     def _copy(value, context):
         if _is_missing(value):
             return None
@@ -104,12 +100,13 @@ def udc_core_translated_to_extras(core_field: str):
             except Exception:
                 return value
         if isinstance(value, dict):
-            default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+            default_lang = tk.config.get("ckan.locale_default", "en") or "en"
             s = value.get(default_lang)
             if isinstance(s, str) and s.strip():
-                data = context.get('data') or context.get('data_dict') or {}
+                data = context.get("data") or context.get("data_dict") or {}
                 data[core_field] = s
         return value
+
     return _copy
 
 
@@ -141,8 +138,8 @@ def udc_lang_string_list(value, context):
     if _is_missing(value):
         return None
     if not isinstance(value, dict):
-        raise tk.Invalid('Expected an object of {lang: [strings]}')
-    langs = set(_langs_from_config())
+        raise tk.Invalid("Expected an object of {lang: [strings]}")
+
     out = {}
     for lang, vals in value.items():
         if _is_missing(vals):
@@ -150,7 +147,9 @@ def udc_lang_string_list(value, context):
         if isinstance(vals, str):
             vals = [vals]
         if not isinstance(vals, list) or not all(isinstance(x, str) for x in vals):
-            raise tk.Invalid('Expected a list of strings for language "{}"'.format(lang))
+            raise tk.Invalid(
+                'Expected a list of strings for language "{}"'.format(lang)
+            )
         # dedupe + strip empties
         seen = set()
         cleaned = []
@@ -169,8 +168,8 @@ def udc_set_core_tags_from_translated(value, context):
     If data['tags_translated'][default_lang] exists, set core 'tags' accordingly.
     Runs in the tags_translated pipeline and (optionally) in the tags pipeline.
     """
-    data = context.get('data') or context.get('data_dict') or {}
-    t = data.get('tags_translated')
+    data = context.get("data") or context.get("data_dict") or {}
+    t = data.get("tags_translated")
     # handle Missing / JSON string
     if _is_missing(t):
         return value
@@ -181,7 +180,7 @@ def udc_set_core_tags_from_translated(value, context):
             return value
     if not isinstance(t, dict):
         return value
-    default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+    default_lang = tk.config.get("ckan.locale_default", "en") or "en"
     names = t.get(default_lang) or []
     if isinstance(names, str):
         names = [names]
@@ -193,9 +192,9 @@ def udc_set_core_tags_from_translated(value, context):
                 n = n.strip()
                 if n and n not in seen:
                     seen.add(n)
-                    cleaned.append({'name': n})
+                    cleaned.append({"name": n})
         if cleaned:
-            data['tags'] = cleaned
+            data["tags"] = cleaned
     return value
 
 
@@ -203,19 +202,19 @@ def udc_fill_tags_translated_from_core(value, context):
     """
     On show: if tags_translated is absent, seed {default_lang: [core tag names]} in-memory.
     """
-    data = context.get('data') or context.get('data_dict') or {}
-    if isinstance(data.get('tags_translated'), dict) and data['tags_translated']:
+    data = context.get("data") or context.get("data_dict") or {}
+    if isinstance(data.get("tags_translated"), dict) and data["tags_translated"]:
         return value
-    tags = data.get('tags') or []
+    tags = data.get("tags") or []
     names = []
     for t in tags:
-        if isinstance(t, dict) and isinstance(t.get('name'), str):
-            names.append(t['name'])
+        if isinstance(t, dict) and isinstance(t.get("name"), str):
+            names.append(t["name"])
         elif isinstance(t, str):
             names.append(t)
     if names:
-        default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
-        data['tags_translated'] = {default_lang: names}
+        default_lang = tk.config.get("ckan.locale_default", "en") or "en"
+        data["tags_translated"] = {default_lang: names}
     return value
 
 
@@ -223,15 +222,17 @@ def udc_seed_translated_from_core(core_field: str):
     """
     INPUT (create/update): if <translated> is empty, seed {default_lang: core} so it gets stored.
     """
+
     def _seed(value, context):
         if not _is_missing(value) and value:
             return value
-        data = context.get('data') or context.get('data_dict') or {}
+        data = context.get("data") or context.get("data_dict") or {}
         core_val = data.get(core_field)
         if isinstance(core_val, str) and core_val.strip():
-            default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+            default_lang = tk.config.get("ckan.locale_default", "en") or "en"
             return {default_lang: core_val}
         return None
+
     return _seed
 
 
@@ -240,14 +241,16 @@ def udc_fill_translated_from_core_on_show(core_field: str):
     SHOW (read): ensure translated_field appears by seeding from core if absent.
     """
     translated_field = core_field + "_translated"
+
     def _fill(value, context):
-        data = context.get('data') or context.get('data_dict') or {}
+        data = context.get("data") or context.get("data_dict") or {}
         tval = data.get(translated_field)
         if isinstance(tval, dict) and tval:
             return value
         core_val = data.get(core_field)
         if isinstance(core_val, str) and core_val.strip():
-            default_lang = tk.config.get('ckan.locale_default', 'en') or 'en'
+            default_lang = tk.config.get("ckan.locale_default", "en") or "en"
             data[translated_field] = {default_lang: core_val}
         return value
+
     return _fill

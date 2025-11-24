@@ -12,15 +12,22 @@ log = logging.getLogger(__name__)
 def get_udc_langs():
     # read dataset languages, ensure default locale is included
     default_lang = config.get("ckan.locale_default", "en") or "en"
-    langs = config.get("udc.multilingual.languages", default_lang).split()
+    raw_langs = config.get("udc.multilingual.languages", default_lang)
 
-    # Merge and deduplicate, ensuring default is first
-    if default_lang not in langs:
-        langs = [default_lang] + [l for l in langs if l != default_lang]
-    # normalize
-    langs = [l.strip() for l in langs if l.strip()]
+    # normalize and keep original order
+    langs = [l.strip() for l in raw_langs.split() if l.strip()]
 
-    return langs
+    # deduplicate while preserving order
+    seen = set()
+    ordered_langs = []
+    for lang in langs:
+        if lang not in seen:
+            ordered_langs.append(lang)
+            seen.add(lang)
+
+    # ensure default language is first
+    remaining_langs = [lang for lang in ordered_langs if lang != default_lang]
+    return [default_lang] + remaining_langs
 
 
 def get_current_lang():

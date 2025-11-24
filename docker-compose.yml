@@ -1,0 +1,135 @@
+services:
+  db:
+    image: ckan/ckan-postgres-dev:master
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  solr:
+    image: ckan/ckan-solr:master
+    restart: unless-stopped
+    volumes:
+      - solr-data:/var/solr
+    environment:
+      SOLR_HEAP: "512m"
+    ports:
+      - "8983:8983"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8983/solr/ckan/admin/ping?wt=json"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:3
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ckan-install:
+    image: ckan/ckan-dev:2.11
+    user: root
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../ckanext-udc:/srv/app/src/ckanext-udc
+      - pip-cache:/root/.cache/pip
+    command: [
+      "/bin/bash",
+      "-c",
+      "set -euo pipefail && cd /srv/app/src/ckanext-udc && python -m venv .venv && . .venv/bin/activate && pip install --upgrade pip setuptools && pip install -r /srv/app/src/ckan/requirements.txt && pip install -e /srv/app/src/ckan && pip install pytest-factoryboy pytest-cov && pip install -r requirements.txt && pip install -r dev-requirements.txt && pip install -e ."
+    ]
+
+  ckan:
+    image: ckan/ckan-dev:2.11
+    restart: unless-stopped
+    depends_on:
+      ckan-install:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      CKAN_SITE_URL: http://localhost:8080
+      CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@db/ckan_test
+      CKAN_DATASTORE_WRITE_URL: postgresql://datastore_write:pass@db/datastore_test
+      CKAN_DATASTORE_READ_URL: postgresql://datastore_read:pass@db/datastore_test
+      CKAN_SOLR_URL: http://solr:8983/solr/ckan
+      CKAN_REDIS_URL: redis://redis:6379/1
+      PYTHONPATH: /srv/app/src/ckanext-udc/.venv/lib/python3.10/site-packages:/srv/app/src/ckanext-udc/.venv/lib/python3/site-packages:/srv/app/src/ckanext-udc:/srv/app/src/ckan
+      COVERAGE_FILE: /tmp/.coverage
+    volumes:
+      - ../ckanext-udc:/srv/app/src/ckanext-udc
+      - site-storage:/srv/app/storage
+    command: [
+      "/bin/bash",
+      "-c",
+      "set -euo pipefail && test -d /srv/app/src/ckanext-udc/.venv/lib && exec ckan -c /srv/app/src/ckanext-udc/test.ini run --host 0.0.0.0 --port 5000"
+    ]
+    ports:
+      - "8080:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  ckan-test:
+    image: ckan/ckan-dev:2.11
+    restart: "no"
+    depends_on:
+      ckan-install:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      CKAN_SITE_URL: http://localhost:8080
+      CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@db/ckan_test
+      CKAN_DATASTORE_WRITE_URL: postgresql://datastore_write:pass@db/datastore_test
+      CKAN_DATASTORE_READ_URL: postgresql://datastore_read:pass@db/datastore_test
+      CKAN_SOLR_URL: http://solr:8983/solr/ckan
+      CKAN_REDIS_URL: redis://redis:6379/1
+      PYTHONPATH: /srv/app/src/ckanext-udc/.venv/lib/python3.10/site-packages:/srv/app/src/ckanext-udc/.venv/lib/python3/site-packages:/srv/app/src/ckanext-udc:/srv/app/src/ckan
+      COVERAGE_FILE: /tmp/.coverage
+    volumes:
+      - ../ckanext-udc:/srv/app/src/ckanext-udc
+      - site-storage:/srv/app/storage
+    command: [
+      "/bin/bash",
+      "-c",
+      "set -euo pipefail && cd /srv/app/src/ckanext-udc && . .venv/bin/activate && TMP_TEST_INI=$(mktemp /tmp/test.ini.XXXX) && cp test.ini $$TMP_TEST_INI && sed -i -e 's/use = config:.*/use = config:\\/srv\\/app\\/src\\/ckan\\/test-core.ini/' $$TMP_TEST_INI && ckan -c $$TMP_TEST_INI db init && ckan -c $$TMP_TEST_INI udc initdb && pytest --ckan-ini=$$TMP_TEST_INI --cov=ckanext.udc --disable-warnings ckanext/udc"
+    ]
+
+volumes:
+  db-data:
+  solr-data:
+  site-storage:
+  pip-cache:
