@@ -3,7 +3,7 @@ from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
 
 from ckanext.udc_react.constants import UDC_REACT_PATH
 from ckan.types import Schema, Context, CKANApp, Response
-from ckan.common import current_user, CKANConfig
+from ckan.common import current_user, CKANConfig, _
 from werkzeug.exceptions import (
     default_exceptions,
     HTTPException,
@@ -22,24 +22,24 @@ from flask import session, request, Response, abort
 log = logging.getLogger(__name__)
 
 
-MESSAGE_NOT_LOGGED_IN_ADD_TO_CATALOGUE = """
+MESSAGE_NOT_LOGGED_IN_ADD_TO_CATALOGUE = _("""
 You are not authorized to add to the catalogue. Please login to add a catalogue entry. If you do not have an account, please <a href="/user/register">create one</a>.
-"""
-MESSAGE_NOT_LOGGED_IN_CREATE_ORGANIZATION = """
+""")
+MESSAGE_NOT_LOGGED_IN_CREATE_ORGANIZATION = _("""
 You are not authorized to create an organization. Please login to create an organization. If you do not have an account, please <a href="/user/register">create one</a>.
-"""
+""")
 
-MESSAGE_NOT_LOGGED_IN_REQUEST_ORGANIZATION_ACCESS = """
+MESSAGE_NOT_LOGGED_IN_REQUEST_ORGANIZATION_ACCESS = _("""
 You are not authorized to request access to an organization. Please login to request access to an organization. If you do not have an account, please <a href="/user/register">create one</a>.
-"""
+""")
 
-MESSAGE_NOT_LOGGED_IN_WRONG_USER = """
+MESSAGE_NOT_LOGGED_IN_WRONG_USER = _("""
 You are not authorized to access this page. Please login with the correct account.
-"""
+""")
 
-MESSAGE_NOT_LOGGED_IN_VIEW_ORGANIZATION_ACCESS_REQUESTS = """
+MESSAGE_NOT_LOGGED_IN_VIEW_ORGANIZATION_ACCESS_REQUESTS = _("""
 You are not authorized to view organization access requests. Please login to view organization access requests.
-"""
+""")
 
 
 def clear_and_flash(message, category):

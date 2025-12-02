@@ -8,13 +8,6 @@ for (const [k, v] of currURLSearchParams.entries()) {
     }
 }
 
-const AND_TEXT = "Match all selected (AND)";
-const OR_TEXT = "Match any selected (OR)";
-const INCLUDE_UNDEFINED_DATE = 'Include items without a date';
-const EXCLUDE_UNDEFINED_DATE = 'Exclude items without a date';
-const INCLUDE_UNDEFINED_NUMBER = 'Include items without a number';
-const EXCLUDE_UNDEFINED_NUMBER = 'Exclude items without a number';
-
 function multiSelectLabelRenderer(data) {
     if (data.isNew) {
         return `Search for "${data.label}"`;
@@ -28,6 +21,7 @@ const CKANFields = ["title", "notes", "url", "version",
 this.ckan.module('advanced-filter', function ($) {
     return {
         initialize: async function () {
+            const self = this;
             const container = this.el[0].querySelector('#filter-loader');
             const filterContainer = document.querySelector('#filters-container');
 
@@ -38,7 +32,7 @@ this.ckan.module('advanced-filter', function ($) {
             const facetsData = await fetch("/api/3/action/filter_facets_get?lang=" + (window.facets.currentLang || "en"))
                 .then(response => {
                     if (!response.ok) {
-                        errorBlock.textContent = 'Failed to load filters.';
+                        errorBlock.textContent = self._('Failed to load filters.');
                         throw new Error(`Network response was not ok: ${response.statusText}`);
                     }
                     return response.json();
@@ -61,14 +55,14 @@ this.ckan.module('advanced-filter', function ($) {
                         return sortedFacets;
 
                     } else {
-                        errorBlock.textContent = 'Server error when retrieving filters.';
+                        errorBlock.textContent = self._('Server error when retrieving filters.');
                         console.error('API response was not successful');
 
                         return null;
                     }
                 })
                 .catch(error => {
-                    errorBlock.textContent = 'Error fetching filter data.';
+                    errorBlock.textContent = self._('Error fetching filter data.');
                     console.error('Fetch error:', error);
                 });
 
@@ -110,6 +104,7 @@ this.ckan.module('filter-multiple-select', function ($) {
 
         },
         _init: function (facetsData) {
+            const self = this;
 
             const id = this.el[0].getAttribute("id");
             const fieldName = this.el[0].getAttribute("name");
@@ -146,7 +141,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                 const html = `
                 <div class="row g-4">
                     <div class="col">
-                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">Min</label>
+                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">${self._('Min')}</label>
                         <input
                             type="number"
                             class="form-control"
@@ -155,7 +150,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                         />
                     </div>
                     <div class="col">
-                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">Max</label>
+                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">${self._('Max')}</label>
                         <input
                             type="number"
                             class="form-control"
@@ -172,22 +167,22 @@ this.ckan.module('filter-multiple-select', function ($) {
                 const checkboxHTML  = `
                 <div class="form-check form-switch mt-1">
                     <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
-                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${EXCLUDE_UNDEFINED_NUMBER}</label>
+                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${self._('Exclude items without a number')}</label>
                 </div>`.trim();
                 this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
 
                 // Check if the filter logic is set
                 if (urlParams.has(`filter-logic-${fieldName}`)) {
                     document.getElementById(`filter-toggle-${fieldName}`).checked = true;
-                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = INCLUDE_UNDEFINED_NUMBER;
+                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Include items without a number');
                 }
 
                 document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
                     const label = document.getElementById(`filter-toggle-label-${fieldName}`);
                     if (this.checked) {
-                        label.textContent = INCLUDE_UNDEFINED_NUMBER;
+                        label.textContent = self._('Include items without a number');
                     } else {
-                        label.textContent = EXCLUDE_UNDEFINED_NUMBER;
+                        label.textContent = self._('Exclude items without a number');
                     }
                 });
             }
@@ -206,7 +201,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                 const html = `
                 <div class="row g-4">
                     <div class="col">
-                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">Start</label>
+                        <label for="${`filter-${fieldName}-min`}" style="font-weight:initial;">${self._('Start')}</label>
                         <input
                             type="date"
                             class="form-control"
@@ -215,7 +210,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                         />
                     </div>
                     <div class="col">
-                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">End</label>
+                        <label for="${`filter-${fieldName}-max`}" style="font-weight:initial;">${self._('End')}</label>
                         <input
                             type="date"
                             class="form-control"
@@ -232,22 +227,22 @@ this.ckan.module('filter-multiple-select', function ($) {
                 const checkboxHTML  = `
                 <div class="form-check form-switch mt-1">
                     <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
-                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${EXCLUDE_UNDEFINED_DATE}</label>
+                    <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${self._('Exclude items without a date')}</label>
                 </div>`.trim();
                 this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
 
                 // Check if the filter logic is set
                 if (urlParams.has(`filter-logic-${fieldName}`)) {
                     document.getElementById(`filter-toggle-${fieldName}`).checked = true;
-                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = INCLUDE_UNDEFINED_DATE;
+                    document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Include items without a date');
                 }
 
                 document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
                     const label = document.getElementById(`filter-toggle-label-${fieldName}`);
                     if (this.checked) {
-                        label.textContent = INCLUDE_UNDEFINED_DATE;
+                        label.textContent = self._('Include items without a date');
                     } else {
-                        label.textContent = EXCLUDE_UNDEFINED_DATE;
+                        label.textContent = self._('Exclude items without a date');
                     }
                 });
             
@@ -260,22 +255,22 @@ this.ckan.module('filter-multiple-select', function ($) {
                     const html = `
                         <div class="form-check form-switch mt-1">
                             <input class="form-check-input" type="checkbox" role="switch" id="${`filter-toggle-${fieldName}`}">
-                            <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${OR_TEXT}</label>
+                            <label class="form-check-label" for="${`filter-toggle-${fieldName}`}" id="${`filter-toggle-label-${fieldName}`}">${self._('Match any selected (OR)')}</label>
                         </div>`.trim();
                     this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', html);
 
                     // Check if the filter logic is set to "and"
                     if (urlParams.has(`filter-logic-${fieldName}`) && urlParams.get(`filter-logic-${fieldName}`)[0] === "AND") {
                         document.getElementById(`filter-toggle-${fieldName}`).checked = true;
-                        document.getElementById(`filter-toggle-label-${fieldName}`).textContent = AND_TEXT;
+                        document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Match all selected (AND)');
                     }
 
                     document.getElementById(`filter-toggle-${fieldName}`).addEventListener('change', function (e) {
                         const label = document.getElementById(`filter-toggle-label-${fieldName}`);
                         if (this.checked) {
-                            label.textContent = AND_TEXT;
+                            label.textContent = self._('Match all selected (AND)');
                         } else {
-                            label.textContent = OR_TEXT;
+                            label.textContent = self._('Match any selected (OR)');
                         }
                     });
 

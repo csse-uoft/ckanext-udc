@@ -69,7 +69,7 @@ this.ckan.module('package-form', function ($) {
       VirtualSelect.init({
         ele: '#field-license_id',
         search: true, multiple: false, maxWidth: '100%',
-        placeholder: 'Please select the license',
+        placeholder: this._('Please select the license'),
         options: options, selectedValue: selectedValue,
         hasOptionDescription: false, optionsCount: 6, optionHeight: '40px'
       });
@@ -403,7 +403,7 @@ this.ckan.module('package-form', function ($) {
         }
         var pct = Math.round((filled / (fe.length || 1)) * 100);
         if (bar) { bar.innerHTML = pct + '%'; bar.style = 'width: ' + pct + '%'; }
-        if (this.tabs[i]) this.tabs[i].innerHTML = 'Maturity Level ' + (i + 1) + ' (' + pct + '%)';
+        if (this.tabs[i]) this.tabs[i].innerHTML = this._('Maturity Level') + ' ' + (i + 1) + ' (' + pct + '%)';
       }
     }
   };

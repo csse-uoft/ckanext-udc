@@ -7,6 +7,7 @@ from collections import OrderedDict
 from typing import Any, Callable, Collection, KeysView, Optional, Union, cast
 
 from ckan.types import Schema, Context
+from ckan.common import _
 import ckan
 import ckan.plugins as plugins
 import ckan.logic as logic
@@ -56,7 +57,7 @@ def package_update(original_action, context, data_dict):
     except Exception as e:
         log.error(e)
         print(e)
-        raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
+        raise logic.ValidationError([_("Error occurred in updating the knowledge graph, please contact administrator:\n") + str(e)])
     return result
 
 @side_effect_free
@@ -70,7 +71,7 @@ def package_delete(original_action, context, data_dict):
     except Exception as e:
         log.error(e)
         print(e)
-        raise logic.ValidationError(["Error occurred in updating the knowledge graph, please contact administrator:\n" + str(e)])
+        raise logic.ValidationError([_("Error occurred in updating the knowledge graph, please contact administrator:\n") + str(e)])
     return result
 
 
@@ -81,22 +82,22 @@ def humanize_entity_type(next_helper: Callable[..., Any],
 
     if (entity_type, object_type) == ("package", "catalogue"):
         if purpose == "main nav":
-            return "Catalogue"
+            return _("Catalogue")
         elif purpose == "search placeholder":
-            return "Search Catalogue Entries"
+            return _("Search Catalogue Entries")
         elif purpose == "search_placeholder":
             # Don't know where is this used.
-            return "Catalogue Entry"
+            return _("Catalogue Entry")
         elif purpose == "create title":
-            return "Create Catalogue Entry"
+            return _("Create Catalogue Entry")
         elif purpose == "create label":
-            return "Create Catalogue Entry"
+            return _("Create Catalogue Entry")
         elif purpose == "add link":
-            return "Add Catalogue Entry"
+            return _("Add Catalogue Entry")
         elif purpose == "no description":
-            return "There is no description for this catalogue entry"
+            return _("There is no description for this catalogue entry")
         elif purpose == "view label":
-            return "View Catalogue Entry"
+            return _("View Catalogue Entry")
 
 
     original_text = next_helper(entity_type, object_type, purpose)

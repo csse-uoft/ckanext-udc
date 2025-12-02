@@ -23,17 +23,17 @@
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="min-width:550px">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Maturity Model Filter</h5>
+        <h5 class="modal-title" id="exampleModalLabel">{{_('Maturity Model Filter')}}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body" data-module="advanced-filter">
         <div id="filter-loader" class="text-center p-4">
           <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading filters...</span>
+            <span class="visually-hidden">{{_('Loading filters...')}}</span>
           </div>
           <span class="error-block" style="display:none"></span>
-          <div>Loading filters...</div>
+          <div>{{_('Loading filters...')}}</div>
         </div>
         
         {# The content of the maturity filter popup #}
@@ -48,7 +48,7 @@
 
             {% for level in h.config %}
               <li class="nav-item" role="presentation">
-                <button class="{{'nav-link active' if loop.index == 1 else 'nav-link'}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+                <button class="{{'nav-link active' if loop.index == 1 else 'nav-link'}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">{{ _('Maturity Level') }} {{ loop.index }}</button>
               </li>
             {% endfor %}
 
@@ -115,8 +115,8 @@
       </div>
         
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" data-module="filter-apply-button">Apply</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{_('Close')}}</button>
+        <button type="button" class="btn btn-primary" data-module="filter-apply-button">{{_('Apply')}}</button>
       </div>
     </div>
   </div>

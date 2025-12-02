@@ -4,7 +4,7 @@
 {% block admin_form_help %}
   {{ super() }}
   {% set udc_help = "https://github.com/csse-uoft/ckanext-udc#supported-ckan-fields" %}
-  <p><strong>UDC Config:</strong> This is the JSON config that defines the maturity model and mappings. See <a href="{{ udc_help }}" target="_blank">supported CKAN fields</a>.</p>
+  <p>{% trans udc_help=udc_help %}<strong>UDC Config:</strong> This is the JSON config that defines the maturity model and mappings. See <a href="{{ udc_help }}" target="_blank">supported CKAN fields</a>.{% endtrans %}</p>
   
 {% endblock %}
 
@@ -14,7 +14,7 @@
 
   {{ super() }}
   
-  <h3>UDC configuration options </h3>
+  <h3>{{_('UDC configuration options')}}</h3>
   {{ form.markdown('ckanext.udc.organization_side_panel_text', id='field-ckanext.udc.organization_side_panel_text', label=_('Organization Side Panel Text'), value=data['ckanext.udc.organization_side_panel_text'], error=errors['ckanext.udc.organization_side_panel_text'], attrs={'class': 'form-control'}) }}
   {{ form.markdown('ckanext.udc.group_side_panel_text', id='field-ckanext.udc.group_side_panel_text', label=_('Group Side Panel Text'), value=data['ckanext.udc.group_side_panel_text'], error=errors['ckanext.udc.group_side_panel_text'], attrs={'class': 'form-control'}) }}
   {{ form.markdown('ckanext.udc.catalogue_side_panel_text', id='field-ckanext.udc.catalogue_side_panel_text', label=_('Add Catalogue Side Panel Text'), value=data['ckanext.udc.catalogue_side_panel_text'], error=errors['ckanext.udc.catalogue_side_panel_text'], attrs={'class': 'form-control'}) }}

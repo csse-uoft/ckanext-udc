@@ -41,7 +41,7 @@ then itself be extended to add/remove blocks of functionality. #}
     <ul class="nav nav-tabs" id="datasetTab" style="margin-bottom:10px">
       {% for level in h.config %}
         <li class="nav-item" role="presentation">
-          <button class="nav-link{{" active" if loop.index == 1}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">Maturity Level {{ loop.index }}</button>
+          <button class="nav-link{{" active" if loop.index == 1}}" id="{{ level["name"] }}-tab" data-bs-toggle="tab" data-bs-target="#{{ level["name"] }}" type="button" role="tab">{{ _('Maturity Level') }} {{ loop.index }}</button>
         </li>
       {% endfor %}
 

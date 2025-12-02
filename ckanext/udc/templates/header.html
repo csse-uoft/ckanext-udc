@@ -9,23 +9,23 @@
 
   <ul class="nav navbar-nav ms-auto mb-2 mb-lg-0">
 
-    <li><a href="/">Home</a></li>
+    <li><a href="{{ h.url_for('home.index') }}">{{_('Home')}}</a></li>
 
 
     <li class="dropdown">
-      <a href="/catalogue/new" class="dropdown-toggle" data-toggle="dropdown">{{_('Add to Catalogue')}}</a>
+      <a href="{{ h.url_for('dataset.new') }}" class="dropdown-toggle" data-toggle="dropdown">{{_('Add to Catalogue')}}</a>
       <ul class="dropdown-menu">
-        <li><a href="/catalogue/new">{{_('Add to Catalogue')}}</a></li>
-        <li><a href="/catalogue/">{{_('View Catalogue')}}</a></li>
+        <li><a href="{{ h.url_for('dataset.new') }}">{{_('Add to Catalogue')}}</a></li>
+        <li><a href="{{ h.url_for('dataset.search') }}">{{_('View Catalogue')}}</a></li>
       </ul>
     </li>
 
     <li class="dropdown">
-      <a href="/organization/" class="dropdown-toggle" data-toggle="dropdown">{{_('Organizations')}}</a>
+      <a href="{{ h.url_for('organization.index') }}" class="dropdown-toggle" data-toggle="dropdown">{{_('Organizations')}}</a>
       <ul class="dropdown-menu">
-        <li class="d-lg-none"><a href="/organization/">{{_('View Organizations')}}</a></li>
-        <li><a href="/organization/new">{{_('Create an Organization')}}</a></li>
-        <li><a href="/organization/">{{_('View Organizations')}}</a></li>
+        <li class="d-lg-none"><a href="{{ h.url_for('organization.index') }}">{{_('View Organizations')}}</a></li>
+        <li><a href="{{ h.url_for('organization.new') }}">{{_('Create an Organization')}}</a></li>
+        <li><a href="{{ h.url_for('organization.index') }}">{{_('View Organizations')}}</a></li>
         <li><a href="/udrc/request-organization-access">{{_('Request to Join an Organization')}}</a></li>
       </ul>
     </li>
@@ -33,7 +33,7 @@
     {{ h.build_nav_main(
       ('home.about', _('About')) ) }}
 
-    <li><a href="/udrc/faq/create-catalogue-entry">FAQ</a></li>
+    <li><a href="/udrc/faq/create-catalogue-entry">{{_('FAQ')}}</a></li>
   </ul>
 
 

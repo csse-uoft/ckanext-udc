@@ -3,6 +3,7 @@ import ckan.plugins as plugins
 import logging
 import re
 import json
+from ckan.common import _
 
 from ckanext.udc.graph.queries import get_client
 from ckanext.udc.graph.preload import dropdown_reload
@@ -19,17 +20,17 @@ def file_format_create(context, data_dict):
     """
     
     if plugins.get_plugin('udc').disable_graphdb:
-        raise logic.ValidationError("GraphDB integration is not enabled")
+        raise logic.ValidationError(_("GraphDB integration is not enabled"))
     
     user = context.get("user")
     id = data_dict.get('id')
     label = data_dict.get('label')
     
     if not user:
-        raise logic.ValidationError("You are not logged in")
+        raise logic.ValidationError(_("You are not logged in"))
 
     if not label:
-        raise logic.ValidationError("file format label is required")
+        raise logic.ValidationError(_("file format label is required"))
     
     if not id:
         # Replace whitespaces
@@ -79,7 +80,7 @@ def file_formats_get(context):
     try:
         data = client.execute_sparql(query)
     except Exception as e:
-        raise logic.ActionError("Error in KG:" + str(e))
+        raise logic.ActionError(_("Error in KG:") + str(e))
     
     result = []
     for item in result["results"]["bindings"]:
@@ -95,19 +96,19 @@ def file_format_delete(context, data_dict):
     Admin can delete a custom file format.
     """
     if plugins.get_plugin('udc').disable_graphdb:
-        raise logic.ValidationError("GraphDB integration is not enabled")
+        raise logic.ValidationError(_("GraphDB integration is not enabled"))
     
     user = context.get("user")
     id = data_dict.get('id')
     
     if not user:
-        raise logic.ValidationError("You are not logged in")
+        raise logic.ValidationError(_("You are not logged in"))
     
     if not id:
-        raise logic.ValidationError("file format id is required")
+        raise logic.ValidationError(_("file format id is required"))
 
     if not authz.is_sysadmin(user):
-        raise logic.NotAuthorized("You are not authorized to delete this file format")
+        raise logic.NotAuthorized(_("You are not authorized to delete this file format"))
     
     query = f"""
     PREFIX cff: <{PREFIX}>

@@ -51,7 +51,7 @@
                 data-bs-toggle="tab"
                 data-bs-target="#{{ level["name"] }}"
                 type="button" role="tab">
-          Maturity Level {{ loop.index }} ({{ maturity_percentages[loop.index - 1] }})
+          {{ _('Maturity Level') }} {{ loop.index }} ({{ maturity_percentages[loop.index - 1] }})
         </button>
       </li>
     {% endfor %}

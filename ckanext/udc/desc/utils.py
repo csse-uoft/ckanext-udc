@@ -2,6 +2,7 @@ import ckan.plugins.toolkit as tk
 from ckan.types import Context
 import ckan.logic as logic
 from ckan.plugins import get_plugin
+from ckan.common import _
 
 
 import json
@@ -28,7 +29,7 @@ def get_package(context: Context, package_id: str):
 def get_config():
     config = tk.config.get("ckanext.udc.desc.config")
     if not config:
-        raise logic.ActionError("ckanext.udc.desc config is not set")
+        raise logic.ActionError(_("ckanext.udc.desc config is not set"))
     config = json.loads(config)
     
     return {**default_config, **config, "maturity_model": get_plugin('udc').maturity_model}

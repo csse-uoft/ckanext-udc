@@ -61,42 +61,42 @@
     <div class="controls">
       <div id="field-license_id" name="license_id" value="{{ data.get('license_id') }}">
         <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">{{_('Loading...')}}</span>
         </div>
       </div>
       {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
 
-      <button type="button" id="add-license-popover-btn" class="btn btn-outline-secondary mt-2"><i class="fa-solid fa-plus"></i> <span class="ms-1">Add Custom License</span></button>
+      <button type="button" id="add-license-popover-btn" class="btn btn-outline-secondary mt-2"><i class="fa-solid fa-plus"></i> <span class="ms-1">{{_('Add Custom License')}}</span></button>
       <div class="add-license-container hidden">
         <input type="hidden" id="license-create-api" name="license-create-api" form="create-license-form" value="{{ h.url_for('api.action', ver=3, logic_function='license_create') }}"/>
         {# Nested Form #}
         <div class="row g-3">
           <div class="col-6">
-            <label for="new-license-title" class="form-label">License Title</label>
+            <label for="new-license-title" class="form-label">{{_('License Title')}}</label>
             <input class="form-control" id="new-license-title" name="title" form="create-license-form" required/>
           </div>
           <div class="col-6">
-            <label for="new-license-id" class="form-label">License ID</label>
+            <label for="new-license-id" class="form-label">{{_('License ID')}}</label>
             <input class="form-control" id="new-license-id" name="id" form="create-license-form" required/>
             <span class="info-block">
-              A Unique ID for the license.
+              {{_('A Unique ID for the license.')}}
             </span>
           </div>
         </div>
         
         <div class="mb-3">
-          <label for="new-license-url" class="form-label">License URL</label>
+          <label for="new-license-url" class="form-label">{{_('License URL')}}</label>
           <input class="form-control" id="new-license-url" name="url" form="create-license-form" required/>
           <span class="info-block">
-            The link to the license.
+            {{_('The link to the license.')}}
           </span>
         </div>
 
         <div class="row m-1">
-          <button type="submit" class="btn btn-primary col-sm-auto" form="create-license-form">Add and Select</button>
+          <button type="submit" class="btn btn-primary col-sm-auto" form="create-license-form">{{_('Add and Select')}}</button>
 
           <span id="new-license-error" class="error-text d-none col-sm-auto"></span>
-          <span id="new-license-success" class="success-text d-none col-sm-auto"> <i class="fa-solid fa-check"></i> Success</span>
+          <span id="new-license-success" class="success-text d-none col-sm-auto"> <i class="fa-solid fa-check"></i> {{_('Success')}}</span>
         </div>
       </div>
 

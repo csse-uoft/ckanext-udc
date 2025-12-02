@@ -2,6 +2,7 @@ import ckan.authz as authz
 from ckan.types import Context
 import ckan.logic as logic
 from ckan.types import Context
+from ckan.common import _
 
 
 from typing import List, Dict, cast
@@ -232,26 +233,26 @@ def summary_generate(context: Context, package_id: str):
 
     except Exception as e:
         raise logic.ActionError(
-            f"\nError while generating summary using OpenAI. Exited with error: {str(e)}"
+            _("\nError while generating summary using OpenAI. Exited with error: ") + str(e)
         )
 
 def update_summary(context: Context, data: dict):
     # Check admin
     if not authz.is_sysadmin(context.get('user')):
-        raise logic.NotAuthorized("You are not authorized to view this page")
+        raise logic.NotAuthorized(_("You are not authorized to view this page"))
     
     package_id = data.get("package_id")
     summary = data.get("summary")
     
     if not package_id:
-        raise logic.ValidationError("package_id is required")
+        raise logic.ValidationError(_("package_id is required"))
     if not summary:
-        raise logic.ValidationError("summary is required")
+        raise logic.ValidationError(_("summary is required"))
     
     package = get_package(context, package_id)
     
     if not package:
-        raise logic.ValidationError("Package not found")
+        raise logic.ValidationError(_("Package not found"))
     
     package["summary"] = summary
     
@@ -267,6 +268,6 @@ def update_summary(context: Context, data: dict):
 def default_ai_summary_config(context: Context, data: dict):
     # Check admin
     if not authz.is_sysadmin(context.get('user')):
-        raise logic.NotAuthorized("You are not authorized to view this page")
+        raise logic.NotAuthorized(_("You are not authorized to view this page"))
     
     return default_config

@@ -31,6 +31,7 @@ import ckan.lib.helpers as h
 from ckan.lib.helpers import Page
 from ckan.common import asbool, current_user, CKANConfig, request, g, config, _
 from ckan.lib.search import SearchQueryError, SearchError
+from ckan.lib.plugins import DefaultTranslation
 
 from flask import Blueprint
 
@@ -108,7 +109,7 @@ if hasattr(ckan, "cli") and hasattr(ckan.cli, "cli"):
 
 
 @tk.blanket.blueprints
-class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
+class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslation):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IDatasetForm)
@@ -119,6 +120,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IMiddleware)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IValidators)
+    plugins.implements(plugins.ITranslation)
 
     disable_graphdb = False
     maturity_model = []

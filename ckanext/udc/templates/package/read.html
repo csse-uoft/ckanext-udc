@@ -18,7 +18,7 @@
         title="This description is AI-genetated using information in the maturity metadata model for this catalogue entry."
         style="background-color:rgb(101 101 101) !important; margin-top: -14px;font-size: 0.8rem; gap: 4px; cursor: help;">
         <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 24 24" width="18" fill="white"><path d="M0 0h24v24H0z" fill="none"/><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>
-        AI Generated
+        {{_('AI Generated')}}
       </span>
       <br/>
     </div>
@@ -30,7 +30,7 @@
 {% block package_resources %}
 
   {% if pkg_dict.get("related_packages") | length > 0 %}
-    <h2>Related Catalogue Entries:</h2>
+    <h2>{{_('Related Catalogue Entries:')}}</h2>
     <div id="related-packages">
       {% for package in pkg_dict.get("related_packages") %}
         {% if package.get("name").startswith("unified-") %}

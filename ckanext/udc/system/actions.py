@@ -3,12 +3,13 @@ import ckan.authz as authz
 from ckan.types import Context
 import ckan.logic as logic
 from ckan.types import Context
+from ckan.common import _
 
 
 def reload_supervisord(context: Context, data: dict) -> str:
     # Check admin
     if not authz.is_sysadmin(context.get("user")):
-        raise logic.NotAuthorized("You are not authorized to view this page")
+        raise logic.NotAuthorized(_("You are not authorized to view this page"))
 
     task = data.get("task")
     if task == "ckan":
@@ -18,7 +19,7 @@ def reload_supervisord(context: Context, data: dict) -> str:
     elif task == "all":
         target = "all"
     else:
-        raise logic.ValidationError("task must be one of 'ckan', 'worker', or 'all'")
+        raise logic.ValidationError(_("task must be one of 'ckan', 'worker', or 'all'"))
 
     try:
         subprocess.run(["sudo", "supervisorctl", "restart", target], check=True)

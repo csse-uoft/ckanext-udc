@@ -21,23 +21,23 @@ def license_create(context, data_dict):
     url = data_dict.get('url')
     
     if not user:
-        raise logic.ValidationError("You are not logged in")
+        raise logic.ValidationError(_("You are not logged in"))
 
     # Validate that we have the required fields.
     if not id:
-        raise logic.ValidationError("licencse id is required")
+        raise logic.ValidationError(_("license id is required"))
     
     if not title:
-        raise logic.ValidationError("licencse title is required")
+        raise logic.ValidationError(_("license title is required"))
     
     if not url:
-        raise logic.ValidationError("licencse url is required")
+        raise logic.ValidationError(_("license url is required"))
     
     license_register = model.Package.get_license_register()
     registered_ids = set([license.id for license in license_register.licenses])
     
     if data_dict['id'] in registered_ids:
-        raise logic.ValidationError("licencse id existed")
+        raise logic.ValidationError(_("license id already exists"))
 
     # Create the object
     userobj = model.User.get(user)
@@ -67,7 +67,7 @@ def license_delete(context, data_dict):
     license = CustomLicense.get(data_dict["id"])
     
     if not authz.is_sysadmin(user) and not license.user_id == userobj.id:
-        raise logic.NotAuthorized("You are not authorized to delete this license")
+        raise logic.NotAuthorized(_("You are not authorized to delete this license"))
     
     # Check if any package uses the license
     cnt = model.Session.query(model.Package) \
@@ -75,7 +75,7 @@ def license_delete(context, data_dict):
             .count()
         
     if cnt > 0:
-        raise logic.ValidationError("The license is in use and cannot be deleted")
+        raise logic.ValidationError(_("The license is in use and cannot be deleted"))
     
     model.Session.delete(license)
     model.Session.commit()
@@ -125,7 +125,7 @@ def license_update(context, data_dict):
     license = CustomLicense.get(data_dict["id"])
     
     if not authz.is_sysadmin(user) and not license.user_id == userobj.id:
-        raise logic.NotAuthorized("You are not authorized to update this license")
+        raise logic.NotAuthorized(_("You are not authorized to update this license"))
     
     if data_dict.get('title'):
         license.title = data_dict['title']

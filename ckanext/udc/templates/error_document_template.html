@@ -10,8 +10,8 @@
       {% endif %}
       {% if code == 403 and request.path == '/catalogue/new' and not show_login_redirect_link %}
         
-        <h4>Sorry, you need to be added to an organization to add a catalogue entry.</h4>
-        <h4>Please contact an organization admin or <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a> to add you to an organization.</h4>
+        <h4>{{_('Sorry, you need to be added to an organization to add a catalogue entry.')}}</h4>
+        <h4>{% trans reply_to=reply_to %}Please contact an organization admin or <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a> to add you to an organization.{% endtrans %}</h4>
 
       {% else %}
         <h4>{{content}}</h4>
@@ -19,7 +19,7 @@
 
       {% if request.path == '/catalogue/new' %}
         <br/>
-        <h4>See <a style="text-decoration: underline;" href="/udrc/faq/create-catalogue-entry" target="_blank">tutorial</a> on how to add a catalogue entry.</h4>
+        <h4>{% trans %}See <a style="text-decoration: underline;" href="/udrc/faq/create-catalogue-entry" target="_blank">tutorial</a> on how to add a catalogue entry.{% endtrans %}</h4>
       {% endif %}
       
     </div>
@@ -31,7 +31,7 @@
   {% endif %}
   {% endblock %}
   <div class="module-content">
-    If you think this is a server error, please contact the <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a>.
+    {% trans reply_to=reply_to %}If you think this is a server error, please contact the <a href="mailto:{{ reply_to }}" style="text-decoration: underline;">site administrator</a>.{% endtrans %}
   </div>
   
   </article>

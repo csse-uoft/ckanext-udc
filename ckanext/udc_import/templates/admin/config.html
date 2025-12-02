@@ -3,7 +3,7 @@
 
 {% block admin_form_help %}
   {{ super() }}
-  <p><strong>UDC Import Side Panel Text:</strong> The text will appear on import page </a>.</p>
+  <p>{{_('<strong>UDC Import Side Panel Text:</strong> The text will appear on import page </a>.')}}</p>
   
 {% endblock %}
 
@@ -12,7 +12,7 @@
 {% block admin_form %}
 
   {{ super() }}
-  <h3>UDC Import configuration options </h3>
+  <h3>{{_('UDC Import configuration options')}}</h3>
   {{ form.markdown('ckanext.udc_import.side_panel_text', id='field-ckanext.udc_import.side_panel_text', label=_('UDC Import Side Panel Text'), value=data['ckanext.udc_import.side_panel_text'], error=errors['ckanext.udc_import.side_panel_text'], attrs={'class': 'form-control'}) }}
   
 {% endblock %}
