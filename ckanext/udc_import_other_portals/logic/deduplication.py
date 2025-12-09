@@ -190,6 +190,51 @@ def create_unified_package(
     except Exception as e:
         raise e
 
+    # Prepare version / versions JSON helpers
+    site_url = toolkit.config.get("ckan.site_url", "").rstrip("/")
+
+    def _pkg_url(pkg_dict: dict) -> str:
+        name = pkg_dict.get("name") or pkg_dict.get("id")
+        return f"{site_url}/dataset/{name}" if site_url and name else ""
+
+    def _pkg_label(pkg_dict: dict) -> str:
+        title = pkg_dict.get("title") or ""
+        return title
+
+    unified_version_dataset = None
+    if linked_packages:
+        unified_version_dataset = {
+            "url": _pkg_url(result),
+            "title": _pkg_label(result),
+        }
+
+    # Update unified package extras: it links to all children via dataset_versions
+    unified_dataset_versions = []
+    for p in linked_packages:
+        url = _pkg_url(p)
+        if not url:
+            continue
+        unified_dataset_versions.append(
+            {
+                "url": url,
+                "title": _pkg_label(p),
+            }
+        )
+
+    if unified_dataset_versions:
+        context_unified = dict(context)
+        context_unified["user"] = context.get("user") or getattr(
+            current_user, "name", None
+        )
+        logic.get_action("package_patch")(
+            context_unified,
+            {
+                "id": result["id"],
+                "version_dataset": None,
+                "dataset_versions": unified_dataset_versions,
+            },
+        )
+
     # Create relations with other linked packages
     relationships_as_subject = [
         {"subject": result["id"], "object": p["id"], "type": "unified_package_of"}
@@ -199,7 +244,41 @@ def create_unified_package(
     for rel in relationships_as_subject:
         logic.check_access("package_relationship_create", context, rel)
         print("create relation:", rel)
-        result = logic.get_action("package_relationship_create")(context, rel)
+        result_rel = logic.get_action("package_relationship_create")(context, rel)
+
+    # Update each linked (child) package extras:
+    # - version_dataset points to unified package
+    # - dataset_versions is all other children in the group
+    for child in linked_packages:
+        child_id = child.get("id")
+        if not child_id:
+            continue
+
+        siblings = [p for p in linked_packages if p.get("id") != child_id]
+        child_dataset_versions = []
+        for sib in siblings:
+            url = _pkg_url(sib)
+            if not url:
+                continue
+            child_dataset_versions.append(
+                {
+                    "url": url,
+                    "title": _pkg_label(sib),
+                }
+            )
+
+        context_child = dict(context)
+        context_child["user"] = context.get("user") or getattr(
+            current_user, "name", None
+        )
+        logic.get_action("package_patch")(
+            context_child,
+            {
+                "id": child_id,
+                "version_dataset": unified_version_dataset,
+                "dataset_versions": child_dataset_versions,
+            },
+        )
        
         # notes: solr does not seem to be updated correctly, ignore solr for now
         # solr update here

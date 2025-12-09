@@ -9,9 +9,10 @@ GET = 'GET'
 
 
 class SPARQLResponse:
-    def __init__(self, response: requests.Response, is_update=False):
+    def __init__(self, response: requests.Response, is_update=False, is_graph_query=False):
         self.response = response
         self.is_update = is_update
+        self.is_graph_query = is_graph_query
         if response.status_code >= 400:
             raise ValueError(f'{response.status_code}: {response.text}')
 
@@ -19,6 +20,10 @@ class SPARQLResponse:
         if self.is_update:
             return
         return self.response.json()
+    
+    def text(self):
+        """Return text response for CONSTRUCT/DESCRIBE queries"""
+        return self.response.text
 
 
 class SPARQLWrapper:
@@ -51,13 +56,28 @@ class SPARQLWrapper:
             return False
         else:
             return True
+    
+    @staticmethod
+    def is_graph_query(query_string):
+        """
+        Check if the query is a CONSTRUCT or DESCRIBE query that returns RDF graph.
+        """
+        # Remove prefixes
+        query_string = re.sub(re.compile(SPARQLWrapper.PrefixDecl), '', query_string)
+        # Remove comments
+        query_string = re.sub(r'^\s*#.*$', '', query_string, flags=re.MULTILINE)
+        # Trim the query
+        query_string = query_string.strip()
+        return bool(re.match(r'^(construct|describe)', query_string, re.IGNORECASE))
 
-    def __init__(self, endpoint, retry_attempts = 3, is_update=False):
+    def __init__(self, endpoint, retry_attempts = 3, is_update=False, is_graph_query=False):
         """
         retry_attempts: number of retry attempts after timeouts
+        is_graph_query: True if query is CONSTRUCT/DESCRIBE (returns RDF graph)
         """
         self.endpoint = endpoint
         self.is_update = is_update
+        self.is_graph_query = is_graph_query
         self.username = None
         self.password = None
         self.method = 'POST'
@@ -96,6 +116,14 @@ class SPARQLWrapper:
                                                     'Accept': 'text/plain',
                                                     'Content-Type': 'application/x-www-form-urlencoded'
                                                 })
+            elif self.is_graph_query:
+                # CONSTRUCT/DESCRIBE queries return RDF graphs, not JSON results
+                response = self.session.request(self.method, self.endpoint,
+                                                data=f'query={urllib.parse.quote(self._query)}&infer={"true" if infer else "false"}',
+                                                headers={
+                                                    'Accept': 'text/turtle, application/rdf+xml, application/n-triples',
+                                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                                })
             else:
                 response = self.session.request(self.method, self.endpoint,
                                                 data=f'query={urllib.parse.quote(self._query)}&infer={"true" if infer else "false"}',
@@ -106,51 +134,68 @@ class SPARQLWrapper:
         elif self.method == GET:
             if self.is_update:
                 raise ValueError('update operations MUST be done by POST')
-
-            response = self.session.request(self.method, self.endpoint,
-                                            params={'query': urllib.parse.quote(self._query), 'infer': "true" if infer else "false"},
-                                            headers={
-                                                'Accept': 'application/x-sparqlstar-results+json,application/sparql-results+json'
-                                            })
+            
+            if self.is_graph_query:
+                response = self.session.request(self.method, self.endpoint,
+                                                params={'query': urllib.parse.quote(self._query), 'infer': "true" if infer else "false"},
+                                                headers={
+                                                    'Accept': 'text/turtle, application/rdf+xml, application/n-triples'
+                                                })
+            else:
+                response = self.session.request(self.method, self.endpoint,
+                                                params={'query': urllib.parse.quote(self._query), 'infer': "true" if infer else "false"},
+                                                headers={
+                                                    'Accept': 'application/x-sparqlstar-results+json,application/sparql-results+json'
+                                                })
         else:
             raise ValueError('Illegal method:', self.method)
 
-        return SPARQLResponse(response, is_update=self.is_update)
+        return SPARQLResponse(response, is_update=self.is_update, is_graph_query=self.is_graph_query)
 
 
 class SparqlClient:
 
     def __init__(self, endpoint, username=None, password=None):
-        self.query_client = SPARQLWrapper(endpoint, is_update=False)
-        self.update_client = SPARQLWrapper(endpoint + '/statements', is_update=True)
+        self.query_client = SPARQLWrapper(endpoint, is_update=False, is_graph_query=False)
+        self.update_client = SPARQLWrapper(endpoint + '/statements', is_update=True, is_graph_query=False)
+        self.graph_client = SPARQLWrapper(endpoint, is_update=False, is_graph_query=True)
         if username:
             self.query_client.set_credentials(username, password)
             self.update_client.set_credentials(username, password)
+            self.graph_client.set_credentials(username, password)
 
     def execute_sparql(self, *query, infer=False, method=None):
         """
         Execute sparql query only without post processing
-        method could be 'select', 'update', or None.
+        method could be 'select', 'update', 'construct', or None.
         If method is None, SparqlClient.parse_sparql_type is invoked to check SPARQL format.
         """
-
+        query_string = ';'.join(query)
+        
         # Check which client to use
-        if method == 'select' or not SPARQLWrapper.is_update_request(query[0]):
+        if method == 'construct' or (method is None and SPARQLWrapper.is_graph_query(query_string)):
+            client = self.graph_client
+        elif method == 'select' or not SPARQLWrapper.is_update_request(query_string):
             client = self.query_client
         else:
             client = self.update_client
 
         client.set_method(POST)
-        client.set_query(';'.join(query))
+        client.set_query(query_string)
         try:
-            result = client.query(infer=infer).json()
-
-            return result
+            response = client.query(infer=infer)
+            
+            # For graph queries (CONSTRUCT/DESCRIBE), return text (Turtle format)
+            if client == self.graph_client:
+                return response.text()
+            else:
+                return response.json()
 
         except:
             print('error with the below sparql query using ' + (
-                'update client' if client == self.update_client else 'normal client'))
-            print(';'.join(query).strip())
+                'update client' if client == self.update_client else 
+                'graph client' if client == self.graph_client else 'normal client'))
+            print(query_string.strip())
             raise
     
     def test_connecetion(self):

@@ -47,10 +47,12 @@ from ckanext.udc.helpers import (
     package_update,
     package_delete,
     get_system_info,
+    udc_json_attr,
 )
 from ckanext.udc.solr.config import pick_locale, get_udc_langs, get_current_lang
 from ckanext.udc.graph.sparql_client import SparqlClient
 from ckanext.udc.graph.preload import preload_ontologies
+from ckanext.udc.graph.logic import get_catalogue_graph
 from babel import Locale
 
 from ckanext.udc.licenses.logic.action import (
@@ -75,6 +77,7 @@ from ckanext.udc.desc.actions import (
 from ckanext.udc.desc.utils import init_plugin as init_udc_desc
 from ckanext.udc.error_handler import override_error_handler
 from ckanext.udc.system.actions import reload_supervisord, get_system_stats
+from ckanext.udc.version.actions import udc_version_meta
 from ckanext.udc.solr.solr import update_solr_maturity_model_fields
 from ckanext.udc.solr.index import before_dataset_index as _before_dataset_index
 
@@ -160,6 +163,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             or "uwsgi" in sys.argv
             or ("jobs" in sys.argv and "worker" in sys.argv)
             or ("search-index" in sys.argv)
+            or ("translation" in sys.argv)
         ):
             log.info("Skipping UDC Plugin Configuration")
             # Do not load the plugin if we are running the CLI
@@ -472,6 +476,18 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                     tk.get_converter("convert_from_extras"),
                     tk.get_validator("ignore_missing"),
                 ],
+                # Version relations: decode JSON stored in extras into
+                # native dict/list structures for templates and Solr indexer.
+                "version_dataset": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    tk.get_validator("ignore_missing"),
+                ],
+                "dataset_versions": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    tk.get_validator("ignore_missing"),
+                ],
             }
         )
 
@@ -499,6 +515,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "humanize_entity_type": humanize_entity_type,
             "get_maturity_percentages": get_maturity_percentages,
             "get_system_info": get_system_info,
+            "udc_json_attr": udc_json_attr,
             "license_options_details": license_options_details,
         }
 
@@ -580,6 +597,8 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             # System actions
             "reload_supervisord": reload_supervisord,
             "get_system_stats": get_system_stats,
+            # Version metadata helper
+            "udc_version_meta": udc_version_meta,
             # "maturity_model_get": get_maturity_model,
             # Filters
             "filter_facets_get": filter_facets_get,

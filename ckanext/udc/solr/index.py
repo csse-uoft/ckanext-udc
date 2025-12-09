@@ -30,6 +30,74 @@ def _tag_names(core_tags):
     return out
 
 
+def _safe_json_load(value: Any) -> Any:
+    """Parse JSON from a string, or pass through dict / list / None.
+
+    If parsing fails, return None rather than raising.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return None
+    return None
+
+
+def _extract_version_single(raw: Any) -> dict[str, Any] | None:
+    """Normalize a single version JSON object.
+
+    Expected shape (best-effort): {"url": str, "title": str, "description": str}.
+    Accept bare strings (treated as url) and dicts with at least url or title.
+    """
+    # Already a dict with something useful
+    if isinstance(raw, dict):
+        url = raw.get("url") or raw.get("href") or ""
+        title = raw.get("title") or ""
+        desc = raw.get("description") or raw.get("notes") or ""
+        if not (url or title or desc):
+            return None
+        out: dict[str, Any] = {}
+        if url:
+            out["url"] = url
+        if title:
+            out["title"] = title
+        if desc:
+            out["description"] = desc
+        return out or None
+
+    # Bare string -> treat as URL
+    if isinstance(raw, str) and raw.strip():
+        return {"url": raw.strip()}
+
+    return None
+
+
+def _extract_version_list(raw: Any) -> list[dict[str, Any]]:
+    """Normalize list-like version field into a list of objects."""
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        parsed = _safe_json_load(raw)
+    else:
+        parsed = raw
+
+    items: list[dict[str, Any]] = []
+    if isinstance(parsed, list):
+        for item in parsed:
+            norm = _extract_version_single(item)
+            if norm:
+                items.append(norm)
+    else:
+        norm = _extract_version_single(parsed)
+        if norm:
+            items.append(norm)
+    return items
+
+
 def before_dataset_index(pkg_dict: dict[str, Any]) -> dict[str, Any]:
     
     log.info("Running before_dataset_index hook")
@@ -102,6 +170,62 @@ def before_dataset_index(pkg_dict: dict[str, Any]) -> dict[str, Any]:
             if isinstance(v, str) and v.strip():
                 index[f"{name}_{L}_txt"] = v
                 index[f"{name}_{L}_f"] = [v]
+
+    # Version relationship fields
+    # ----------------------------
+    # These are stored canonically as JSON in extras `version_dataset`
+    # and `dataset_versions`. At index-time we derive URL-only and
+    # label fields suitable for filtering and display in facets/search.
+
+    # Single "is version of" target
+    raw_version_dataset = index.get("version_dataset")
+    vd_obj: dict[str, Any] | None = None
+    if raw_version_dataset is not None:
+        parsed = _safe_json_load(raw_version_dataset)
+        vd_obj = _extract_version_single(parsed)
+
+    version_dataset_url_val = None
+    version_dataset_label_val = None
+    if vd_obj:
+        url = vd_obj.get("url") or ""
+        title = vd_obj.get("title") or ""
+        desc = vd_obj.get("description") or ""
+
+        if url:
+            version_dataset_url_val = url
+        # Title for label: prefer explicit, otherwise fall back to description
+        label_title = title or desc or ""
+        if version_dataset_url_val and label_title:
+            version_dataset_label_val = f"{label_title} ({version_dataset_url_val})"
+
+    if version_dataset_url_val:
+        index["version_dataset_url"] = version_dataset_url_val
+    if version_dataset_label_val:
+        index["version_dataset_title_url"] = version_dataset_label_val
+
+    # Multiple "has version" targets
+    raw_dataset_versions = index.get("dataset_versions")
+    dv_list = _safe_json_load(raw_dataset_versions)
+    dv_items = _extract_version_list(dv_list)
+
+    urls: list[str] = []
+    labels: list[str] = []
+    for item in dv_items:
+        url = item.get("url") or ""
+        title = item.get("title") or ""
+        desc = item.get("description") or ""
+        if not (url or title or desc):
+            continue
+        if url:
+            urls.append(url)
+        label_title = title or desc or ""
+        if url and label_title:
+            labels.append(f"{label_title} ({url})")
+
+    if urls:
+        index["dataset_versions_url"] = urls
+    if labels:
+        index["dataset_versions_title_url"] = labels
 
 
     # Pretty-print the final indexed document for debugging

@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import OrderedDict
 from functools import partial
 from typing import Any, Iterable, Optional, Union, cast
+from ckanext.udc.graph.logic import get_catalogue_graph
 from werkzeug.datastructures import MultiDict
 
 from flask import Blueprint
@@ -549,6 +550,7 @@ def custom_dataset_search():
     return base.render('package/custom_search.html', extra_vars)
 
 
+# Redirect /dataset to /catalogue
 @bp.route(
     "/dataset",
     endpoint="redirect-search",
@@ -558,3 +560,79 @@ def redirect_to_catalogue_search():
     # Redirect to the catalogue search page
     new_url = re.sub(r'(/[\w-]*)?/dataset', r'\1/catalogue', request.url)
     return tk.redirect_to(new_url)
+
+
+
+# Blueprint for raw graph endpoints
+graph_blueprint = Blueprint('udc_graph', __name__)
+
+
+@graph_blueprint.route('/catalogue/<package_id>/graph')
+@graph_blueprint.route('/catalogue/<package_id>/graph.<format>')
+def package_graph(package_id, format=None):
+    """
+    Return the knowledge graph for a package in raw RDF format.
+    
+    URL: /catalogue/<package_id>/graph[.format]
+    """
+    from flask import Response, request, abort
+    
+    # Get format from URL extension or query parameter
+    if not format:
+        format = request.args.get('format', 'turtle')
+    
+    # Map file extensions to format names
+    format_mapping = {
+        'ttl': 'turtle',
+        'turtle': 'turtle',
+        'jsonld': 'json-ld',
+        'json-ld': 'json-ld',
+        'rdf': 'xml',
+        'xml': 'xml',
+        'n3': 'n3',
+        'nt': 'nt',
+    }
+    
+    format = format_mapping.get(format.lower(), format.lower())
+    
+    # Validate format
+    valid_formats = {'turtle', 'json-ld', 'xml', 'n3', 'nt', 'pretty-xml'}
+    if format not in valid_formats:
+        abort(400, description=f"Invalid format '{format}'. Must be one of: {', '.join(valid_formats)}")
+    
+    # Check if GraphDB is disabled
+    if plugins.get_plugin('udc').disable_graphdb:
+        abort(503, description='Knowledge graph feature is disabled. GraphDB connection is not available.')
+    
+    # Check access - use package_show authorization
+    try:
+        tk.check_access('package_show', {'user': current_user.name if current_user else None}, 
+                       {'id': package_id})
+    except tk.NotAuthorized:
+        abort(403, description='Not authorized to access this package')
+    except tk.ObjectNotFound:
+        abort(404, description=f'Package not found: {package_id}')
+    
+    # Get the graph
+    try:
+        graph_data = get_catalogue_graph(package_id, format)
+    except ValueError as e:
+        log.error(f"Error retrieving graph for package {package_id}: {str(e)}")
+        abort(404, description=str(e))
+    except Exception as e:
+        log.error(f"Unexpected error retrieving graph for package {package_id}: {str(e)}")
+        abort(500, description='Error occurred while retrieving knowledge graph')
+    
+    # Set appropriate content type
+    content_types = {
+        'turtle': 'text/turtle; charset=utf-8',
+        'json-ld': 'application/ld+json; charset=utf-8',
+        'xml': 'application/rdf+xml; charset=utf-8',
+        'pretty-xml': 'application/rdf+xml; charset=utf-8',
+        'n3': 'text/n3; charset=utf-8',
+        'nt': 'application/n-triples; charset=utf-8',
+    }
+    
+    content_type = content_types.get(format, 'text/plain; charset=utf-8')
+    
+    return Response(graph_data, mimetype=content_type)

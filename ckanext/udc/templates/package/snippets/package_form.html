@@ -257,7 +257,66 @@ then itself be extended to add/remove blocks of functionality. #}
                 {% endcall %}
 
 
-              {% elif field.get("type") == "text" or field.get("type") == None %}
+              {% elif field.get("type") in ["text", None, "single_dataset", "multiple_datasets"] or field.get("type") == None %}
+                {# Special handling: version relationships use structured JSON (url/title/description) #}
+                {% if field["name"] == "version_dataset" %}
+                  {% set vd_raw = data.get('version_dataset') %}
+
+                  <div class="control-group mb-3">
+                    <label class="control-label d-block">{{ localized_label }}</label>
+                    <div class="controls" id="version-dataset-wrapper">
+                      {% if localized_short %}
+                        <span class="form-text">
+                          {{ localized_short }}
+                          {% if localized_long %}
+                            <button type="button" style="padding:0;border:none;background:none;color:inherit"
+                                    data-bs-toggle="tooltip" data-bs-placement="right" title="{{ localized_long }}">
+                              <i class="fa-regular fa-circle-question"></i>
+                            </button>
+                          {% endif %}
+                        </span>
+                      {% endif %}
+
+                        {# JS builds visible URL/Title/Description fields inside this wrapper.
+                          Use helper to turn dict/list into JSON string safe for attribute. #}
+
+                        <input type="hidden" name="version_dataset" id="field-version_dataset"
+                             value="{{ h.udc_json_attr(vd_raw) }}" />
+                    </div>
+                  </div>
+
+                {% elif field["name"] == "dataset_versions" %}
+                  {% set dv_raw = data.get('dataset_versions') %}
+
+                  <div class="control-group mb-3">
+                    <label class="control-label d-block">{{ localized_label }}</label>
+                    <div class="controls" id="dataset-versions-wrapper" data-udc-dataset-versions-wrapper="true">
+                      {% if localized_short %}
+                        <span class="form-text">
+                          {{ localized_short }}
+                          {% if localized_long %}
+                            <button type="button" style="padding:0;border:none;background:none;color:inherit"
+                                    data-bs-toggle="tooltip" data-bs-placement="right" title="{{ localized_long }}">
+                              <i class="fa-regular fa-circle-question"></i>
+                            </button>
+                          {% endif %}
+                        </span>
+                      {% endif %}
+
+                      <div class="dataset-versions-rows"></div>
+
+                      <button type="button" class="btn btn-outline-secondary mt-2" id="dataset-versions-add" data-udc-disable-on-load>
+                        {{ _('Add another version') }}
+                      </button>
+
+                          {# JS builds visible URL/Title/Description fields inside this wrapper.
+                          Use helper to turn dict/list into JSON string safe for attribute. #}
+                         <input type="hidden" name="dataset_versions" id="field-dataset_versions"
+                            value="{{ h.udc_json_attr(dv_raw) }}" />
+                    </div>
+                  </div>
+
+                {% else %}
                 {% set id = "field-" + field["name"] %}
                 {% set raw = data[field["name"]] %}
                 {% set raw_dict = raw if raw is mapping else {} %}
@@ -307,9 +366,11 @@ then itself be extended to add/remove blocks of functionality. #}
                   </div>
                 {% endfor %}
 
-                <input type="hidden" name="{{ field['name'] }}" id="{{ id }}"
+                    <input type="hidden" name="{{ field['name'] }}" id="{{ id }}"
                       data-i18n-hidden="{{ field['name'] }}"
                       value="{{ raw | tojson if raw is mapping else '' }}"/>
+
+                    {% endif %}
 
               {% else %}
                 {# Non-text custom fields keep default single input #}

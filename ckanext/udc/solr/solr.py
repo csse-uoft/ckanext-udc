@@ -104,7 +104,7 @@ def update_solr_maturity_model_fields(maturity_model: list):
                     "docValues": True,
                 }
 
-            elif ftype == "multiple_select":
+            elif ftype in ("multiple_select", "multiple_datasets"):
                 new_fields[key] = {
                     "name": key,
                     "type": "string",
@@ -113,7 +113,7 @@ def update_solr_maturity_model_fields(maturity_model: list):
                     "indexed": True,
                 }
 
-            elif ftype == "single_select":
+            elif ftype in ("single_select", "single_dataset"):
                 new_fields[key] = {
                     "name": key,
                     "type": "string",
@@ -178,5 +178,31 @@ def update_solr_maturity_model_fields(maturity_model: list):
         log.info("Added tags_ngram field.")
     else:
         log.info("tags_ngram field already exists.")
-        
+
     all_fields = get_fields()
+
+    # 5) Ensure version relationship helper fields exist and are multiValued strings
+    #    These are populated by the before_dataset_index hook from JSON version metadata.
+    version_fields = [
+        "version_dataset_url",
+        "version_dataset_title_url",
+        "dataset_versions_url",
+        "dataset_versions_title_url",
+    ]
+
+    for fname in version_fields:
+        fdef = all_fields.get(fname)
+        if not fdef:
+            add_field(fname, "string", indexed=True, stored=True, multi_valued=True)
+            log.info("Added version field %s as multiValued string", fname)
+        else:
+            needs_update = (
+                fdef.get("type") != "string"
+                or not fdef.get("indexed", False)
+                or not fdef.get("stored", False)
+                or not fdef.get("multiValued", False)
+            )
+            if needs_update:
+                delete_field(fname)
+                add_field(fname, "string", indexed=True, stored=True, multi_valued=True)
+                log.info("Replaced version field %s as multiValued string", fname)

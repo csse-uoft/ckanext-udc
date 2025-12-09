@@ -29,6 +29,10 @@ def get_udc_langs():
     remaining_langs = [lang for lang in ordered_langs if lang != default_lang]
     return [default_lang] + remaining_langs
 
+def get_default_lang():
+    """Get the default language from the config, defaulting to 'en'."""
+    return config.get("ckan.locale_default", "en") or "en"
+
 
 def get_current_lang():
     """Get the current language from the request context or default to 'en'."""

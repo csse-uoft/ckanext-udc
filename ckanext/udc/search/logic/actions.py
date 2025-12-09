@@ -90,6 +90,12 @@ def _filter_facets_get(data_dict) -> dict[str, Any]:
     for key in facet_keys:
         if key == "tags":
             alias_to_solr[key] = f"tags_{lang}_f"
+        # version relationship helper facets: use *_title_url for display
+        # but map outward stable keys to URL-only Solr fields
+        elif key == "version_dataset":
+            alias_to_solr[key] = "version_dataset_url"
+        elif key == "dataset_versions":
+            alias_to_solr[key] = "dataset_versions_url"
         elif key.startswith("extras_"):
             # Non-text maturity fields (date/number/select) facet via extras_*
             alias_to_solr[key] = key

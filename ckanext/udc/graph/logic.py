@@ -1,4 +1,5 @@
 import ckan.plugins as plugins
+import ckan.plugins.toolkit as tk
 
 import rdflib
 from rdflib import Graph, term
@@ -7,11 +8,12 @@ from rdflib.plugins.serializers.turtle import TurtleSerializer
 from rdflib.serializer import Serializer
 import pyld
 import logging
+import json
 
 from .serializer import *
 from .template import compile_template, compile_with_temp_value
 from .mapping_helpers import all_helpers
-from .ckan_field import CKANField
+from .ckan_field import prepare_data_dict
 from .queries import get_uri_as_object_usage, get_client, get_num_paths
 
 
@@ -22,10 +24,10 @@ def get_mappings():
 
 def find_existing_instance_uris(data_dict) -> list:
     """Return a list of URIs"""
-    ckanField = CKANField(data_dict)
+    prepared_dict = prepare_data_dict(data_dict)
     g = Graph()
     compiled_template = compile_with_temp_value(get_mappings(), all_helpers,
-                                                {**data_dict, "ckanField": ckanField})
+                                                prepared_dict)
     catalogue_uri = compiled_template["@id"]
     # print("compiled_template", compiled_template)
     
@@ -117,18 +119,20 @@ def find_existing_instance_uris(data_dict) -> list:
 
 def onUpdateCatalogue(context, data_dict):
     # print(f"onUpdateCatalogue Update: ", data_dict)
-    ckanField = CKANField(data_dict)
-
+    
     # Remove empty fields
     for key in [*data_dict.keys()]:
         if data_dict[key] == '':
             del data_dict[key]
 
     uris_to_del = find_existing_instance_uris(data_dict)
-
+    
+    # print("data_dict", json.dumps(data_dict, indent=2))
+    prepared_dict = prepare_data_dict(data_dict)
+    # print("prepared_dict", json.dumps(prepared_dict, indent=2))
     compiled_template = compile_template(get_mappings(), all_helpers,
-                                         {**data_dict, "ckanField": ckanField, })
-    # print("compiled_template", compiled_template)
+                                         prepared_dict)
+    # print("compiled_template", json.dumps(compiled_template, indent=2))
     catalogue_uri = compiled_template["@id"]
 
     g = Graph()
@@ -193,12 +197,12 @@ def onUpdateCatalogue(context, data_dict):
 
 def onDeleteCatalogue(context, data_dict):
     # print(f"onDeleteCatalogue: ", data_dict)
-    ckanField = CKANField(data_dict)
-
+    
     uris_to_del = find_existing_instance_uris(data_dict)
-
+    
+    prepared_dict = prepare_data_dict(data_dict)
     compiled_template = compile_with_temp_value(get_mappings(), all_helpers,
-                                                {**data_dict, "ckanField": ckanField})
+                                                prepared_dict)
     # print("compiled_template", compiled_template)
     catalogue_uri = compiled_template["@id"]
 
@@ -261,3 +265,151 @@ def onDeleteCatalogue(context, data_dict):
     client.execute_sparql(delete_query)
 
 
+def get_catalogue_graph(package_id_or_name: str, format: str = "turtle") -> str:
+    """
+    Retrieve the knowledge graph for a specific catalogue entry.
+    
+    Args:
+        package_id_or_name: The package ID or name
+        format: Output format - 'turtle', 'json-ld', 'xml', 'n3', 'nt' (default: 'turtle')
+    
+    Returns:
+        str: Serialized RDF graph in the requested format
+    
+    Raises:
+        ValueError: If package not found or invalid format
+    """
+    # Get the package to ensure it exists and get its ID
+    try:
+        package = tk.get_action('package_show')({}, {'id': package_id_or_name})
+    except tk.ObjectNotFound:
+        raise ValueError(f"Package '{package_id_or_name}' not found")
+    
+    package_id = package.get('id')
+    if not package_id:
+        raise ValueError("Package ID not found")
+    
+    # Get the catalogue URI by compiling the template with the package data
+    prepared_dict = prepare_data_dict(package)
+    compiled_template = compile_with_temp_value(get_mappings(), all_helpers, prepared_dict)
+    catalogue_uri = compiled_template["@id"]
+    
+    # Validate format
+    valid_formats = {'turtle', 'json-ld', 'xml', 'n3', 'nt', 'pretty-xml'}
+    if format not in valid_formats:
+        raise ValueError(f"Invalid format '{format}'. Must be one of: {', '.join(valid_formats)}")
+    
+    # Build SPARQL CONSTRUCT query to retrieve all triples related to this catalogue entry
+    # We retrieve:
+    # 1. All triples where the catalogue URI is the subject
+    # 2. All triples from objects (both blank nodes and URIs)
+    # 3. Nested blank nodes up to 3 levels deep
+    query = f"""
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX dcat: <http://www.w3.org/ns/dcat#>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX cudr: <http://data.urbandatacentre.ca/>
+    PREFIX cudrc: <http://data.urbandatacentre.ca/catalogue/>
+    PREFIX fair: <http://ontology.eil.utoronto.ca/fair#>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
+    PREFIX locn: <http://www.w3.org/ns/locn#>
+    PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX oa: <http://www.w3.org/ns/oa#>
+    PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+    PREFIX dqv: <http://www.w3.org/ns/dqv#>
+    PREFIX sc: <http://schema.org/>
+    
+    CONSTRUCT {{
+        <{catalogue_uri}> ?p ?o .
+        ?o ?p2 ?o2 .
+        ?o2 ?p3 ?o3 .
+        ?o3 ?p4 ?o4 .
+    }}
+    WHERE {{
+        {{
+            # Level 1: Direct properties of catalogue
+            <{catalogue_uri}> ?p ?o .
+        }}
+        UNION
+        {{
+            # Level 2: Properties of objects (expand both URIs and blank nodes)
+            <{catalogue_uri}> ?p ?o .
+            ?o ?p2 ?o2 .
+        }}
+        UNION
+        {{
+            # Level 3: Properties of nested objects
+            <{catalogue_uri}> ?p ?o .
+            ?o ?p2 ?o2 .
+            ?o2 ?p3 ?o3 .
+        }}
+        UNION
+        {{
+            # Level 4: Properties of deeply nested objects
+            <{catalogue_uri}> ?p ?o .
+            ?o ?p2 ?o2 .
+            ?o2 ?p3 ?o3 .
+            ?o3 ?p4 ?o4 .
+        }}
+    }}
+    """
+    
+    # Execute query - execute_sparql will automatically detect CONSTRUCT and return Turtle text
+    client = get_client()
+    try:
+        result = client.execute_sparql(query)
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Error executing SPARQL query for package {package_id}: {str(e)}")
+        raise ValueError(f"Failed to retrieve graph: {str(e)}")
+    
+    # Parse the result into an RDF graph
+    g = Graph()
+    
+    # Bind namespace prefixes to the graph for better serialization
+    g.bind('xsd', 'http://www.w3.org/2001/XMLSchema#')
+    g.bind('owl', 'http://www.w3.org/2002/07/owl#')
+    g.bind('dcat', 'http://www.w3.org/ns/dcat#')
+    g.bind('skos', 'http://www.w3.org/2004/02/skos/core#')
+    g.bind('rdfs', 'http://www.w3.org/2000/01/rdf-schema#')
+    g.bind('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+    g.bind('dct', 'http://purl.org/dc/terms/')
+    g.bind('dcterms', 'http://purl.org/dc/terms/')
+    g.bind('foaf', 'http://xmlns.com/foaf/0.1/')
+    g.bind('cudr', 'http://data.urbandatacentre.ca/')
+    g.bind('cudrc', 'http://data.urbandatacentre.ca/catalogue/')
+    g.bind('fair', 'http://ontology.eil.utoronto.ca/fair#')
+    g.bind('adms', 'http://www.w3.org/ns/adms#')
+    g.bind('locn', 'http://www.w3.org/ns/locn#')
+    g.bind('odrl', 'http://www.w3.org/ns/odrl/2/')
+    g.bind('prov', 'http://www.w3.org/ns/prov#')
+    g.bind('oa', 'http://www.w3.org/ns/oa#')
+    g.bind('vcard', 'http://www.w3.org/2006/vcard/ns#')
+    g.bind('dqv', 'http://www.w3.org/ns/dqv#')
+    g.bind('sc', 'http://schema.org/')
+    
+    # Result is now a Turtle string from the SPARQL endpoint
+    if result and isinstance(result, str) and result.strip():
+        try:
+            # Parse as Turtle (the default format returned by GraphDB for CONSTRUCT)
+            g.parse(data=result, format='turtle')
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Error parsing SPARQL result: {str(e)}")
+            # Return empty graph if parsing fails
+            pass
+    else:
+        # Empty result
+        logging.getLogger(__name__).warning(f"No triples found for catalogue {package_id}")
+    
+    # Serialize to requested format
+    try:
+        return g.serialize(format=format)
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Error serializing graph to {format}: {str(e)}")
+        raise ValueError(f"Failed to serialize graph to {format}: {str(e)}")

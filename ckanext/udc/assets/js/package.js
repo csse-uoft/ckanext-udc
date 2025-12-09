@@ -34,6 +34,10 @@ this.ckan.module('package-form', function ($) {
         // Progress bars (existing logic)
         this._initProgressTracking();
 
+        // Version relationship fields (single + multiple)
+        this._initVersionDataset();
+        this._initDatasetVersions();
+
         // Default all levels to configured default language on load
         var self = this;
         (this.pkgConfig || []).forEach(function (_level, i) {
@@ -220,6 +224,317 @@ this.ckan.module('package-form', function ($) {
           el.setAttribute('tabindex', '-1');
         }
       });
+    },
+
+    // ===== Version relationship helpers =====
+    _parseJsonSafe: function (value, fallback) {
+      if (fallback === undefined) fallback = null;
+      if (value == null || value === '') return fallback;
+      if (typeof value === 'object') return value;
+      try {
+        return JSON.parse(String(value));
+      } catch (e) {
+        return fallback;
+      }
+    },
+
+    _stringifyOrEmpty: function (obj) {
+      if (!obj || (typeof obj === 'object' && Object.keys(obj).length === 0)) return '';
+      try { return JSON.stringify(obj); } catch (e) { return ''; }
+    },
+
+    _isCudcCatalogueUrl: function (url) {
+      if (!url || typeof url !== 'string') return false;
+      return url.indexOf('/catalogue/') !== -1;
+    },
+
+    _updateVersionTitleDisabled: function (inputUrl, inputTitle) {
+      if (!inputUrl || !inputTitle) return;
+      var url = inputUrl.value || '';
+      var isCudc = this._isCudcCatalogueUrl(url.trim());
+      inputTitle.readOnly = !!isCudc;
+      inputTitle.classList.toggle('disabled', !!isCudc);
+    },
+
+    _versionMetaApiUrl: function () {
+      // Simple convention: backend can expose this via config or window var later
+      if (window.udcVersionMetaApi) return window.udcVersionMetaApi;
+      return '/api/3/action/udc_version_meta';
+    },
+
+    _fetchVersionMeta: async function (url) {
+      if (!url) return null;
+      try {
+        var resp = await fetch(this._versionMetaApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        if (!resp.ok) return null;
+        var data = await resp.json();
+        if (data && data.success && data.result) {
+          return data.result;
+        }
+      } catch (e) {
+        // swallow; UI will simply not auto-fill
+      }
+      return null;
+    },
+
+    _initVersionDataset: function () {
+      var wrapper = document.getElementById('version-dataset-wrapper');
+      var hidden = document.getElementById('field-version_dataset');
+      if (!wrapper || !hidden) return;
+      var self = this;
+
+      // Build structure: Row1 URL+button, Row2 Title, Row3 Description
+      var row1 = document.createElement('div');
+      row1.className = 'row g-2 align-items-end mb-1';
+      row1.innerHTML = '' +
+        '<div class="col-md-8 col-lg-7">' +
+          '<div class="control-medium">' +
+            '<label class="form-label small" for="field-version_dataset_url_dummy">' + self._('URL') + '</label>' +
+            '<div class="controls">' +
+              '<input id="field-version_dataset_url_dummy" type="text" name="version_dataset_url_dummy" class="form-control" data-version-field="url" />' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-4 col-lg-5 d-flex align-items-end">' +
+          '<button type="button" class="btn btn-outline-primary w-100" id="version-dataset-fetch" data-udc-disable-on-load>' + self._('Auto-fill') + '</button>' +
+        '</div>';
+
+      var row2 = document.createElement('div');
+      row2.className = 'row g-2 mb-2';
+      row2.innerHTML = '' +
+        '<div class="col-12">' +
+          '<div class="control-medium">' +
+            '<label class="form-label small" for="field-version_dataset_title_dummy">' + self._('Title') + '</label>' +
+            '<div class="controls">' +
+              '<input id="field-version_dataset_title_dummy" type="text" name="version_dataset_title_dummy" class="form-control" data-version-field="title" />' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      var row3 = document.createElement('div');
+      row3.className = 'row g-2';
+      row3.innerHTML = '' +
+        '<div class="col-12">' +
+          '<div class="control-medium control-full">' +
+            '<label class="form-label small" for="field-version_dataset_description_dummy">' + self._('Description') + '</label>' +
+            '<div class="controls">' +
+              '<textarea id="field-version_dataset_description_dummy" name="version_dataset_description_dummy" class="form-control" rows="3" data-version-field="description"></textarea>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      wrapper.appendChild(row1);
+      wrapper.appendChild(row2);
+      wrapper.appendChild(row3);
+
+      var inputUrl = wrapper.querySelector('#field-version_dataset_url_dummy');
+      var inputTitle = wrapper.querySelector('#field-version_dataset_title_dummy');
+      var inputDesc = wrapper.querySelector('#field-version_dataset_description_dummy');
+      var fetchBtn = wrapper.querySelector('#version-dataset-fetch');
+
+      var syncHidden = function () {
+        var obj = {};
+        var url = (inputUrl && inputUrl.value || '').trim();
+        var title = (inputTitle && inputTitle.value || '').trim();
+        var desc = (inputDesc && inputDesc.value || '').trim();
+        if (url) obj.url = url;
+        if (title) obj.title = title;
+        if (desc) obj.description = desc;
+        hidden.value = self._stringifyOrEmpty(obj);
+        self._updateVersionTitleDisabled(inputUrl, inputTitle);
+      };
+
+      // Prefill from existing JSON
+      var parsed = this._parseJsonSafe(hidden.value, null);
+      if (parsed && typeof parsed === 'object') {
+        if (inputUrl && parsed.url) inputUrl.value = parsed.url;
+        if (inputTitle && parsed.title) inputTitle.value = parsed.title;
+        if (inputDesc && parsed.description) inputDesc.value = parsed.description;
+      }
+      this._updateVersionTitleDisabled(inputUrl, inputTitle);
+
+      [inputUrl, inputTitle, inputDesc].forEach(function (inp) {
+        if (!inp) return;
+        inp.addEventListener('input', syncHidden);
+        inp.addEventListener('change', syncHidden);
+      });
+
+      if (fetchBtn && inputUrl) {
+        fetchBtn.addEventListener('click', async function (e) {
+          e.preventDefault();
+          var url = (inputUrl.value || '').trim();
+          if (!url) return;
+          var meta = await self._fetchVersionMeta(url);
+          if (meta) {
+            if (inputTitle && meta.title) inputTitle.value = meta.title;
+            if (inputDesc && meta.description) inputDesc.value = meta.description;
+          }
+          syncHidden();
+        });
+      }
+
+      syncHidden();
+    },
+
+    _initDatasetVersions: function () {
+      var wrapper = document.querySelector('[data-udc-dataset-versions-wrapper="true"]');
+      var hidden = document.getElementById('field-dataset_versions');
+      if (!wrapper || !hidden) return;
+
+      var rowsContainer = wrapper.querySelector('.dataset-versions-rows');
+      var addBtn = document.getElementById('dataset-versions-add');
+      var self = this;
+
+      var buildRow = function (data) {
+        data = data || {};
+        var rowIdx = rowsContainer.querySelectorAll('[data-version-row="true"]').length;
+        var row = document.createElement('div');
+        row.className = 'row g-2 align-items-end mb-1';
+        row.setAttribute('data-version-row', 'true');
+        row.setAttribute('data-version-row-id', String(rowIdx));
+        row.innerHTML = '' +
+          '<div class="col-md-8 col-lg-7">' +
+            '<div class="control-medium">' +
+              '<label class="form-label small" for="field-dataset_versions_url_dummy_' + rowIdx + '">' + self._('URL') + '</label>' +
+              '<div class="controls">' +
+                '<input type="text" class="form-control" data-version-field="url" id="field-dataset_versions_url_dummy_' + rowIdx + '" />' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="col-md-2 col-lg-2 d-flex align-items-end">' +
+            '<button type="button" class="btn btn-outline-primary w-100" data-version-fetch="true" data-udc-disable-on-load>' + self._('Auto-fill') + '</button>' +
+          '</div>' +
+          '<div class="col-md-2 col-lg-3 d-flex align-items-end">' +
+            '<button type="button" class="btn btn-outline-danger w-100" data-version-remove="true">' + self._('Remove') + '</button>' +
+          '</div>';
+
+        var descRow = document.createElement('div');
+        descRow.className = 'row mb-1';
+        descRow.innerHTML = '' +
+          '<div class="col-12">' +
+            '<div class="form-groupcontrol-medium">' +
+              '<label class="form-label small" for="field-dataset_versions_title_dummy_' + rowIdx + '">' + self._('Title') + '</label>' +
+              '<div class="controls">' +
+                '<input type="text" class="form-control" data-version-field="title" id="field-dataset_versions_title_dummy_' + rowIdx + '" />' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        var descRow2 = document.createElement('div');
+        descRow2.className = 'row mb-3';
+        descRow2.innerHTML = '' +
+          '<div class="col-12">' +
+            '<div class="control-medium control-full">' +
+              '<label class="form-label small" for="field-dataset_versions_description_dummy_' + rowIdx + '">' + self._('Description (optional)') + '</label>' +
+              '<div class="controls">' +
+                '<textarea class="form-control" rows="3" data-version-field="description" id="field-dataset_versions_description_dummy_' + rowIdx + '"></textarea>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        rowsContainer.appendChild(row);
+        rowsContainer.appendChild(descRow);
+        rowsContainer.appendChild(descRow2);
+
+        var urlInput = row.querySelector('[data-version-field="url"]');
+        var titleInput = descRow.querySelector('[data-version-field="title"]');
+        var descInput = descRow2.querySelector('[data-version-field="description"]');
+        var rowId = String(rowIdx);
+        if (urlInput) urlInput.setAttribute('data-version-row-id', rowId);
+        if (titleInput) titleInput.setAttribute('data-version-row-id', rowId);
+        if (descInput) descInput.setAttribute('data-version-row-id', rowId);
+
+        if (data.url) urlInput.value = data.url;
+        if (data.title) titleInput.value = data.title;
+        if (data.description) descInput.value = data.description;
+
+        var updateTitleDisabled = function () {
+          self._updateVersionTitleDisabled(urlInput, titleInput);
+        };
+        urlInput.addEventListener('input', updateTitleDisabled);
+        urlInput.addEventListener('change', updateTitleDisabled);
+        updateTitleDisabled();
+
+        [urlInput, titleInput, descInput].forEach(function (inp) {
+          inp.addEventListener('input', syncHidden);
+          inp.addEventListener('change', syncHidden);
+        });
+
+        var fetchBtn = row.querySelector('[data-version-fetch="true"]');
+        if (fetchBtn && urlInput) {
+          fetchBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            var url = (urlInput.value || '').trim();
+            if (!url) return;
+            var meta = await self._fetchVersionMeta(url);
+            if (meta) {
+              if (titleInput && meta.title) titleInput.value = meta.title;
+              if (descInput && meta.description) descInput.value = meta.description;
+            }
+            syncHidden();
+          });
+        }
+
+        var removeBtn = row.querySelector('[data-version-remove="true"]');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            row.parentNode.removeChild(row);
+            descRow.parentNode.removeChild(descRow);
+            descRow2.parentNode.removeChild(descRow2);
+            syncHidden();
+          });
+        }
+      };
+
+      var syncHidden = function () {
+        var rows = rowsContainer.querySelectorAll('[data-version-row="true"]');
+        var out = [];
+        rows.forEach(function (row) {
+          var rowId = row.getAttribute('data-version-row-id');
+          var urlInput = rowId ? rowsContainer.querySelector('[data-version-field="url"][data-version-row-id="' + rowId + '"]') : null;
+          var titleInput = rowId ? rowsContainer.querySelector('[data-version-field="title"][data-version-row-id="' + rowId + '"]') : null;
+          var descInput = rowId ? rowsContainer.querySelector('[data-version-field="description"][data-version-row-id="' + rowId + '"]') : null;
+          var url = (urlInput && urlInput.value) || '';
+          var title = (titleInput && titleInput.value) || '';
+          var descVal = (descInput && descInput.value) || '';
+          url = url.trim();
+          title = title.trim();
+          descVal = descVal.trim();
+          if (!url && !title && !descVal) return;
+          var obj = {};
+          if (url) obj.url = url;
+          if (title) obj.title = title;
+          if (descVal) obj.description = descVal;
+          out.push(obj);
+        });
+        hidden.value = self._stringifyOrEmpty(out);
+      };
+
+      // Prefill from hidden
+      var existing = this._parseJsonSafe(hidden.value, []);
+      if (Array.isArray(existing) && existing.length) {
+        existing.forEach(function (item) { buildRow(item); });
+      }
+
+      if (addBtn) {
+        addBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          buildRow({});
+          syncHidden();
+        });
+      }
+
+      // Ensure at least one row so the user has a place to type
+      if (!rowsContainer.querySelector('[data-version-row="true"]')) {
+        buildRow({});
+      }
+
+      syncHidden();
     },
 
     _unlockForm: function () {

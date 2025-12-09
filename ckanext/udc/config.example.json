@@ -682,7 +682,7 @@
                         "en": "Is version of another dataset",
                         "fr": "Est une version d’un autre jeu de données"
                     },
-                    "type": "text",
+                    "type": "single_dataset",
                     "short_description": {
                         "en": "Link to dataset that it is a version of.",
                         "fr": "Lien vers le jeu de données dont celui-ci est une version."
@@ -699,7 +699,7 @@
                         "en": "Other versions",
                         "fr": "Autres versions"
                     },
-                    "type": "text",
+                    "type": "multiple_datasets",
                     "short_description": {
                         "en": "Link to datasets that are versions of it.",
                         "fr": "Lien vers les jeux de données qui en sont des versions."
@@ -1013,19 +1013,16 @@
             "dqv": "http://www.w3.org/ns/dqv#",
             "sc": "http://schema.org/"
         },
-        "@id": "http://data.urbandatacentre.ca/catalogue/{ckanField.id}",
+        "@id": "http://data.urbandatacentre.ca/catalogue/{id}",
         "@type": "http://data.urbandatacentre.ca/catalogue",
         "dcat:theme": {
             "@type": "skos:Concept",
             "@id": "http://data.urbandatacentre.ca/theme/{quote_url(theme.lower())}",
-            "skos:prefLabel": "{theme}"
+            "skos:prefLabel": "eval(theme)"
         },
-        "dct:title": {
-            "@type": "xsd:string",
-            "@value": "{ckanField.title}"
-        },
-        "dct:description": "{ckanField.description}",
-        "dcat:keyword": "eval(mapFromCKANTags(ckanField.tags))",
+        "dct:title": "eval(map_to_multiple_languages(title))",
+        "dct:description": "eval(map_to_multiple_languages(description))",
+        "dcat:keyword": "eval(map_from_tags_multiple_languages(tags))",
         "dct:issued": {
             "@type": "xsd:date",
             "@value": "{to_date(published_date)}"
@@ -1041,13 +1038,13 @@
         "dct:spatial": {
             "@type": "dct:Location",
             "@id": "http://data.urbandatacentre.ca/geo/{quote_url(geo_span.lower())}",
-            "locn:geometry": "{geo_span}"
+            "locn:geometry": "eval(geo_span)"
         },
         "dct:identifier": "{unique_identifier}",
-        "cudr:accessCategory": "{access_category}",
+        "cudr:accessCategory": "eval(access_category)",
         "dct:license": "eval(mapFromCKANLicense(license_id))",
         "dcat:accessURL": {
-            "@id": "{quote_url(location)}"
+            "@id": "eval(quote_url(location))"
         },
         "cudr:catalogueEntryIdentifier": "{unique_metadata_identifier}",
         "cudr:file_size": {
@@ -1057,27 +1054,27 @@
         "dcat:accessService": {
             "@id": "http://data.urbandatacentre.ca/data_service/{generate_uuid()}",
             "@type": "dcat:DataService",
-            "dcat:endpointURL": "{data_service}"
+            "dcat:endpointURL": "{quote_url(data_service)}"
         },
         "dct:rightsHolder": {
             "@id": "http://data.urbandatacentre.ca/owner/{generate_uuid()}",
             "@type": [
                 "foaf:Agent"
             ],
-            "foaf:name": "{owner}"
+            "foaf:name": "eval(owner)"
         },
         "dcat:contactPoint": {
             "@id": "http://data.urbandatacentre.ca/contact_point/{generate_uuid()}",
             "@type": "vcard:Individual",
-            "vcard:fn": "{access_steward}",
-            "vcard:hasEmail": "{access_steward_email}"
+            "vcard:fn": "eval(access_steward)",
+            "vcard:hasEmail": "eval(access_steward_email)"
         },
         "dct:publisher": {
             "@id": "http://data.urbandatacentre.ca/publisher/{generate_uuid()}",
             "@type": [
                 "foaf:Agent"
             ],
-            "foaf:name": "{publisher}",
+            "foaf:name": "eval(publisher)",
             "foaf:mbox": "{publisher_email}"
         },
         "dct:creator": {
@@ -1085,8 +1082,8 @@
             "@type": [
                 "foaf:Agent"
             ],
-            "foaf:mbox": "{ckanField.author_email}",
-            "foaf:name": "{ckanField.author}"
+            "foaf:mbox": "{author_email}",
+            "foaf:name": "{author}"
         },
         "cudr:accessedAt": {
             "@type": "xsd:date",
@@ -1106,17 +1103,17 @@
         },
         "dct:format": "eval(split_to_uris(file_format))",
         "dcat:downloadURL": {
-            "@id": "{quote_url(ckanField.source)}"
+            "@id": "{quote_url(source)}"
         },
-        "owl:versionInfo": "{version_info}",
-        "adms:versionNotes": "{ckanField.version}",
-        "dct:isVersionOf": "{version_dataset}",
-        "dct:hasVersion": "{dataset_versions}",
+        "owl:versionInfo": "eval(version_info)",
+        "adms:versionNotes": "{version}",
+        "dct:isVersionOf": "eval(map_version_dataset_to_rdf(version_dataset))",
+        "dct:hasVersion": "eval(map_dataset_versions_to_rdf(dataset_versions))",
         "dct:provenance": {
             "@id": "http://data.urbandatacentre.ca/provenance/{generate_uuid()}",
             "@type": "dct:ProvenanceStatement",
-            "prov:value": "{provenance}",
-            "prov:wasQuotedFrom": "{provenance_url}"
+            "prov:value": "eval(provenance)",
+            "prov:wasQuotedFrom": "eval(provenance_url)"
         },
         "dcat:temporalResolution": "{temporal_resolution}",
         "dcat:spatialResolutionInMeters": {
@@ -1156,12 +1153,12 @@
             "@type": [
                 "foaf:Agent"
             ],
-            "foaf:name": "{community_steward}"
+            "foaf:name": "eval(community_steward)"
         },
         "cudr:spatialIndigenousCommunity": {
             "@type": "dct:Location",
             "@id": "http://data.urbandatacentre.ca/geo/{quote_url(indigenous_span.lower())}",
-            "locn:geometry": "{indigenous_span}"
+            "locn:geometry": "eval(indigenous_span)"
         },
         "fair:rda-r1.3-01d": {
             "@type": "xsd:boolean",
@@ -1240,9 +1237,8 @@
             "oa:hasBody": {
                 "@id": "http://data.urbandatacentre.ca/qualityAnnotation/body/{generate_uuid()}",
                 "@type": "oa:TextualBody",
-                "rdf:value": "{quality_annotation}"
+                "rdf:value": "eval(quality_annotation)"
             }
-        },
-        "dqv:inDimension": "TODO"
+        }
     }
 }

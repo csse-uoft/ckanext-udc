@@ -17,10 +17,11 @@ from ckan.plugins.toolkit import (chained_action, side_effect_free, chained_help
 import ckan.lib.helpers as h
 from ckan.common import current_user, _
 
-from .graph.logic import onUpdateCatalogue, onDeleteCatalogue
+from .graph.logic import onUpdateCatalogue, onDeleteCatalogue, get_catalogue_graph
 from ckanext.udc.file_format.logic import before_package_update as before_package_update_for_file_format
 
 import logging
+import json
 import chalk
 
 log = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ def package_update(original_action, context, data_dict):
     result = original_action(context, data_dict)
     try:
         if not plugins.get_plugin('udc').disable_graphdb:
-            onUpdateCatalogue(context, data_dict)
+            onUpdateCatalogue(context, result)
     except Exception as e:
         log.error(e)
         print(e)
@@ -225,3 +226,20 @@ def get_maturity_percentages(config, pkg_dict):
 def get_system_info(name: str):
     return model.system_info.get_system_info(name)
 
+
+def udc_json_attr(value):
+    """Return a JSON string safe to embed in an HTML attribute.
+
+    - If value is already a string, assume it is JSON (or plain text) and
+      return it as-is; Jinja's autoescape will handle HTML encoding.
+    - If value is a dict/list/etc, json.dumps it to a compact string.
+    """
+
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except Exception:
+        return ""

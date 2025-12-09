@@ -2,6 +2,8 @@ import sys
 import re
 from pyld import jsonld
 from copy import deepcopy
+
+from ckan.plugins.core import get_plugin
 from .mapping_helpers import generate_uuid
 from .contants import EMPTY_FIELD
 
@@ -30,6 +32,7 @@ def compile_template(template, global_vars, local_vars, nested=False):
     Parse the mapping config into json-ld data.
     Empty fields are removed.
     """
+    udcPlugin = get_plugin('udc')
     result = deepcopy(template)
     if not isinstance(result, list):
         result = [result]
@@ -56,8 +59,16 @@ def compile_template(template, global_vars, local_vars, nested=False):
                     try:
                         should_eval = item[attr].startswith('eval(') and item[attr].endswith(')')
                         if should_eval:
-                            # eval() syntax
-                            val = eval(item[attr][5:-1], global_vars, local_vars)
+                            expression = item[attr][5:-1].strip()
+                            # If the expression within eval() is a string field name,
+                            # and that field is a localized text, we need to convert it to json-ld
+                            # All text fields defined in UDC plugin are localized text fields
+                            if expression in udcPlugin.text_fields:
+                                # If the expression is a text field, i.e. `eval(title)`, we need to map it to multiple languages
+                                val = eval(f'map_to_multiple_languages({expression})', global_vars, local_vars)
+                            else:
+                                # General eval() syntax
+                                val = eval(expression, global_vars, local_vars)
                            
                             # Remove [{ "@value": '....' }] wrapping
                             if len(result) == 1 and len(item) == 1 and attr == '@value':

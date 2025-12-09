@@ -33,6 +33,9 @@ SUPPORTED_FIELD_TYPES = [
     "number",
     "single_select",
     "multiple_select",
+    # Relationship / versioning helpers handled specially by the UI/schema
+    "single_dataset",
+    "multiple_datasets",
 ]
 
 
