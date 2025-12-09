@@ -4,6 +4,7 @@ import uuid
 import urllib
 import urllib.parse
 from datetime import datetime
+from typing import List, Optional
 from rdflib import Literal, XSD
 from .contants import EMPTY_FIELD
 import ckan.model as model
@@ -133,7 +134,7 @@ def map_to_single_language(val, lang='en'):
         return val
     return ""
 
-def map_to_multiple_datasets(datasets: list[str]):
+def map_to_multiple_datasets(datasets: List[str]):
     """Map a list of dataset urls to json-ld array for dct:Dataset"""
     result = []
     for ds in datasets:
