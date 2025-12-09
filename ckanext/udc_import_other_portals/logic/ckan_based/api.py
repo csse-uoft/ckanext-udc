@@ -136,8 +136,9 @@ def check_existing_package_id_or_name(id_or_name: str, base_api):
 
 def check_site_alive(base_api):
     try:
-        res = requests.get(f"{base_api}/3/action/site_read").json()
-        return res["result"]
+        res = requests.get(f"{base_api}/3").json()
+        print(res)
+        return res["version"] == 3
     except:
         return False
 
