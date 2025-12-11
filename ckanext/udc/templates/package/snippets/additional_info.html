@@ -97,231 +97,193 @@
           {% endif %}
 
           {% for field in level["fields"] %}
-            {# -------- Custom field (from maturity model) -------- #}
-            {% if field.get("label") %}
+            {# -------- Unified field rendering (supports both custom and CKAN fields) -------- #}
+            {% set field_name = field.get("name") or field.get("ckanField") %}
+            {% set field_label = field.get("label") %}
+            
+            {% if field_label %}
               <tr>
                 <th scope="row" class="dataset-label">
-                  {{ pick_locale(field["label"], __lang) }}
+                  {{ pick_locale(field_label, __lang) }}
                   {{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
                 </th>
                 <td class="dataset-details">
-                  {% set valToText = {} %}
-                  {% if field.get("options") %}
-                    {% for option in field["options"] %}
-                      {% set opt_text = pick_locale(option["text"], __lang) %}
-                      {% do valToText.update({option["value"]: opt_text}) %}
-                    {% endfor %}
-                  {% endif %}
-
-                  {% if field["type"] == "multiple_select" %}
-                    {% set values = [] %}
-                    {% for selected in (pkg_dict[field["name"]] or '').split(',') %}
-                      {% if valToText[selected] %}
-                        {% do values.append(valToText[selected]) %}
-                      {% endif %}
-                    {% endfor %}
-                    {{ ', '.join(values) }}
-
-                  {% elif field["type"] == "single_select" %}
-                    {{ valToText[pkg_dict[field["name"]]] }}
-
-                  {% else %}
-                    {# text / date / number etc. For text we may have a {lang: value} dict from backend
-                       Special-case version_dataset / dataset_versions which now store JSON objects
-                    #}
-                    {% if field["name"] == "version_dataset" %}
-                      {% set v = pkg_dict.get('version_dataset') %}
-                      {% if v is mapping %}
-                        {% set url = v.get('url') %}
-                        {% set title = v.get('title') %}
-                        {% set desc = v.get('description') %}
-                        {% if url or title or desc %}
-                          <div>
-                            {% if url %}
-                              {% set link_title = desc or title or url %}
-                              <a href="{{ url }}" target="_blank" title="{{ link_title }}">
-                                {{ title or url }}
-                              </a>
-                            {% elif title %}
-                              <span title="{{ desc or title }}">{{ title }}</span>
-                            {% endif %}
-                            {% if desc %}
-                              <span class="visually-hidden">{{ desc }}</span>
-                            {% endif %}
-                          </div>
-                        {% endif %}
+                  {# Handle CKAN fields with special rendering #}
+                  {% if field.get("ckanField") %}
+                    
+                    {% if field["ckanField"] == "source" %}
+                      {% if h.is_url(pkg_dict.url) %}
+                        <a href="{{ pkg_dict.url }}" rel="foaf:homepage" target="_blank" property="foaf:homepage">{{ pkg_dict.url }}</a>
                       {% else %}
-                        {% set raw_val = pkg_dict[field["name"]] %}
-                        {% set display_val = pick_locale(raw_val, __lang) %}
-                        {% if h.is_url(display_val) %}
-                          <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
-                        {% else %}
-                          {{ display_val }}
-                        {% endif %}
+                        <span property="foaf:homepage">{{ pkg_dict.url }}</span>
                       {% endif %}
 
-                    {% elif field["name"] == "dataset_versions" %}
-                      {% set vlist = pkg_dict.get('dataset_versions') %}
-                      {% if vlist is mapping %}
-                        {% set vlist = [vlist] %}
-                      {% endif %}
-                      {% if vlist is sequence %}
-                        <ul class="list-unstyled">
-                          {% for item in vlist %}
-                            {% if item is mapping %}
-                              {% set url = item.get('url') %}
-                              {% set title = item.get('title') %}
-                              {% set desc = item.get('description') %}
-                              {% if url or title or desc %}
-                                <li class="mb-1">
-                                  {% if url %}
-                                    {% set link_title = desc or title or url %}
-                                    <a href="{{ url }}" target="_blank" title="{{ link_title }}">
-                                      {{ title or url }}
-                                    </a>
-                                  {% elif title %}
-                                    <span title="{{ desc or title }}">{{ title }}</span>
-                                  {% endif %}
-                                  {% if desc %}
-                                    <span class="visually-hidden">{{ desc }}</span>
-                                  {% endif %}
-                                </li>
-                              {% endif %}
+                    {% elif field["ckanField"] == "author_email" %}
+                      <span property="dc:creator">{{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author_email) if pkg_dict.author_email else "" }}</span>
+
+                    {% elif field["ckanField"] == "author" %}
+                      <span property="dc:creator">{{ pkg_dict.author or "" }}</span>
+
+                    {% elif field["ckanField"] == "maintainer_email" %}
+                      <span property="dc:contributor">{{ h.mail_to(email_address=pkg_dict.maintainer_email, name=pkg_dict.maintainer_email) }}</span>
+
+                    {% elif field["ckanField"] == "maintainer" %}
+                      <span property="dc:contributor">{{ pkg_dict.maintainer }}</span>
+
+                    {% elif field["ckanField"] == "version" %}
+                      {{ pkg_dict.version }}
+
+                    {% elif field["ckanField"] == "description" %}
+                      {{ h.render_markdown(h.get_translated(pkg_dict, 'notes')) }}
+
+                    {% elif field["ckanField"] == "tags" %}
+                      {% set tt = pkg_dict.get('tags_translated') %}
+                      {% set tag_list = [] %}
+                      {% set config_default = config.get('ckan.locale_default', 'en') %}
+                      
+                      {% if tt is mapping %}
+                        {# Try current language first, then fallback to default languages #}
+                        {% set tag_list = tt.get(__lang) or tt.get(config_default) or tt.get('en') or tt.get('fr') %}
+                        {% if not tag_list %}
+                          {# last resort: any first list in dict #}
+                          {% for _k, _v in tt.items() %}
+                            {% if _v %}
+                              {% set tag_list = _v %}
+                              {% break %}
                             {% endif %}
                           {% endfor %}
-                        </ul>
+                        {% endif %}
+                      {% endif %}
+                      
+                      {% if tag_list and tag_list is iterable and tag_list is not string %}
+                        {{ ', '.join(tag_list) }}
+                      {% elif pkg_dict.tags or pkg_dict.tags_translated %}
+                        {# fallback to tags snippet with multilingual support #}
+                        {% snippet "package/snippets/tags.html", tags=pkg_dict.tags, pkg=pkg_dict %}
+                      {% endif %}
+
+                    {% elif field["ckanField"] == "license_id" %}
+                      {% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}
+
+                    {% elif field["ckanField"] == "title" %}
+                      {{ h.get_translated(pkg_dict, 'title') }}
+
+                    {% elif field["ckanField"] == "organization_and_visibility" %}
+                      {% if pkg_dict.organization %}
+                        <a href="{{ h.url_for('organization.read', id=pkg_dict.organization.name) }}">{{ pkg_dict.organization.title or pkg_dict.organization.name }}</a>
+                      {% endif %}
+                    {% endif %}
+
+                  {# Handle custom fields #}
+                  {% else %}
+                    {% set valToText = {} %}
+                    {% if field.get("options") %}
+                      {% for option in field["options"] %}
+                        {% set opt_text = pick_locale(option["text"], __lang) %}
+                        {% do valToText.update({option["value"]: opt_text}) %}
+                      {% endfor %}
+                    {% endif %}
+
+                    {% if field["type"] == "multiple_select" %}
+                      {% set values = [] %}
+                      {% for selected in (pkg_dict[field_name] or '').split(',') %}
+                        {% if valToText[selected] %}
+                          {% do values.append(valToText[selected]) %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ ', '.join(values) }}
+
+                    {% elif field["type"] == "single_select" %}
+                      {{ valToText[pkg_dict[field_name]] }}
+
+                    {% else %}
+                      {# text / date / number etc. For text we may have a {lang: value} dict from backend
+                         Special-case version_dataset / dataset_versions which now store JSON objects
+                      #}
+                      {% if field_name == "version_dataset" %}
+                        {% set v = pkg_dict.get('version_dataset') %}
+                        {% if v is mapping %}
+                          {% set url = v.get('url') %}
+                          {% set title = v.get('title') %}
+                          {% set desc = v.get('description') %}
+                          {% if url or title or desc %}
+                            <div>
+                              {% if url %}
+                                {% set link_title = desc or title or url %}
+                                <a href="{{ url }}" target="_blank" title="{{ link_title }}">
+                                  {{ title or url }}
+                                </a>
+                              {% elif title %}
+                                <span title="{{ desc or title }}">{{ title }}</span>
+                              {% endif %}
+                              {% if desc %}
+                                <span class="visually-hidden">{{ desc }}</span>
+                              {% endif %}
+                            </div>
+                          {% endif %}
+                        {% else %}
+                          {% set raw_val = pkg_dict[field_name] %}
+                          {% set display_val = pick_locale(raw_val, __lang) %}
+                          {% if h.is_url(display_val) %}
+                            <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+                          {% else %}
+                            {{ display_val }}
+                          {% endif %}
+                        {% endif %}
+
+                      {% elif field_name == "dataset_versions" %}
+                        {% set vlist = pkg_dict.get('dataset_versions') %}
+                        {% if vlist is mapping %}
+                          {% set vlist = [vlist] %}
+                        {% endif %}
+                        {% if vlist is sequence %}
+                          <ul class="list-unstyled">
+                            {% for item in vlist %}
+                              {% if item is mapping %}
+                                {% set url = item.get('url') %}
+                                {% set title = item.get('title') %}
+                                {% set desc = item.get('description') %}
+                                {% if url or title or desc %}
+                                  <li class="mb-1">
+                                    {% if url %}
+                                      {% set link_title = desc or title or url %}
+                                      <a href="{{ url }}" target="_blank" title="{{ link_title }}">
+                                        {{ title or url }}
+                                      </a>
+                                    {% elif title %}
+                                      <span title="{{ desc or title }}">{{ title }}</span>
+                                    {% endif %}
+                                    {% if desc %}
+                                      <span class="visually-hidden">{{ desc }}</span>
+                                    {% endif %}
+                                  </li>
+                                {% endif %}
+                              {% endif %}
+                            {% endfor %}
+                          </ul>
+                        {% else %}
+                          {% set raw_val = pkg_dict[field_name] %}
+                          {% set display_val = pick_locale(raw_val, __lang) %}
+                          {% if h.is_url(display_val) %}
+                            <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+                          {% else %}
+                            {{ display_val }}
+                          {% endif %}
+                        {% endif %}
+
                       {% else %}
-                        {% set raw_val = pkg_dict[field["name"]] %}
+                        {% set raw_val = pkg_dict[field_name] %}
                         {% set display_val = pick_locale(raw_val, __lang) %}
                         {% if h.is_url(display_val) %}
                           <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
                         {% else %}
                           {{ display_val }}
                         {% endif %}
-                      {% endif %}
-
-                    {% else %}
-                      {% set raw_val = pkg_dict[field["name"]] %}
-                      {% set display_val = pick_locale(raw_val, __lang) %}
-                      {% if h.is_url(display_val) %}
-                        <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
-                      {% else %}
-                        {{ display_val }}
                       {% endif %}
                     {% endif %}
                   {% endif %}
                 </td>
               </tr>
-
-            {# -------- CKAN predefined/core fields -------- #}
-            {% elif field.get("ckanField") %}
-              {% if field["ckanField"] == "source" and pkg_dict.url %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _('Source') }}
-                    {{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  {% if h.is_url(pkg_dict.url) %}
-                    <td class="dataset-details" property="foaf:homepage">
-                      <a href="{{ pkg_dict.url }}" rel="foaf:homepage" target="_blank">{{ pkg_dict.url }}</a>
-                    </td>
-                  {% else %}
-                    <td class="dataset-details" property="foaf:homepage">{{ pkg_dict.url }}</td>
-                  {% endif %}
-                </tr>
-
-              {% elif field["ckanField"] == "author_email" %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("Author Email") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details" property="dc:creator">
-                    {{ h.mail_to(email_address=pkg_dict.author_email, name=pkg_dict.author_email) if pkg_dict.author_email else "" }}
-                  </td>
-                </tr>
-
-              {% elif field["ckanField"] == "author" %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("Author") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details" property="dc:creator">{{ pkg_dict.author or "" }}</td>
-                </tr>
-
-              {% elif field["ckanField"] == "maintainer_email" and pkg_dict.maintainer_email %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _('Maintainer Email') }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details" property="dc:contributor">
-                    {{ h.mail_to(email_address=pkg_dict.maintainer_email, name=pkg_dict.maintainer_email) }}
-                  </td>
-                </tr>
-
-              {% elif field["ckanField"] == "maintainer" and pkg_dict.maintainer %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _('Maintainer') }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details" property="dc:contributor">{{ pkg_dict.maintainer }}</td>
-                </tr>
-
-              {% elif field["ckanField"] == "version" and pkg_dict.version %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("Version") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details">{{ pkg_dict.version }}</td>
-                </tr>
-
-              {% elif field["ckanField"] == "description" and pkg_dict.notes %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("Description") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details">
-                    {{ h.render_markdown(h.get_translated(pkg_dict, 'notes')) }}
-                  </td>
-                </tr>
-
-              {% elif field["ckanField"] == "tags" and (pkg_dict.tags or pkg_dict.tags_translated) %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("Tags") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details">
-                    {% set tt = pkg_dict.get('tags_translated') %}
-                    {% if tt is mapping %}
-                      {% set tag_list = tt.get(__lang) or tt.get('en') or tt.get('fr') %}
-                      {% if not tag_list %}
-                        {# last resort: any first list in dict #}
-                        {% for _k, _v in tt.items() %}
-                          {% set tag_list = _v %}
-                          {% break %}
-                        {% endfor %}
-                      {% endif %}
-                      {% if tag_list %}
-                        {{ ', '.join(tag_list) }}
-                      {% else %}
-                        {# fallback to core snippet #}
-                        {% snippet "package/snippets/tags.html", tags=pkg_dict.tags %}
-                      {% endif %}
-                    {% else %}
-                      {% snippet "package/snippets/tags.html", tags=pkg_dict.tags %}
-                    {% endif %}
-                  </td>
-                </tr>
-
-              {% elif field["ckanField"] == "license_id" and pkg_dict.license_id %}
-                <tr>
-                  <th scope="row" class="dataset-label">
-                    {{ _("License") }}{{ th_description(field.get("short_description"), field.get("long_description"), __lang) }}
-                  </th>
-                  <td class="dataset-details">
-                    {% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}
-                  </td>
-                </tr>
-              {% endif %}
             {% endif %}
           {% endfor %}
 

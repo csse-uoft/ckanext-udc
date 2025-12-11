@@ -200,11 +200,18 @@ def udc_set_core_tags_from_translated(value, context):
 
 def udc_fill_tags_translated_from_core(value, context):
     """
-    On show: if tags_translated is absent, seed {default_lang: [core tag names]} in-memory.
+    On show: if tags_translated is absent or missing default_lang, seed from core tags.
     """
     data = context.get("data") or context.get("data_dict") or {}
-    if isinstance(data.get("tags_translated"), dict) and data["tags_translated"]:
+    default_lang = tk.config.get("ckan.locale_default", "en") or "en"
+    
+    tags_trans = data.get("tags_translated")
+    
+    # If tags_translated exists and has data for default language, keep it
+    if isinstance(tags_trans, dict) and tags_trans and tags_trans.get(default_lang):
         return value
+    
+    # Otherwise, seed from core tags
     tags = data.get("tags") or []
     names = []
     for t in tags:
@@ -212,9 +219,16 @@ def udc_fill_tags_translated_from_core(value, context):
             names.append(t["name"])
         elif isinstance(t, str):
             names.append(t)
+    
     if names:
-        default_lang = tk.config.get("ckan.locale_default", "en") or "en"
-        data["tags_translated"] = {default_lang: names}
+        # If tags_translated exists but is missing default_lang, add it
+        if isinstance(tags_trans, dict):
+            tags_trans[default_lang] = names
+            data["tags_translated"] = tags_trans
+        else:
+            # Create new tags_translated
+            data["tags_translated"] = {default_lang: names}
+    
     return value
 
 

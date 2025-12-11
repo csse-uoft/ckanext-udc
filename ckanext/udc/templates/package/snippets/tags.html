@@ -1,0 +1,48 @@
+{#
+  Renders tags with multilingual support
+
+  tags - a list of tag dicts (fallback)
+  pkg - package dict (optional, to access tags_translated)
+
+  Example:
+
+  {% snippet "package/snippets/tags.html", tags=pkg.tags, pkg=pkg %}
+
+#}
+{% set __lang = h.lang() or 'en' %}
+{% set config_default = config.get('ckan.locale_default', 'en') %}
+{% set tag_list = [] %}
+
+{# Try to get multilingual tags first #}
+{% if pkg %}
+  {% set tt = pkg.get('tags_translated') %}
+  {% if tt is mapping %}
+    {# Try current language first, then fallback to default languages #}
+    {% set tag_list = tt.get(__lang) or tt.get(config_default) or tt.get('en') or tt.get('fr') %}
+    {% if not tag_list %}
+      {# Last resort: any first list in dict #}
+      {% for _k, _v in tt.items() %}
+        {% if _v %}
+          {% set tag_list = _v %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{# Convert tag list to tag dict format if needed #}
+{% if tag_list and tag_list is iterable and tag_list is not string %}
+  {% set translated_tags = [] %}
+  {% for tag_name in tag_list %}
+    {% do translated_tags.append({'name': tag_name, 'display_name': tag_name}) %}
+  {% endfor %}
+  <section class="tags">
+    {% snippet 'snippets/tag_list.html', tags=translated_tags, _class='tag-list' %}
+  </section>
+{% elif tags %}
+  {# Fallback to core tags if no multilingual tags available #}
+  <section class="tags">
+    {% snippet 'snippets/tag_list.html', tags=tags, _class='tag-list' %}
+  </section>
+{% endif %}

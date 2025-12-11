@@ -52,6 +52,10 @@
                 },
                 {
                     "ckanField": "description",
+                    "label": {
+                        "en": "Description",
+                        "fr": "Description"
+                    },
                     "short_description": {
                         "en": "A description of the dataset.",
                         "fr": "Une description du jeu de données."
@@ -229,6 +233,10 @@
                 },
                 {
                     "ckanField": "license_id",
+                    "label": {
+                        "en": "License",
+                        "fr": "Licence"
+                    },
                     "short_description": {
                         "en": "License used to access the dataset.",
                         "fr": "Licence utilisée pour accéder au jeu de données."
@@ -373,6 +381,10 @@
                 },
                 {
                     "ckanField": "author",
+                    "label": {
+                        "en": "Author",
+                        "fr": "Auteur"
+                    },
                     "short_description": {
                         "en": "Author of the dataset.",
                         "fr": "Auteur du jeu de données."
@@ -385,6 +397,10 @@
                 },
                 {
                     "ckanField": "author_email",
+                    "label": {
+                        "en": "Author Email",
+                        "fr": "Courriel de l'auteur"
+                    },
                     "short_description": {
                         "en": "Email of the author.",
                         "fr": "Adresse courriel de l’auteur."
@@ -637,6 +653,10 @@
             "fields": [
                 {
                     "ckanField": "version",
+                    "label": {
+                        "en": "Version",
+                        "fr": "Version"
+                    },
                     "short_description": {
                         "en": "Version of the datatset",
                         "fr": "Version du jeu de données"
@@ -649,6 +669,10 @@
                 },
                 {
                     "ckanField": "source",
+                    "label": {
+                        "en": "Source",
+                        "fr": "Source"
+                    },
                     "short_description": {
                         "en": "Source of the dataset.",
                         "fr": "Source du jeu de données."
