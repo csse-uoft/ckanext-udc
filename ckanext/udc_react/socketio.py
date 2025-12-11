@@ -30,7 +30,7 @@ def initSocketIO(app):
     
 
     @socketio.event(namespace="/admin-dashboard")
-    def connect(auth):
+    def connect(auth=None):
         # Notes: flask beaker session does not work with socketIO for unknown reason.
         # Using alternative way to authenticate users.
         if not auth or not auth.get("token"):
@@ -38,8 +38,28 @@ def initSocketIO(app):
             emit("error", {"message": "token not provided"})
             sio_disconnect()
             return
-        data = decode(auth["token"])
-        user_id = data["user_id"]
+        
+        try:
+            data = decode(auth["token"])
+        except Exception as e:
+            log.error(f"Failed to decode token: {e}")
+            emit("error", {"message": "invalid token"})
+            sio_disconnect()
+            return
+        
+        if not data:
+            log.info("Token decoded to None")
+            emit("error", {"message": "invalid token"})
+            sio_disconnect()
+            return
+            
+        user_id = data.get("user_id")
+        if not user_id:
+            log.info("Token missing user_id")
+            emit("error", {"message": "invalid token"})
+            sio_disconnect()
+            return
+            
         if not is_sysadmin(user_id):
             emit("error", {"message": "user not admin"})
             sio_disconnect()
