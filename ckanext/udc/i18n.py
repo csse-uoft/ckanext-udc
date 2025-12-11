@@ -46,13 +46,8 @@ def udc_lang_object(value, context):
     if not value:
         return None
     
-    # Ensure default language exists by seeding from any available value
-    # But only if it wasn't explicitly cleared
-    if default_lang not in value:
-        # pick one existing language to seed default
-        first = next(iter(value.values()))
-        if isinstance(first, str) and first.strip():
-            value[default_lang] = first
+    # Don't auto-seed default language from other languages
+    # This allows setting only non-default language values without clearing default
     
     return value
 
