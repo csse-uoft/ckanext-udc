@@ -155,8 +155,15 @@ this.ckan.module('package-form', function ($) {
           if (name === 'tags') self._syncTagString(collected.parsed);
         };
         inputs.forEach(function (inp) {
+          // Listen for both input and change events
+          // For Select2/autocomplete inputs, change event is key
           inp.addEventListener('input', update);
           inp.addEventListener('change', update);
+          
+          // For Select2, also listen for select2-removed/added events
+          if (jQuery && jQuery.fn.on) {
+            jQuery(inp).on('change', update);
+          }
         });
         update();
       });

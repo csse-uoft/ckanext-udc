@@ -148,10 +148,13 @@ then itself be extended to add/remove blocks of functionality. #}
                 {% set tags_translated_raw = data.get('tags_translated') %}
                 {% if tags_translated_raw is mapping %}
                   {% set tags_hidden_value = tags_translated_raw | tojson %}
+                  {% set tags_translated = tags_translated_raw %}
                 {% elif tags_translated_raw %}
                   {% set tags_hidden_value = tags_translated_raw %}
+                  {% set tags_translated = {} %}
                 {% else %}
                   {% set tags_hidden_value = '' %}
+                  {% set tags_translated = {} %}
                 {% endif %}
 
                 {% for lang_code in udc_langs if lang_code != default_lang %}
@@ -160,12 +163,14 @@ then itself be extended to add/remove blocks of functionality. #}
                   {% set short_hint = locales.pick_locale(field.get("short_description"), lang_code) %}
                   {% set long_hint = locales.pick_locale(field.get("long_description"), lang_code) %}
                   {% set is_active = (lang_code == __lang) %}
+                  {% set lang_tags = tags_translated.get(lang_code, []) %}
+                  {% set lang_tags_value = lang_tags | join(', ') if lang_tags else '' %}
                   <div class="udc-i18n-wrapper{% if not is_active %} d-none{% endif %}" data-udc-i18n-wrapper="true" data-lang="{{ lang_code }}">
                     {% call form.input('tags_' ~ lang_code ~ '_dummy',
                                       label=_(loc_label),
                                       id='field-tags-' ~ lang_code,
                                       placeholder=_('eg. economy, mental health, government'),
-                                      value='',
+                                      value=lang_tags_value,
                                       error=errors['tags_translated'],
                                       classes=['control-full'],
                                       attrs={'class': 'udc-i18n-input', 'data-lang':lang_code, 'data-i18n-for':'tags', 'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'}) %}
