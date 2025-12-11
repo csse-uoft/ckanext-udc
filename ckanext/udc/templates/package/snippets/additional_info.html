@@ -11,6 +11,53 @@
   {%- endif -%}
 {%- endmacro %}
 
+{% macro render_multilingual_value(value, lang='en', render_as_markdown=False) -%}
+  {%- if value is mapping -%}
+    {%- set result = h.pick_locale_with_fallback(value, lang) -%}
+    {%- set display_val = result[0] -%}
+    {%- set fallback_lang = result[1] -%}
+    {%- if render_as_markdown -%}
+      {{ h.render_markdown(display_val) }}
+    {%- elif h.is_url(display_val) -%}
+      <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+    {%- else -%}
+      {{ display_val }}
+    {%- endif -%}
+    {%- if fallback_lang -%}
+      <small class="text-muted ms-2" style="font-style: italic;">
+        ({{ _('showing value for') }} {{ h.udc_language_labels.get(fallback_lang, fallback_lang) }})
+      </small>
+    {%- endif -%}
+  {%- else -%}
+    {%- set display_val = pick_locale(value, lang) -%}
+    {%- if render_as_markdown -%}
+      {{ h.render_markdown(display_val) }}
+    {%- elif h.is_url(display_val) -%}
+      <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+    {%- else -%}
+      {{ display_val }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro render_multilingual_tags(tags_translated, lang='en') -%}
+  {%- if tags_translated is mapping -%}
+    {# Use pick_locale_with_fallback for consistent behavior #}
+    {%- set result = h.pick_locale_with_fallback(tags_translated, lang) -%}
+    {%- set tag_list = result[0] -%}
+    {%- set fallback_lang = result[1] -%}
+    
+    {%- if tag_list and tag_list is iterable and tag_list is not string -%}
+      {{ ', '.join(tag_list) }}
+      {%- if fallback_lang -%}
+        <small class="text-muted ms-2" style="font-style: italic;">
+          ({{ _('showing value for') }} {{ h.udc_language_labels.get(fallback_lang, fallback_lang) }})
+        </small>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro %}
+
 {% macro th_description (short_description="", long_description="", lang='en') %}
   {% set sd = pick_locale(short_description, lang) %}
   {% set ld = pick_locale(long_description, lang) %}
@@ -134,29 +181,17 @@
                       {{ pkg_dict.version }}
 
                     {% elif field["ckanField"] == "description" %}
-                      {{ h.render_markdown(h.get_translated(pkg_dict, 'notes')) }}
+                      {% set notes_translated = pkg_dict.get('notes_translated') %}
+                      {% if notes_translated %}
+                        {{ render_multilingual_value(notes_translated, __lang, render_as_markdown=True) }}
+                      {% elif pkg_dict.get('notes') %}
+                        {{ h.render_markdown(pkg_dict.get('notes')) }}
+                      {% endif %}
 
                     {% elif field["ckanField"] == "tags" %}
                       {% set tt = pkg_dict.get('tags_translated') %}
-                      {% set tag_list = [] %}
-                      {% set config_default = config.get('ckan.locale_default', 'en') %}
-                      
-                      {% if tt is mapping %}
-                        {# Try current language first, then fallback to default languages #}
-                        {% set tag_list = tt.get(__lang) or tt.get(config_default) or tt.get('en') or tt.get('fr') %}
-                        {% if not tag_list %}
-                          {# last resort: any first list in dict #}
-                          {% for _k, _v in tt.items() %}
-                            {% if _v %}
-                              {% set tag_list = _v %}
-                              {% break %}
-                            {% endif %}
-                          {% endfor %}
-                        {% endif %}
-                      {% endif %}
-                      
-                      {% if tag_list and tag_list is iterable and tag_list is not string %}
-                        {{ ', '.join(tag_list) }}
+                      {% if tt %}
+                        {{ render_multilingual_tags(tt, __lang) }}
                       {% elif pkg_dict.tags or pkg_dict.tags_translated %}
                         {# fallback to tags snippet with multilingual support #}
                         {% snippet "package/snippets/tags.html", tags=pkg_dict.tags, pkg=pkg_dict %}
@@ -166,12 +201,13 @@
                       {% snippet "snippets/license.html", pkg_dict=pkg_dict, text_only=True %}
 
                     {% elif field["ckanField"] == "title" %}
-                      {{ h.get_translated(pkg_dict, 'title') }}
+                      {% set title_data = pkg_dict.get('title_translated') or pkg_dict.get('title') %}
+                      {{ render_multilingual_value(title_data, __lang) }}
 
-                    {% elif field["ckanField"] == "organization_and_visibility" %}
+                    {# {% elif field["ckanField"] == "organization_and_visibility" %}
                       {% if pkg_dict.organization %}
                         <a href="{{ h.url_for('organization.read', id=pkg_dict.organization.name) }}">{{ pkg_dict.organization.title or pkg_dict.organization.name }}</a>
-                      {% endif %}
+                      {% endif %} #}
                     {% endif %}
 
                   {# Handle custom fields #}
@@ -223,12 +259,7 @@
                           {% endif %}
                         {% else %}
                           {% set raw_val = pkg_dict[field_name] %}
-                          {% set display_val = pick_locale(raw_val, __lang) %}
-                          {% if h.is_url(display_val) %}
-                            <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
-                          {% else %}
-                            {{ display_val }}
-                          {% endif %}
+                          {{ render_multilingual_value(raw_val, __lang) }}
                         {% endif %}
 
                       {% elif field_name == "dataset_versions" %}
@@ -263,22 +294,12 @@
                           </ul>
                         {% else %}
                           {% set raw_val = pkg_dict[field_name] %}
-                          {% set display_val = pick_locale(raw_val, __lang) %}
-                          {% if h.is_url(display_val) %}
-                            <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
-                          {% else %}
-                            {{ display_val }}
-                          {% endif %}
+                          {{ render_multilingual_value(raw_val, __lang) }}
                         {% endif %}
 
                       {% else %}
                         {% set raw_val = pkg_dict[field_name] %}
-                        {% set display_val = pick_locale(raw_val, __lang) %}
-                        {% if h.is_url(display_val) %}
-                          <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
-                        {% else %}
-                          {{ display_val }}
-                        {% endif %}
+                        {{ render_multilingual_value(raw_val, __lang) }}
                       {% endif %}
                     {% endif %}
                   {% endif %}

@@ -178,14 +178,19 @@ this.ckan.module('package-form', function ($) {
         var raw = inp.value;
         if (typeof raw !== 'string') raw = '';
         raw = raw.trim();
-        if (!raw) return;
+        
+        // Always include the value, even if empty, so backend knows it was cleared
         if (format === 'list') {
-          var parts = raw.split(/[\n,]+/).map(function (piece) {
-            return piece.trim();
-          }).filter(function (piece) { return piece.length > 0; });
-          if (parts.length) out[L] = parts;
+          if (!raw) {
+            out[L] = [];
+          } else {
+            var parts = raw.split(/[\n,]+/).map(function (piece) {
+              return piece.trim();
+            }).filter(function (piece) { return piece.length > 0; });
+            out[L] = parts;
+          }
         } else {
-          out[L] = raw;
+          out[L] = raw; // Include empty strings so backend knows field was cleared
         }
       });
       return {

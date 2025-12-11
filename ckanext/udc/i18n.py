@@ -26,21 +26,34 @@ def udc_lang_object(value, context):
         return {default_lang: value}
     if not isinstance(value, dict):
         raise tk.Invalid("Expected an object of {lang: string} for localized text.")
-    # Validate entries
+    
+    default_lang = tk.config.get("ckan.locale_default", "en") or "en"
+    
+    # Track if default language was explicitly set to empty (should be preserved)
+    default_was_empty = default_lang in value and value[default_lang] == ""
+    
+    # Validate entries - remove only None/missing, but keep empty strings
     for k, v in list(value.items()):
         if _is_missing(v):
             value.pop(k, None)
         elif not isinstance(v, str):
             raise tk.Invalid("Localized text values must be strings.")
+    
+    # Restore empty default language if it was explicitly set
+    if default_was_empty and default_lang not in value:
+        value[default_lang] = ""
+    
     if not value:
         return None
+    
     # Ensure default language exists by seeding from any available value
-    default_lang = tk.config.get("ckan.locale_default", "en") or "en"
+    # But only if it wasn't explicitly cleared
     if default_lang not in value:
         # pick one existing language to seed default
         first = next(iter(value.values()))
         if isinstance(first, str) and first.strip():
             value[default_lang] = first
+    
     return value
 
 

@@ -49,7 +49,7 @@ from ckanext.udc.helpers import (
     get_system_info,
     udc_json_attr,
 )
-from ckanext.udc.solr.config import pick_locale, get_udc_langs, get_current_lang
+from ckanext.udc.solr.config import pick_locale, pick_locale_with_fallback, get_udc_langs, get_current_lang
 from ckanext.udc.graph.sparql_client import SparqlClient
 from ckanext.udc.graph.preload import preload_ontologies
 from ckanext.udc.graph.logic import get_catalogue_graph
@@ -518,6 +518,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "get_system_info": get_system_info,
             "udc_json_attr": udc_json_attr,
             "license_options_details": license_options_details,
+            "pick_locale_with_fallback": pick_locale_with_fallback,
         }
 
     def _language_label(self, code: str, fallback: str) -> str:

@@ -61,3 +61,51 @@ def pick_locale(texts: Union[str, dict], lang: str = None) -> str:
         elif len(texts) > 0:
             return list(texts.values())[0]
     return ""
+
+
+def pick_locale_with_fallback(texts: Union[str, dict], lang: str = None) -> tuple:
+    """Pick the text in the specified language from a dict of texts with fallback chain.
+
+    Returns a tuple of (text, actual_lang_used) where actual_lang_used is None if
+    the requested language was used, or the language code if a fallback was used.
+
+    If texts is a string, return (texts, None).
+    If texts is a dict, try requested language, then follow the precedence order
+    from get_udc_langs(). Empty strings are treated as missing values.
+    """
+    if not lang:
+        lang = h.lang() or get_default_lang()
+    
+    if isinstance(texts, str):
+        return (texts, None)
+    
+    if not isinstance(texts, dict):
+        return ("", None)
+    
+    # Helper to check if value is non-empty
+    def is_non_empty(val):
+        if val is None:
+            return False
+        if isinstance(val, str) and not val.strip():
+            return False
+        if isinstance(val, (list, dict)) and not val:
+            return False
+        return True
+    
+    # If requested language exists and is non-empty, return it with None (no fallback)
+    if lang in texts and is_non_empty(texts[lang]):
+        return (texts[lang], None)
+    
+    # Otherwise, try fallback languages in order
+    lang_order = get_udc_langs()
+    for fallback_lang in lang_order:
+        if fallback_lang in texts and is_non_empty(texts[fallback_lang]):
+            # Return the value and the language code used
+            return (texts[fallback_lang], fallback_lang)
+    
+    # Last resort: return any available non-empty value
+    for k, v in texts.items():
+        if is_non_empty(v):
+            return (v, k)
+    
+    return ("", None)
