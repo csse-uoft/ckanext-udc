@@ -8,7 +8,7 @@ package_mapping = {
     "title": "title",
     "author": "author",
     "author_email": "author_email",
-    "notes": "notes",
+    # "notes": "notes",  # handled separately for translation
     "metadata_created": "metadata_created",
     "metadata_modified": "metadata_modified",
     "version": "version",
@@ -56,6 +56,12 @@ class DonneesQuebecImport(CKANBasedImport):
         if src.get("title"):
             target["title_translated"] = {
                 "fr": src["title"],
+            }
+            
+        # notes translated (description)
+        if src.get("notes"):
+            target["notes_translated"] = {
+                "fr": src["notes"],
             }
 
         # location
