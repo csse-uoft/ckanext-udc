@@ -242,7 +242,8 @@ def udc_fill_tags_translated_from_core(value, context):
 
 def udc_seed_translated_from_core(core_field: str):
     """
-    INPUT (create/update): if <translated> is empty, seed {default_lang: core} so it gets stored.
+    INPUT (create/update): if <translated> is empty, seed {user_lang: core} so it gets stored.
+    Seeds to the user's current locale, not the system default.
     """
 
     def _seed(value, context):
@@ -251,8 +252,10 @@ def udc_seed_translated_from_core(core_field: str):
         data = context.get("data") or context.get("data_dict") or {}
         core_val = data.get(core_field)
         if isinstance(core_val, str) and core_val.strip():
-            default_lang = tk.config.get("ckan.locale_default", "en") or "en"
-            return {default_lang: core_val}
+            # Use the current user's language, not the system default
+            import ckan.lib.helpers as h
+            user_lang = h.lang() or tk.config.get("ckan.locale_default", "en") or "en"
+            return {user_lang: core_val}
         return None
 
     return _seed
