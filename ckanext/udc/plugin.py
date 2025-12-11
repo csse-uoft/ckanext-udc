@@ -82,6 +82,8 @@ from ckanext.udc.solr.solr import update_solr_maturity_model_fields
 from ckanext.udc.solr.index import before_dataset_index as _before_dataset_index
 
 from ckanext.udc.search.logic.actions import filter_facets_get
+from ckanext.udc.user.actions import deleted_users_list, purge_deleted_users
+from ckanext.udc.user import auth as user_auth
 from .i18n import (
     udc_lang_object,
     udc_json_dump,
@@ -118,6 +120,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController)
     plugins.implements(plugins.IMiddleware)
@@ -604,6 +607,18 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             # "maturity_model_get": get_maturity_model,
             # Filters
             "filter_facets_get": filter_facets_get,
+            # User management
+            "deleted_users_list": deleted_users_list,
+            "purge_deleted_users": purge_deleted_users,
+        }
+
+    def get_auth_functions(self):
+        """
+        Register custom authorization functions.
+        """
+        return {
+            "deleted_users_list": user_auth.deleted_users_list,
+            "purge_deleted_users": user_auth.purge_deleted_users,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
