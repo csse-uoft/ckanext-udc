@@ -164,6 +164,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             or ("jobs" in sys.argv and "worker" in sys.argv)
             or ("search-index" in sys.argv)
             or ("translation" in sys.argv)
+            or ("asset" in sys.argv)
         ):
             log.info("Skipping UDC Plugin Configuration")
             # Do not load the plugin if we are running the CLI
