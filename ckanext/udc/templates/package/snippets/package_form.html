@@ -164,10 +164,11 @@ then itself be extended to add/remove blocks of functionality. #}
                     {% call form.input('tags_' ~ lang_code ~ '_dummy',
                                       label=_(loc_label),
                                       id='field-tags-' ~ lang_code,
+                                      placeholder=_('eg. economy, mental health, government'),
                                       value='',
                                       error=errors['tags_translated'],
                                       classes=['control-full'],
-                                      attrs={'class': 'form-control udc-i18n-input', 'data-lang':lang_code, 'data-i18n-for':'tags'}) %}
+                                      attrs={'class': 'udc-i18n-input', 'data-lang':lang_code, 'data-i18n-for':'tags', 'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'}) %}
                       {% if short_hint %}
                         <span class="form-text">
                           {{ short_hint }}
