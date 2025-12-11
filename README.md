@@ -174,11 +174,12 @@ To install ckanext-udc:
 
     Adjust `ckan.jobs.timeout` to 36000 (10 hours)
 
-4. Compiling translation files
+4. Compiling assets and translation files
     ```shell
     cd /usr/lib/ckan/default/src/ckanext-udc
     python setup.py compile_catalog
     ckan -c /etc/ckan/default/ckan.ini translation js
+    ckan -c /etc/ckan/default/ckan.ini asset build
     ```
 
 5. Install UDC-React Dependencies & Build
