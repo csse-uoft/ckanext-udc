@@ -1,0 +1,70 @@
+{# Shared macros for rendering multilingual fields with language fallback #}
+
+{% macro pick_locale(val, lang='en') -%}
+  {%- if val is mapping -%}
+    {%- set out = val.get(lang) or val.get('en') or val.get('fr') -%}
+    {%- if not out -%}
+      {%- for k, v in val.items() -%}{%- set out = v -%}{%- break -%}{%- endfor -%}
+    {%- endif -%}
+    {{ out }}
+  {%- else -%}
+    {{ val }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro render_multilingual_value(value, lang='en', render_as_markdown=False) -%}
+  {%- if value is mapping -%}
+    {%- set result = h.pick_locale_with_fallback(value, lang) -%}
+    {%- set display_val = result[0] -%}
+    {%- set fallback_lang = result[1] -%}
+    {%- if render_as_markdown -%}
+      {{ h.render_markdown(display_val) }}
+    {%- elif h.is_url(display_val) -%}
+      <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+    {%- else -%}
+      {{ display_val }}
+    {%- endif -%}
+    {%- if fallback_lang -%}
+      <small class="text-muted ms-2" style="font-style: italic;">
+        ({{ _('showing value for') }} {{ h.udc_language_labels.get(fallback_lang, fallback_lang) }})
+      </small>
+    {%- endif -%}
+  {%- else -%}
+    {%- set display_val = pick_locale(value, lang) -%}
+    {%- if render_as_markdown -%}
+      {{ h.render_markdown(display_val) }}
+    {%- elif h.is_url(display_val) -%}
+      <a href="{{ display_val }}" target="_blank">{{ display_val }}</a>
+    {%- else -%}
+      {{ display_val }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro render_multilingual_tags(tags_translated, lang='en') -%}
+  {%- if tags_translated is mapping -%}
+    {# Use pick_locale_with_fallback for consistent behavior #}
+    {%- set result = h.pick_locale_with_fallback(tags_translated, lang) -%}
+    {%- set tag_list = result[0] -%}
+    {%- set fallback_lang = result[1] -%}
+    
+    {%- if tag_list and tag_list is iterable and tag_list is not string -%}
+      {%- for tag in tag_list -%}
+        <span class="badge bg-secondary me-1">{{ tag }}</span>
+      {%- endfor -%}
+      {%- if fallback_lang -%}
+        <small class="text-muted ms-2" style="font-style: italic;">
+          ({{ _('showing value for') }} {{ h.udc_language_labels.get(fallback_lang, fallback_lang) }})
+        </small>
+      {%- endif -%}
+    {%- endif -%}
+  {%- else -%}
+    {# Fallback for non-multilingual tags #}
+    {%- set tag_list = pick_locale(tags_translated, lang) -%}
+    {%- if tag_list and tag_list is iterable and tag_list is not string -%}
+      {%- for tag in tag_list -%}
+        <span class="badge bg-secondary me-1">{{ tag }}</span>
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro %}

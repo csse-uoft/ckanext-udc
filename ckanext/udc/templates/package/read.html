@@ -1,5 +1,7 @@
 {% ckan_extends %}
 
+{% import 'snippets/multilingual_macros.html' as multilingual_macros with context %}
+
 {% block package_notes %}
   
   {% if pkg.summary %}
@@ -23,7 +25,13 @@
       <br/>
     </div>
   {% else %}
-    {{ super() }}
+      {% set notes_translated = pkg_dict.get('notes_translated') %}
+      {% if notes_translated %}
+        {{ multilingual_macros.render_multilingual_value(notes_translated, __lang, render_as_markdown=True) }}
+        <div style="margin-top: 10px;"> </div>
+      {% elif pkg_dict.get('notes') %}
+        {{ h.render_markdown(pkg_dict.get('notes')) }}
+      {% endif %}
   {% endif %}
 {% endblock %}
 
