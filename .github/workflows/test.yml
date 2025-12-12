@@ -69,10 +69,10 @@ jobs:
       contents: write
     
     steps:
-    - name: Checkout
+    - name: Checkout main branch
       uses: actions/checkout@v4
       with:
-        ref: docs
+        fetch-depth: 0
         
     - name: Download coverage report
       uses: actions/download-artifact@v4
@@ -84,6 +84,22 @@ jobs:
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
+        
+        # Check if docs branch exists
+        if git ls-remote --exit-code --heads origin docs; then
+          echo "docs branch exists, checking it out"
+          git fetch origin docs
+          git checkout docs
+        else
+          echo "docs branch does not exist, creating it"
+          git checkout --orphan docs
+          git rm -rf . || true
+        fi
+        
+        # Remove old coverage and add new one
+        rm -rf coverage
+        mv ../coverage .
+        
         git add coverage
         git commit -m "Update coverage report from ${{ github.sha }}" || echo "No changes to commit"
         git push origin docs
