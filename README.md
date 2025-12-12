@@ -1,6 +1,9 @@
 [![Tests](https://github.com/csse-uoft/ckanext-udc/workflows/Tests/badge.svg?branch=main)](https://github.com/csse-uoft/ckanext-udc/actions)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://csse-uoft.github.io/ckanext-udc/)
 
 # ckanext-udc
+
+**[📊 View Coverage Report](https://csse-uoft.github.io/ckanext-udc/)**
 
 ## [Developer Manual](./DEV.md)
 ## [Testing Instructions](./TESTING.md)
