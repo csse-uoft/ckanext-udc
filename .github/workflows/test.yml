@@ -89,7 +89,7 @@ jobs:
         if git ls-remote --exit-code --heads origin docs; then
           echo "docs branch exists, checking it out"
           git fetch origin docs
-          git checkout docs
+          git checkout -B docs origin/docs
         else
           echo "docs branch does not exist, creating it"
           git checkout --orphan docs
