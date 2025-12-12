@@ -10,13 +10,21 @@
 
 **Backend Patterns**
 - `UdcPlugin` extends `DefaultDatasetForm` and rewires schemas via `_modify_package_schema`; multilingual text fields use validators in `ckanext/udc/i18n.py` to persist JSON blobs in extras.
+- Multilingual fields (`title_translated`, `notes_translated`, etc.) are stored as JSON in package extras; core fields are **NOT** automatically synced - use `pick_locale_with_fallback()` helper in templates for language fallback with visual indicators.
+- `udc_seed_translated_from_core()` seeds to **user's current locale** (`h.lang()`), not system default; `udc_lang_object()` preserves explicit empty values and does not auto-seed between languages.
 - `package_update` and `package_delete` hooks dispatch to `graph.logic.onUpdateCatalogue`/`onDeleteCatalogue`; raise `logic.ValidationError` on failures so UI surfaces graph errors.
-- Register additional logic through toolkit actions (eg. `license_*`, `file_format_*`, `summary_*`) instead of direct imports to respect CKAN permission checks.
+- Register additional logic through toolkit actions (eg. `license_*`, `file_format_*`, `summary_*`, `deleted_users_list`, `purge_deleted_users`) instead of direct imports to respect CKAN permission checks.
 
 **Search & Solr**
 - `/catalogue` blueprint in `ckanext/udc/views.py` parses `fts_`, `exact_`, `min_`, and `max_` query params and rebuilds URLs with `remove_field` helpers.
 - `ckanext/udc/solr/index.py` injects `<field>_<lang>_{txt|f}` properties before indexing; update your Solr schema when adding maturity-model fields.
 - `filter_facets_get` returns stable keys (e.g., `extras_file_format`) while mapping to language-specific Solr fields and localizing dropdown labels from `UdcPlugin.dropdown_options`.
+- Language fallback: `pick_locale_with_fallback(texts, lang)` returns `(value, fallback_lang)` tuple; use in templates to show "(showing value for Français)" when user's language unavailable.
+
+**User Management**
+- `deleted_users_list` action lists all soft-deleted users (state='deleted'); sysadmin-only access via `ckanext/udc/user/auth.py`.
+- `purge_deleted_users` action permanently removes deleted users and cleans up memberships/collaborations; **cannot be undone**, sysadmin-only.
+- User management APIs documented in `docs/API_USER_MANAGEMENT.md`; see `ckanext/udc/tests/test_user_actions.py` for test patterns.
 
 **Graph & External Services**
 - Knowledge graph sync depends on a reachable SPARQL endpoint; `reload_config` applies ontology preloads and `graph/logic.py` emits delete/insert SPARQL per package change.
@@ -34,6 +42,16 @@
 - Background jobs run via `ckan -c /etc/ckan/default/ckan.ini jobs worker`; set `WERKZEUG_DEBUG_PIN` if you need interactive debugging.
 
 **Testing & QA**
-- Execute backend tests with `pytest --ckan-ini=test.ini`; leverage `pytest-ckan` fixtures (`clean_db`, `app`) when expanding `ckanext/udc/tests`.
+- Execute backend tests with `pytest --ckan-ini=test.ini` or use docker-compose: `docker-compose run ckan-test`; leverage `pytest-ckan` fixtures (`clean_db`, `with_plugins`, `app`) when expanding `ckanext/udc/tests`.
+- Test organization: Core tests in `ckanext/udc/tests/` (helpers, package actions, plugin, solr config, user actions); graph transformation tests in `ckanext/udc/tests/graph/` - see respective README.md files.
+- User management tests demonstrate authorization patterns, multilingual persistence, and integration scenarios - follow similar patterns for new features.
 - Linting/formatting rules are centralized in `setup.cfg` and `pyproject.toml`; mirror those when adding new packages or scripts.
 - After touching multilingual fields or Solr mappings, reindex (`ckan -c /etc/ckan/default/ckan.ini search-index rebuild`) to validate schema compatibility early.
+- Docker services use internal ports (db:5432, solr:8983, redis:6379) for inter-container communication; external ports (5433, 8984, 6380) are for host access only.
+
+**Key Implementation Details**
+- JavaScript form handling (`package.js`): `_collectI18nValues()` includes empty strings to signal intentional field clearing to backend validators.
+- Template helpers: Use `render_multilingual_value()` and `render_multilingual_tags()` macros in `additional_info.html` to reduce duplication and show language fallback indicators.
+- Empty value handling: Empty strings, whitespace-only strings, and empty arrays treated as missing values in fallback logic (`is_non_empty()` helper).
+- Package actions pass **result dict** to graph functions, not input data_dict - tests validate this flow.
+
