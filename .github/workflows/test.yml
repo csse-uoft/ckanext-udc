@@ -78,7 +78,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: coverage-report
-        path: coverage
+        path: ./coverage-temp
     
     - name: Deploy to docs branch
       run: |
@@ -98,7 +98,7 @@ jobs:
         
         # Remove old coverage and add new one
         rm -rf coverage
-        mv ../coverage .
+        mv coverage-temp coverage
         
         git add coverage
         git commit -m "Update coverage report from ${{ github.sha }}" || echo "No changes to commit"
