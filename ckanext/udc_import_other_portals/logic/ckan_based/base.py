@@ -93,17 +93,19 @@ class CKANBasedImport(BaseImport):
 
                     if self.import_config.other_config.get("delete_previously_imported"):
                         # Delete all packages that were previously imported
-                        for package_id_to_remove in imported_id_map.values():
-                            _delete_all_imports()
+                        _delete_all_imports()
+                        imported_id_map = {}
                     else:
                         # Get all packages that are deleted from the remote server, Remove them in ours
-                        for package_id_to_remove in [v for k, v in imported_id_map.items() if k not in self.packages_ids]:
+                        for remote_id, package_id_to_remove in [
+                            (k, v) for k, v in imported_id_map.items() if k not in self.packages_ids
+                        ]:
                             try:
                                 package_to_delete = get_self_package(self.build_context(), package_id_to_remove)
                                 # delete_package(self.build_context(), package_id_to_remove)
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
-                                imported_id_map.pop(package_id_to_remove, None)
+                                imported_id_map.pop(remote_id, None)
                             except Exception as e:
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
                                 self.logger.exception(e)
@@ -115,8 +117,12 @@ class CKANBasedImport(BaseImport):
                     futures = {executor.submit(self.process_package, src, imported_id_map.get(src.get("id"))): src for src in self.all_packages}
                     for future in as_completed(futures):
                         try:
-                            remote_id, mapped_id, name = future.result()
-                            imported_id_map[remote_id] = mapped_id
+                            result = future.result()
+                            if not result:
+                                continue
+                            remote_id, mapped_id, name = result
+                            if mapped_id:
+                                imported_id_map[remote_id] = mapped_id
                         except Exception as e:
                             self.logger.error('ERROR: A package import failed.')
                             self.logger.exception(e)
@@ -175,4 +181,3 @@ class CKANBasedImport(BaseImport):
         # Iterrate all packages and make sure no error occurred
         for src in self.all_packages:
             mapped = self.map_to_cudc_package(src)
-

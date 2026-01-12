@@ -269,6 +269,7 @@ class BaseImport:
             self.logger.info(
                 f"INFO: Skipped {src['name']} ({src['id']}) - map_to_cudc_package returned None"
             )
+            return None
             
         # Replace with a new UUID
         mapped["cudc_import_remote_id"] = mapped["id"]

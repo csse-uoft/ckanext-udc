@@ -105,7 +105,7 @@ def find_duplicated_packages(context, package_dict: dict, current_import_config_
 
     # Exact match with title + author emails
     author_email = package_dict.get("author_email")
-    if title and author:
+    if title and author_email:
         result = package_search(
             context,
             current_import_config_id,
@@ -142,10 +142,15 @@ def parse_date(date_str):
 
 def get_sort_key(item):
     # Prefer 'source_last_updated' if it exists, otherwise use 'metadata_modified'
-    if "source_last_updated" in item:
-        return parse_date(item["source_last_updated"])
-    else:
-        return parse_date(item["metadata_modified"])
+    for key in ("source_last_updated", "metadata_modified"):
+        value = item.get(key)
+        if not value:
+            continue
+        try:
+            return parse_date(value)
+        except ValueError:
+            continue
+    return datetime.min
 
 
 def create_unified_package(
@@ -296,7 +301,7 @@ def process_duplication(context: Context, linked_packages: list):
 
     # Find exisiting unified package
     p_has_unified_package = [
-        p for p in linked_packages if (p.get("is_unified") == "true")
+        p for p in linked_packages if (p.get("is_unified") in ("true", True))
     ]
 
     print("p_has_unified_package", p_has_unified_package)
