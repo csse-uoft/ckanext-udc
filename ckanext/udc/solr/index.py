@@ -177,6 +177,10 @@ def before_dataset_index(pkg_dict: dict[str, Any]) -> dict[str, Any]:
     # and `dataset_versions`. At index-time we derive URL-only and
     # label fields suitable for filtering and display in facets/search.
 
+    # Drop raw extras to avoid indexing schema conflicts.
+    index.pop("extras_version_dataset", None)
+    index.pop("extras_dataset_versions", None)
+
     # Single "is version of" target
     raw_version_dataset = index.get("version_dataset")
     vd_obj: dict[str, Any] | None = None
