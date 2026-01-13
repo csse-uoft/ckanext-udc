@@ -158,7 +158,14 @@ def ensure_organization(context: Context, organization: dict):
                 return
 
         logic.check_access("organization_create", context, data_dict=organization)
-        logic.get_action("organization_create")(context, organization)
+        try:
+            logic.get_action("organization_create")(context, organization)
+        except IntegrityError:
+            # Another process created it; re-check and continue.
+            model.Session.rollback()
+            organization_ids = logic.get_action("organization_list")(context)
+            if organization["id"] not in organization_ids:
+                raise
 
 
 class BaseImport:
@@ -401,7 +408,13 @@ def ensure_license(context, license_id, license_title, license_url, check=True):
             logic.get_action("license_create")(
                 context, {"id": license_id, "title": license_title, "url": license_url}
             )
-        except:
-            # Weird concurrency issue
+        except IntegrityError:
+            # Another process created it; re-check and continue.
+            model.Session.rollback()
+            licenses = logic.get_action("licenses_get")(context)
+            if not any(l.get("id") == license_id for l in licenses):
+                raise
+        except Exception:
+            # Keep behavior for unexpected errors.
             pass
         return
