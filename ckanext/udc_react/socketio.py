@@ -8,6 +8,8 @@ from flask_socketio import (
     join_room,
     leave_room,
 )
+import json
+import redis
 import logging
 from pprint import pprint
 from ckan.lib.api_token import decode
@@ -22,11 +24,36 @@ log = logging.getLogger(__name__)
 
 
 def initSocketIO(app):
-    socketio = SocketIO(app, debug=False, logger=False, manage_session=True)
-    worker_data = (
-        {}
-    )  # Structure: { job_id: { 'sid': sid, 'logs': [], 'progress': None, 'finished': [] } }
+    # Use Redis as the message queue for Socket.IO
+    redis_url = config.get("ckan.redis.url", "redis://localhost:6379/0")
+    redis_ttl = int(config.get("ckanext.udc.socketio.redis_ttl", 86400))
+    redis_client = redis.Redis.from_url(redis_url, decode_responses=True)
+
+    socketio = SocketIO(
+        app,
+        debug=False,
+        logger=False,
+        manage_session=True,
+        message_queue=redis_url,
+    )
+
+    # client_map stays local to the process; per-connection state lives here.
     client_map = {}  # Structure: { sid: job_id }
+
+    def _job_key(job_id: str) -> str:
+        return f"udc:import:job:{job_id}"
+
+    def _get_job_data(job_id: str) -> dict:
+        raw = redis_client.get(_job_key(job_id))
+        if not raw:
+            return {"logs": [], "progress": None, "finished": []}
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {"logs": [], "progress": None, "finished": []}
+
+    def _set_job_data(job_id: str, data: dict) -> None:
+        redis_client.setex(_job_key(job_id), redis_ttl, json.dumps(data))
     
 
     @socketio.event(namespace="/admin-dashboard")
@@ -117,14 +144,15 @@ def initSocketIO(app):
         sid = request.sid
         join_room(import_id)  # Join a room named after the job_id
 
-        if import_id in worker_data:
+        job_data = _get_job_data(import_id)
+        if job_data.get("logs") or job_data.get("progress") is not None:
             # Emit the entire log and progress history for the job_id to the newly subscribed client
-            for log_entry in worker_data[import_id].get("logs", []):
+            for log_entry in job_data.get("logs", []):
                 emit("log_message", log_entry, room=sid, namespace="/admin-dashboard")
-            if worker_data[import_id].get("progress") is not None:
+            if job_data.get("progress") is not None:
                 emit(
                     "progress_update",
-                    worker_data[import_id]["progress"],
+                    job_data["progress"],
                     room=sid,
                     namespace="/admin-dashboard",
                 )
@@ -151,8 +179,9 @@ def initSocketIO(app):
 
         :param import_id: The ID of the import/job.
         """
-        if import_id in worker_data:
-            emit("job_status", worker_data[import_id])
+        job_data = _get_job_data(import_id)
+        if job_data.get("logs") or job_data.get("progress") is not None:
+            emit("job_status", job_data)
             log.info(
                 f"Sent status for job_id {import_id} to admin client {request.sid}"
             )
@@ -189,13 +218,12 @@ def initSocketIO(app):
             return
 
         # Initialize job entry if it doesn't exist
-        if job_id not in worker_data:
-            worker_data[job_id] = {
-                "sid": sid,
-                "logs": [],  # Store logs for this worker
-                "progress": None,  # Store the latest progress for this worker
-                "finished": [],  # Store the finished packages
-            }
+        job_data = _get_job_data(job_id)
+        job_data["sid"] = sid
+        job_data.setdefault("logs", [])
+        job_data.setdefault("progress", None)
+        job_data.setdefault("finished", [])
+        _set_job_data(job_id, job_data)
 
         # Map the client's sid to their job_id
         client_map[sid] = job_id
@@ -238,8 +266,9 @@ def initSocketIO(app):
 
         log_entry = {"log_level": log_level, "message": message}
 
-        # Save the log entry in worker_data
-        worker_data[job_id]["logs"].append(log_entry)
+        job_data = _get_job_data(job_id)
+        job_data.setdefault("logs", []).append(log_entry)
+        _set_job_data(job_id, job_data)
 
         # Emit the log message to the admin-dashboard room corresponding to the job_id
         emit("log_message", log_entry, room=job_id, namespace="/admin-dashboard")
@@ -285,8 +314,9 @@ def initSocketIO(app):
 
         progress_entry = {"current": current, "total": total}
 
-        # Save the progress update in worker_data
-        worker_data[job_id]["progress"] = progress_entry
+        job_data = _get_job_data(job_id)
+        job_data["progress"] = progress_entry
+        _set_job_data(job_id, job_data)
 
         # Emit the progress update to the admin-dashboard room corresponding to the job_id
         emit(
@@ -324,8 +354,9 @@ def initSocketIO(app):
 
         job_id = client_map[sid]
         
-        # Save the progress update in worker_data
-        worker_data[job_id]["finished"].append(data)
+        job_data = _get_job_data(job_id)
+        job_data.setdefault("finished", []).append(data)
+        _set_job_data(job_id, job_data)
 
         # Emit the progress update to the admin-dashboard room corresponding to the job_id
         emit(
@@ -353,14 +384,15 @@ def initSocketIO(app):
         if sid in client_map:
             job_id = client_map.pop(sid)
             leave_room(job_id)
-            if job_id in worker_data:
+            job_data = _get_job_data(job_id)
+            if job_data.get("finished") is not None:
                 # Store finished data in the database
                 job = CUDCImportJob.get(job_id)
-                job.other_data = {'finished': worker_data[job_id]["finished"]}
+                job.other_data = {"finished": job_data.get("finished", [])}
                 model.Session.add(job)
                 model.Session.commit()
-                
-                del worker_data[job_id]
+
+                redis_client.delete(_job_key(job_id))
                 log.info(f"Removed worker data for job {job_id} upon disconnect.")
         
         emit(
