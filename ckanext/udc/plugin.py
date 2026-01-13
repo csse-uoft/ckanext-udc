@@ -357,6 +357,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                     udc_json_dump,
                     tk.get_converter("convert_to_extras"),
                 ],
+                "udc_import_extras": [
+                    tk.get_validator("ignore_missing"),
+                    udc_json_dump,
+                    tk.get_converter("convert_to_extras"),
+                ],
             }
         )
 
@@ -489,6 +494,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                     tk.get_validator("ignore_missing"),
                 ],
                 "dataset_versions": [
+                    tk.get_converter("convert_from_extras"),
+                    udc_json_load,
+                    tk.get_validator("ignore_missing"),
+                ],
+                "udc_import_extras": [
                     tk.get_converter("convert_from_extras"),
                     udc_json_load,
                     tk.get_validator("ignore_missing"),
@@ -675,6 +685,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
         pass
 
     def after_dataset_show(self, context: Context, pkg_dict: dict[str, Any]) -> None:
+        if context.get("for_update"):
+            # Avoid injecting related_packages and udc_import_extras during package_update/patch.
+            pkg_dict.pop("udc_import_extras", None)
+            return
         # Add related packages
         related_packages = []
 

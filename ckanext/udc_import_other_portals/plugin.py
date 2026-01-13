@@ -18,6 +18,7 @@ from .logic.actions import (
     cudc_clear_organization,
 )
 from .logic.relationships import init_relationships
+from .scheduler import sync_cron_jobs
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
         if ("run" in sys.argv or "uwsgi" in sys.argv) and not ("worker" in sys.argv):
             # We want the main CKAN instance to run startup tasks
             init_startup()
+            sync_cron_jobs()
             log.info("Udc ImportOtherPortals DB startup!")
  
         log.info("Udc ImportOtherPortals Plugin Loaded!")

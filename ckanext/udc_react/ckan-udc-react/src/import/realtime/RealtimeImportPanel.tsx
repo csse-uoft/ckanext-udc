@@ -1,6 +1,6 @@
 import { Card, CardContent, Typography, Box, LinearProgress, Select, MenuItem, FormControl, InputLabel, Button } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from "socket.io-client";
 import { useApi } from '../../api/useApi';
 import { ImportLog, ImportProgress, RunningJob, ImportPanelProps, FinishedPackage } from './types';
@@ -16,6 +16,11 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
   const [selectedJob, setSelectedJob] = useState<string>("");
   const [socket, setSocket] = useState<Socket>();
   const [autoScroll, setAutoScroll] = useState(true); // Auto-scroll state
+  const selectedJobRef = useRef<string>("");
+
+  useEffect(() => {
+    selectedJobRef.current = selectedJob;
+  }, [selectedJob]);
 
   useEffect(() => {
     let socket: Socket;
@@ -31,12 +36,27 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
       });
       setSocket(socket);
 
+      socket.on('connect', () => {
+        socket.emit('get_running_jobs', props.uuid);
+        if (selectedJobRef.current) {
+          socket.emit('subscribe', selectedJobRef.current);
+          socket.emit('get_job_status', selectedJobRef.current);
+        }
+      });
+
       // Fetch running jobs for the import config
       socket.emit('get_running_jobs', props.uuid);
 
       // Listen for running jobs
       socket.on('running_jobs', (jobs: { [key: string]: RunningJob }) => {
-        setRunningJobs(Object.values(jobs));
+        const running = Object.values(jobs);
+        setRunningJobs(running);
+        if (!selectedJob && running.length > 0) {
+          setSelectedJob(running[0].id);
+          setImportLogs([]);
+          setFinishedPackages([]);
+          setImportProgress({ current: 0, total: 1 });
+        }
       });
 
       // Listen for progress updates
@@ -96,6 +116,9 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
   };
 
   useEffect(() => {
+    if (!selectedJob) {
+      return;
+    }
     socket?.emit('subscribe', selectedJob);
     socket?.emit('get_job_status', selectedJob);
     socket?.once('job_status', (status: { progress: ImportProgress, logs: ImportLog[], finished: FinishedPackage[] }) => {

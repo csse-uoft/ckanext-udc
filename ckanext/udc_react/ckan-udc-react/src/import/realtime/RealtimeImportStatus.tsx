@@ -7,6 +7,7 @@ import { RealtimeImportPanel } from './RealtimeImportPanel';
 export function RealtimeImportStatus() {
   const { api, executeApiCall } = useApi();
   const [tabs, setTabs] = useState<IDynamicTab[]>([]);
+  const [initialKey, setInitialKey] = useState<string>();
 
   const load = async (option?: string) => {
     const importConfigs = await executeApiCall(api.getImportConfigs) as Record<string, { code: string, name: string }>;
@@ -26,6 +27,9 @@ export function RealtimeImportStatus() {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('config') || undefined;
+    setInitialKey(key || undefined);
     load();
   }, []);
 
@@ -34,7 +38,7 @@ export function RealtimeImportStatus() {
   return (
     <Container>
       <Typography variant='h5' paddingBottom={2}>Realtime Import Status</Typography>
-      <DynamicTabs tabs={tabs} />
+      <DynamicTabs tabs={tabs} initialKey={initialKey} />
     </Container>
   );
 }

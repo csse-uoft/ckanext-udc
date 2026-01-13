@@ -8,3 +8,5 @@ openai>=1.37.1
 Flask-SocketIO>=5.3.6
 python-socketio[client]>=5.11.3
 pychalk>=1.0.0
+rq_scheduler==0.13.0
+rq==1.11.0

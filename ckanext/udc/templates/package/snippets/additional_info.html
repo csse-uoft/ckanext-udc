@@ -256,12 +256,51 @@
             {% block extras scoped %}
               {% for extra in h.sorted_extras(pkg_dict.extras) %}
                 {% set key, value = extra %}
+                {% if key == 'udc_import_extras' %}
+                  {% continue %}
+                {% endif %}
                 <tr rel="dc:relation" resource="_:extra{{ i }}">
                   <th scope="row" class="dataset-label" property="rdfs:label">{{ _(key|e) }}</th>
                   <td class="dataset-details" property="rdf:value">{{ value }}</td>
                 </tr>
               {% endfor %}
             {% endblock %}
+            {% if h.check_access('sysadmin') and pkg_dict.get('udc_import_extras') %}
+              <tr>
+                <th scope="row" class="dataset-label">UDC Import Extras</th>
+                <td class="dataset-details">
+                  <details>
+                    <summary>Show import extras</summary>
+                    {% set import_extras = pkg_dict.get('udc_import_extras') %}
+                    {% if import_extras is mapping %}
+                      {% set import_extras = [import_extras] %}
+                    {% endif %}
+                    {% if import_extras is sequence %}
+                      <table class="table table-sm table-bordered mt-2">
+                        <thead>
+                          <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for item in import_extras %}
+                            {% if item is mapping %}
+                              <tr>
+                                <td>{{ item.get('key') }}</td>
+                                <td>{{ item.get('value') }}</td>
+                              </tr>
+                            {% endif %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    {% else %}
+                      <pre>{{ import_extras }}</pre>
+                    {% endif %}
+                  </details>
+                </td>
+              </tr>
+            {% endif %}
           {% endif %}
 
         </table>

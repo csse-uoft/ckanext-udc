@@ -12,6 +12,7 @@ import ckan.authz as authz
 import ckan.lib.jobs as jobs
 
 from .base import BaseImport
+from ckanext.udc_import_other_portals.scheduler import sync_cron_jobs
 
 
 log = logging.getLogger(__name__)
@@ -98,11 +99,13 @@ def cudc_import_config_update(context: Context, data: Dict[str, Any]):
             current_config.update(**import_config)
             model.Session.add(current_config)
             model.Session.commit()
+            sync_cron_jobs()
             return current_config.as_dict()
     else:
         new_config = CUDCImportConfig(created_by=userobj.id, **import_config)
         model.Session.add(new_config)
         model.Session.commit()
+        sync_cron_jobs()
         return new_config.as_dict()
 
 
@@ -135,6 +138,7 @@ def cudc_import_config_delete(context: Context, data: Dict[str, Any]):
 
     CUDCImportConfig.delete_by_id(uuid_to_delete)
     model.Session.commit()
+    sync_cron_jobs()
 
 
 def cudc_import_run(context: Context, data: Dict[str, Any]):

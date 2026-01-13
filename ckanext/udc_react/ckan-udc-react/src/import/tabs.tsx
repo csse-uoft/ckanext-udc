@@ -35,11 +35,28 @@ export interface IDynamicTab { key: string, label: string, panel: JSX.Element }
 
 export interface DynamicTabsProps {
   tabs: IDynamicTab[];
+  initialKey?: string;
 }
 
 
 export default function DynamicTabs(props: DynamicTabsProps) {
-  const [value, setValue] = React.useState(0);
+  const getInitialIndex = () => {
+    if (!props.initialKey) {
+      return 0;
+    }
+    const idx = props.tabs.findIndex((tab) => tab.key === props.initialKey);
+    return idx >= 0 ? idx : 0;
+  };
+
+  const [value, setValue] = React.useState(getInitialIndex());
+
+  React.useEffect(() => {
+    if (!props.tabs.length) {
+      return;
+    }
+    const idx = getInitialIndex();
+    setValue(idx);
+  }, [props.initialKey, props.tabs.length]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

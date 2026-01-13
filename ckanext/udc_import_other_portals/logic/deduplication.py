@@ -1,4 +1,5 @@
 from ckanext.udc_import_other_portals.logger import ImportLogger
+import json
 import ckan.plugins.toolkit as toolkit
 from ckan.types import Context
 import ckan.logic as logic
@@ -206,6 +207,9 @@ def create_unified_package(
         title = pkg_dict.get("title") or ""
         return title
 
+    def _json_dump(value):
+        return json.dumps(value, ensure_ascii=True)
+
     unified_version_dataset = None
     if linked_packages:
         unified_version_dataset = {
@@ -236,7 +240,7 @@ def create_unified_package(
             {
                 "id": result["id"],
                 "version_dataset": None,
-                "dataset_versions": unified_dataset_versions,
+                "dataset_versions": _json_dump(unified_dataset_versions),
             },
         )
 
@@ -246,10 +250,14 @@ def create_unified_package(
         for p in linked_packages
     ]
 
+    rel_context = dict(context)
+    # Delay commit so relationship objects stay bound while as_dict is evaluated.
+    rel_context["defer_commit"] = True
     for rel in relationships_as_subject:
-        logic.check_access("package_relationship_create", context, rel)
+        logic.check_access("package_relationship_create", rel_context, rel)
         print("create relation:", rel)
-        result_rel = logic.get_action("package_relationship_create")(context, rel)
+        logic.get_action("package_relationship_create")(rel_context, rel)
+    model.repo.commit_and_remove()
 
     # Update each linked (child) package extras:
     # - version_dataset points to unified package
@@ -280,8 +288,8 @@ def create_unified_package(
             context_child,
             {
                 "id": child_id,
-                "version_dataset": unified_version_dataset,
-                "dataset_versions": child_dataset_versions,
+                "version_dataset": _json_dump(unified_version_dataset),
+                "dataset_versions": _json_dump(child_dataset_versions),
             },
         )
        

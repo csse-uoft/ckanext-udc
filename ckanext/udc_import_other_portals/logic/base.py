@@ -265,9 +265,9 @@ class BaseImport:
             self.logger.exception(e)
             self.logger.finished_one(
                 "errored",
-                src["id"],  # Using source package info
-                src["name"],
-                src["title"],
+                src.get("id"),  # Using source package info
+                src.get("name", ""),
+                src.get("title", ""),
                 f"Failed to map package from source.\n{generate_trace(e)}",
             )
             raise
