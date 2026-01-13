@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Optional
 
 from ckanext.udc_import_other_portals.model import CUDCImportConfig
 from ckanext.udc_import_other_portals.worker.socketio_client import SocketClient
@@ -72,7 +73,7 @@ class ArcGISBasedImport(BaseImport):
         raw = re.sub(r"<[^>]*>", " ", text or "")
         return re.sub(r"\s+", " ", raw).strip()
 
-    def _extract_license_url(self, html: str) -> str | None:
+    def _extract_license_url(self, html: str) -> Optional[str]:
         match = re.search(r'href=[\'"]([^\'"]+)[\'"]', html or "")
         return match.group(1) if match else None
     
@@ -82,10 +83,10 @@ class ArcGISBasedImport(BaseImport):
             base = base[:-7]
         return base
 
-    def _extract_supported_formats(self, attributes: dict) -> list[str]:
+    def _extract_supported_formats(self, attributes: dict) -> List[str]:
         formats = set()
 
-        def add_formats(value: str | None) -> None:
+        def add_formats(value: Optional[str]) -> None:
             if not value or not isinstance(value, str):
                 return
             for fmt in value.split(","):
@@ -137,7 +138,7 @@ class ArcGISBasedImport(BaseImport):
             return f"{base_url}/{layer_id}"
         return base_url
 
-    def _layer_explore_url(self, slug: str | None, layer_id: int) -> str | None:
+    def _layer_explore_url(self, slug: Optional[str], layer_id: int) -> Optional[str]:
         if not slug:
             return None
         base = self._hub_base()
@@ -149,9 +150,9 @@ class ArcGISBasedImport(BaseImport):
         self,
         service_url: str,
         layer_id: int,
-        formats: list[str],
-        layer_label: str | None = None,
-    ) -> list[dict]:
+        formats: List[str],
+        layer_label: Optional[str] = None,
+    ) -> List[dict]:
         resources = []
         base_url = self._layer_url(service_url, layer_id)
         if not re.search(r"/(FeatureServer|MapServer)/\\d+$", base_url):
@@ -200,7 +201,7 @@ class ArcGISBasedImport(BaseImport):
             return self._resource_name_from_url(url, fallback)
         return fallback
 
-    def _landing_url(self, attributes: dict, src_id: str) -> str | None:
+    def _landing_url(self, attributes: dict, src_id: str) -> Optional[str]:
         slug = attributes.get("slug")
         item_id = attributes.get("itemId") or src_id
         base_url = (self.base_api or "").rstrip("/")
@@ -212,7 +213,7 @@ class ArcGISBasedImport(BaseImport):
             return f"{base_url}/datasets/{item_id}"
         return None
 
-    def _build_tags(self, attributes: dict, limit: int | None = None) -> list[dict]:
+    def _build_tags(self, attributes: dict, limit: Optional[int] = None) -> List[dict]:
         tags = []
         seen = set()
         for raw in (attributes.get("tags") or []):
@@ -237,7 +238,7 @@ class ArcGISBasedImport(BaseImport):
                 return tags
         return tags
 
-    def _build_import_extras(self, attributes: dict, source_portal: str, source_id: str) -> list[dict]:
+    def _build_import_extras(self, attributes: dict, source_portal: str, source_id: str) -> List[dict]:
         extras = []
         layer_info = attributes.get("layer") or {}
 
@@ -265,7 +266,7 @@ class ArcGISBasedImport(BaseImport):
         title: str,
         notes: str,
         source_portal: str,
-        tag_limit: int | None = None,
+        tag_limit: Optional[int] = None,
     ) -> dict:
         attributes = src.get("attributes") or {}
 
@@ -410,7 +411,7 @@ class ArcGISBasedImport(BaseImport):
             return True
         return False
 
-    def _build_resources(self, attributes: dict, dataset_id: str) -> list[dict]:
+    def _build_resources(self, attributes: dict, dataset_id: str) -> List[dict]:
         resources = []
 
         service_url = attributes.get("url")
@@ -491,8 +492,8 @@ class ArcGISBasedImport(BaseImport):
     def _map_license(
         self,
         arcgis_license: str = "",
-        license_url: str | None = None,
-        license_name: str | None = None,
+        license_url: Optional[str] = None,
+        license_name: Optional[str] = None,
     ) -> str:
         """
         Map ArcGIS license text to CKAN license IDs.
