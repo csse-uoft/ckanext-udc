@@ -11,7 +11,7 @@
 
             {% if title %}
                 {# Facet Title #}
-                <span class="facet">{{ title }}{{" (And)" if facets.filter_logics[field] else ""}}:</span>
+                <span class="facet">{{ title }}{{" (And)" if facets.filter_logics and facets.filter_logics.get(field) else ""}}:</span>
 
                 {% for field_detail in facets_fields[field]["values"] %}
                     {% set original_value = field_detail["ori_value"] %}

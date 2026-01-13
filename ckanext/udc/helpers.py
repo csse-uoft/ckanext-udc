@@ -164,19 +164,29 @@ def process_facets_fields(facets_fields: dict):
         if field_name not in results:
             results[field_name] = {"logic": "or", "values": []}
         
-        if 'values' in facets_fields[field]:
-            values = facets_fields[field]['values']
-            is_fts = facets_fields[field].get('fts', False)
+        field_value = facets_fields[field]
+        if isinstance(field_value, list):
+            for item in field_value:
+                results[field_name]["values"].append({
+                    "ori_field": field,
+                    "ori_value": item,
+                    "value": item,
+                })
+            continue
+
+        if isinstance(field_value, dict) and 'values' in field_value:
+            values = field_value['values']
+            is_fts = field_value.get('fts', False)
             for item in values:
                 results[field_name]["values"].append({
                     "ori_field": field,
                     "ori_value": item,
                     "value": f'Search for "{item}"' if is_fts else item,
                 })
-        else:
+        elif isinstance(field_value, dict):
             # Date or number ranges
-            min = facets_fields[field].get('min')
-            max = facets_fields[field].get('max')
+            min = field_value.get('min')
+            max = field_value.get('max')
 
             if min:
                 results[field_name]["values"].append({
