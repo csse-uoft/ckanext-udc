@@ -24,6 +24,9 @@ def udc_lang_object(value, context):
         # Coerce a bare string to the default locale
         default_lang = tk.config.get("ckan.locale_default", "en") or "en"
         return {default_lang: value}
+    if isinstance(value, (int, float, bool)):
+        default_lang = tk.config.get("ckan.locale_default", "en") or "en"
+        return {default_lang: str(value)}
     if not isinstance(value, dict):
         raise tk.Invalid("Expected an object of {lang: string} for localized text.")
     
@@ -84,7 +87,10 @@ def udc_json_load(value, context):
         if not s:
             return None
         try:
-            return json.loads(s)
+            parsed = json.loads(s)
+            if isinstance(parsed, (dict, list)):
+                return parsed
+            return value
         except Exception:
             # Soft-fail: leave it as-is so subsequent validators can decide.
             log.debug("udc_json_load: not JSON (leaving as-is): %r", value)
