@@ -4,7 +4,11 @@ from ckan.common import _
 import logging
 
 from ckanext.udc.licenses.model import CustomLicense, init_tables
-from ckanext.udc.licenses.utils import create_custom_license
+from ckanext.udc.licenses.utils import (
+    bump_license_version,
+    refresh_custom_licenses,
+    refresh_license_register_if_needed,
+)
 from psycopg2.errors import UndefinedTable
 
 log = logging.getLogger(__name__)
@@ -33,6 +37,7 @@ def license_create(context, data_dict):
     if not url:
         raise logic.ValidationError(_("license url is required"))
     
+    refresh_license_register_if_needed()
     license_register = model.Package.get_license_register()
     registered_ids = set([license.id for license in license_register.licenses])
     
@@ -43,11 +48,9 @@ def license_create(context, data_dict):
     userobj = model.User.get(user)
     model.Session.add(CustomLicense(id=id, title=title, url=url, user_id=userobj.id))
 
-    # Add to registered license
-    # Create License Class dynamically
-    license_register.licenses.append(create_custom_license(id, url, title))
-    
     model.Session.commit()
+    refresh_custom_licenses()
+    bump_license_version()
     return {"success": True}
 
 
@@ -80,13 +83,8 @@ def license_delete(context, data_dict):
     model.Session.delete(license)
     model.Session.commit()
     
-    # Update the license register
-    license_register = model.Package.get_license_register()
-    for i, l in enumerate(license_register.licenses):
-        if l.id == license.id:
-            license_register.licenses.pop(i)
-            break
-    
+    refresh_custom_licenses()
+    bump_license_version()
     return {'success': True}
 
 
@@ -135,13 +133,8 @@ def license_update(context, data_dict):
     
     model.Session.commit()
     
-    # Update the license register
-    license_register = model.Package.get_license_register()
-    for i, l in enumerate(license_register.licenses):
-        if l.id == license.id:
-            license_register.licenses[i] = create_custom_license(license.id, license.url, license.title)
-    
-    
+    refresh_custom_licenses()
+    bump_license_version()
     return {'success': True}
 
 
@@ -160,14 +153,6 @@ def init_licenses():
     """
     This is not an action call, this initialize all custom licenses from the custom_license table into CKAN.
     """
-    license_register = model.Package.get_license_register()
-    registered_ids = set([license.id for license in license_register.licenses])
-    
     if model.meta.engine.dialect.has_table(model.meta.engine.connect(), 'custom_license'):
-        custom_licenses = model.Session.query(CustomLicense)
-        for custom_license in custom_licenses:
-            if custom_license.id not in registered_ids:
-                # Add to registered license
-                # Create License Class dynamically
-                license_register.licenses.append(create_custom_license(custom_license.id, custom_license.url, custom_license.title))
+        refresh_custom_licenses()
         log.info("Loaded custom licenses")
