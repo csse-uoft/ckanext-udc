@@ -48,6 +48,7 @@ from ckanext.udc.helpers import (
     package_delete,
     get_system_info,
     udc_json_attr,
+    render_markdown,
 )
 from ckanext.udc.solr.config import pick_locale, pick_locale_with_fallback, get_udc_langs, get_current_lang
 from ckanext.udc.graph.sparql_client import SparqlClient
@@ -506,6 +507,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             language_labels[code] = label
 
         return {
+            "render_markdown": render_markdown,
             "config": self.maturity_model,
             "maturity_model": self.maturity_model,
             "facet_titles": self.facet_titles,

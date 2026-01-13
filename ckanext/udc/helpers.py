@@ -107,6 +107,12 @@ def humanize_entity_type(next_helper: Callable[..., Any],
     return original_text
 
 
+def render_markdown(data: str, **kwargs):
+    allow_html = tk.asbool(tk.config.get("ckanext.udc.render_markdown_allow_html", False))
+    kwargs.setdefault("allow_html", allow_html)
+    return h.render_markdown(data, **kwargs)
+
+
 def get_default_facet_titles():
     facets: dict[str, str] = OrderedDict()
     
