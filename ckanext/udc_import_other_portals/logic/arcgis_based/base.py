@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from ckanext.udc_import_other_portals.model import CUDCImportConfig
 from ckanext.udc_import_other_portals.worker.socketio_client import SocketClient
@@ -392,7 +392,7 @@ class ArcGISBasedImport(BaseImport):
 
         return target
 
-    def _service_item_ids(self) -> set[str]:
+    def _service_item_ids(self) -> Set[str]:
         if hasattr(self, "_service_item_ids_cache"):
             return self._service_item_ids_cache
         item_ids = set()
