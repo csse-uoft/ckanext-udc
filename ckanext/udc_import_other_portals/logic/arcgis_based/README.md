@@ -22,12 +22,17 @@ This directory contains import implementations for ArcGIS Hub-based open data po
 - **`ontario_geohub.py`**: Ontario GeoHub (https://geohub.lio.gov.on.ca/)
   - Filters for public datasets
   - Uses shared ArcGIS mapping from `ArcGISBasedImport`
-  - Ontario-specific title/notes fallbacks (name/snippet + description/searchDescription)
+  - Sets `name_prefix` and `source_portal`
 
 - **`manitoba_geoportal.py`**: Manitoba GeoPortal (https://geoportal.gov.mb.ca/)
   - Filters for public datasets
   - Uses shared ArcGIS mapping from `ArcGISBasedImport`
-  - Manitoba-specific tag limit (10) and source URL prefix
+  - Sets `name_prefix` and `source_portal`
+
+### Common Class Attributes
+
+- `name_prefix`: prepended to generated dataset names so IDs remain unique across portals.
+- `source_portal`: stored in `udc_import_extras` to identify the origin portal for debugging and provenance.
 
 ## ArcGIS Hub API Structure
 
@@ -144,9 +149,10 @@ To add a new ArcGIS Hub portal:
 
 1. Create a new file in this directory (e.g., `my_portal.py`)
 2. Extend `ArcGISBasedImport`
-3. Override `map_to_cudc_package()` to handle portal-specific metadata
-4. Optionally override `iterate_imports()` to filter datasets
-5. Add to `__init__.py` exports
+3. Set `name_prefix` and `source_portal`
+4. Override `iterate_imports()` to filter datasets (optional)
+5. Override `map_to_cudc_package()` only if you need portal-specific fields
+6. Add to `__init__.py` exports
 
 ### Example
 
@@ -154,24 +160,53 @@ To add a new ArcGIS Hub portal:
 from ckanext.udc_import_other_portals.logic.arcgis_based.base import ArcGISBasedImport
 
 class MyPortalImport(ArcGISBasedImport):
-    def iterate_imports(self):
-        # Filter for specific dataset types
-        for dataset in self.all_datasets:
-            if dataset.get('attributes', {}).get('access') == 'public':
-                yield dataset
-    
+    name_prefix = "my"
+    source_portal = "My Portal"
+
+    # Override map_to_cudc_package() only if you need custom fields.
+    # The base class already maps title/notes, tags, resources, license,
+    # and other common metadata.
+    # def map_to_cudc_package(self, src):
+```
+
+### Example: Override map_to_cudc_package
+
+```python
+from ckanext.udc_import_other_portals.logic.arcgis_based.base import ArcGISBasedImport
+
+class MyPortalImport(ArcGISBasedImport):
+    name_prefix = "my"
+    source_portal = "My Portal"
+
     def map_to_cudc_package(self, src: dict, target: dict):
-        attributes = src.get('attributes', {})
-        
-        title = attributes.get("name", "")
-        notes = attributes.get("description", "")
-        return self._map_common_fields(
-            src,
-            target,
-            title=title,
-            notes=notes,
-            source_portal="My Portal",
-        )
+        target = super().map_to_cudc_package(src, target)
+
+        attributes = src.get("attributes") or {}
+        if attributes.get("recordCount") is not None:
+            target["record_count"] = str(attributes.get("recordCount"))
+
+        return target
+```
+
+### Example: Override iterate_imports
+
+```python
+from ckanext.udc_import_other_portals.logic.arcgis_based.base import ArcGISBasedImport
+
+class MyPortalImport(ArcGISBasedImport):
+    name_prefix = "my"
+    source_portal = "My Portal"
+
+    def iterate_imports(self):
+        """Skip private datasets and those with a restricted tag."""
+        for dataset in self.all_datasets:
+            attributes = dataset.get("attributes") or {}
+            if attributes.get("access") != "public":
+                continue
+            tags = attributes.get("tags") or []
+            if "restricted" in tags:
+                continue
+            yield dataset
 ```
 
 ## Configuration
