@@ -319,6 +319,103 @@ export interface License {
   };
 }
 
+export interface UserSummary {
+  id: string;
+  name: string;
+  fullname?: string;
+  email?: string;
+  created?: string;
+  state?: string;
+  sysadmin?: boolean;
+  about?: string;
+}
+
+export interface UserListResponse {
+  results: UserSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface UserListFilters {
+  q?: string;
+  name?: string;
+  fullname?: string;
+  email?: string;
+  about?: string;
+  sysadmin?: boolean;
+}
+
+export async function listUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/udc_user_list", {
+    method: "POST",
+    body: JSON.stringify(params),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as UserListResponse;
+}
+
+export async function listDeletedUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/deleted_users_list", {
+    method: "POST",
+    body: JSON.stringify(params),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as UserListResponse;
+}
+
+export async function resetUserPassword(data: { id: string; new_password: string }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/udc_user_reset_password", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function deleteUser(data: { id: string }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/udc_user_delete", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
+export async function purgeDeletedUsers(data: { ids: string[] }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/purge_deleted_users", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
+}
+
 export async function getLicenses(): Promise<License[]> {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/licenses_get");
   return result.result;

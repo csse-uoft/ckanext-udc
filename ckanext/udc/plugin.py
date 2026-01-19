@@ -83,7 +83,13 @@ from ckanext.udc.solr.solr import update_solr_maturity_model_fields
 from ckanext.udc.solr.index import before_dataset_index as _before_dataset_index
 
 from ckanext.udc.search.logic.actions import filter_facets_get
-from ckanext.udc.user.actions import deleted_users_list, purge_deleted_users
+from ckanext.udc.user.actions import (
+    deleted_users_list,
+    purge_deleted_users,
+    udc_user_list,
+    udc_user_reset_password,
+    udc_user_delete,
+)
 from ckanext.udc.user import auth as user_auth
 from .i18n import (
     udc_lang_object,
@@ -622,6 +628,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             # User management
             "deleted_users_list": deleted_users_list,
             "purge_deleted_users": purge_deleted_users,
+            "udc_user_list": udc_user_list,
+            "udc_user_reset_password": udc_user_reset_password,
+            "udc_user_delete": udc_user_delete,
         }
 
     def get_auth_functions(self):
@@ -631,6 +640,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
         return {
             "deleted_users_list": user_auth.deleted_users_list,
             "purge_deleted_users": user_auth.purge_deleted_users,
+            "udc_user_list": user_auth.udc_user_list,
+            "udc_user_reset_password": user_auth.udc_user_reset_password,
+            "udc_user_delete": user_auth.udc_user_delete,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):

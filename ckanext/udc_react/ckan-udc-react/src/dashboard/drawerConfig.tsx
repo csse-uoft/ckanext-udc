@@ -1,4 +1,4 @@
-import { CloudSync, Publish, Edit, OpenInBrowser, Settings, Replay, SystemSecurityUpdate } from '@mui/icons-material';
+import { CloudSync, Publish, Edit, OpenInBrowser, Settings, Replay, SystemSecurityUpdate, People, PersonOff } from '@mui/icons-material';
 import ImportDashboard from '../import/ImportDashboard';
 import { ImportStatus } from '../import/importStatus';
 import QAPage from '../qa/QAPage';
@@ -11,6 +11,8 @@ import UDRCConfigPage from '../udrc/Settings';
 import SystemReload from '../udrc/SystemReload';
 import CKANSystemStats from '../udrc/SystemStats';
 import ManageLicenses from '../udrc/License/ManageLicenses';
+import ManageUsers from '../udrc/User/ManageUsers';
+import DeletedUsers from '../udrc/User/DeletedUsers';
 
 
 export interface DrawerItem {
@@ -97,6 +99,18 @@ const drawerConfig: DrawerConfig = {
           icon: <Settings />,
           path: `/${REACT_PATH}/system-config/licenses`,
           component: ManageLicenses,
+        },
+        {
+          text: "User Management",
+          icon: <People />,
+          path: `/${REACT_PATH}/system-config/users`,
+          component: ManageUsers,
+        },
+        {
+          text: "Deleted Users",
+          icon: <PersonOff />,
+          path: `/${REACT_PATH}/system-config/users/deleted`,
+          component: DeletedUsers,
         },
         {
           text: "System Config",
