@@ -20,33 +20,6 @@ class ManitobaGeoPortalImport(ArcGISBasedImport):
     }
     """
     name_prefix = "mb"
-
-    def map_to_cudc_package(self, src: dict, target: dict):
-        """
-        Map Manitoba GeoPortal dataset to CKAN package format.
-        
-        Args:
-            src: Source dataset from ArcGIS Hub API
-            target: Target CKAN package dictionary to populate
-            
-        Returns:
-            The populated target dictionary
-        """
-        attributes = src.get('attributes', {})
-
-        item_id = src.get("id", "")
-        if item_id:
-            target["url"] = f"https://geoportal.gov.mb.ca/datasets/{item_id}"
-
-        title = attributes.get("name", "")
-        notes = attributes.get("description", "")
-        return self._map_common_fields(
-            src,
-            target,
-            title=title,
-            notes=notes,
-            source_portal="Manitoba GeoPortal",
-            tag_limit=10,
-        )
+    source_portal = "Manitoba GeoPortal"
 
 DefaultImportClass = ManitobaGeoPortalImport

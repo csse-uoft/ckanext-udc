@@ -37,10 +37,12 @@ class ArcGISBasedImport(BaseImport):
     Base class for ArcGIS Hub imports
     """
     name_prefix = ""
+    source_portal = ""
 
     def __init__(self, context, import_config: 'CUDCImportConfig', job_id: str):
         super().__init__(context, import_config, job_id)
         self.base_api = import_config.other_config.get("base_api")
+        self.source_portal = getattr(self, "source_portal", "") or ""
         
         # Validate that base_api is provided
         if not self.base_api:
@@ -240,6 +242,25 @@ class ArcGISBasedImport(BaseImport):
                 return tags
         return tags
 
+    def map_to_cudc_package(self, src: dict, target: dict):
+        """
+        Map ArcGIS Hub dataset to CUDC package format.
+
+        Args:
+            src (dict): The source ArcGIS dataset
+            target (dict): The target package template with default values
+        """
+        attributes = src.get("attributes") or {}
+        title = attributes.get("name", "") or attributes.get("snippet", "")
+        notes = attributes.get("description", "") or attributes.get("searchDescription", "")
+        return self._map_common_fields(
+            src,
+            target,
+            title=title,
+            notes=notes,
+            source_portal=self.source_portal,
+        )
+
     def _build_import_extras(self, attributes: dict, source_portal: str, source_id: str) -> List[dict]:
         extras = []
         layer_info = attributes.get("layer") or {}
@@ -268,7 +289,6 @@ class ArcGISBasedImport(BaseImport):
         title: str,
         notes: str,
         source_portal: str,
-        tag_limit: Optional[int] = None,
     ) -> dict:
         attributes = src.get("attributes") or {}
 
@@ -316,7 +336,7 @@ class ArcGISBasedImport(BaseImport):
             except (TypeError, ValueError):
                 target["file_size"] = str(attributes.get("size"))
 
-        tags = self._build_tags(attributes, limit=tag_limit)
+        tags = self._build_tags(attributes)
         if tags:
             target["tags"] = tags
 
