@@ -22,3 +22,23 @@ cd ckanext-udc
 python setup.py compile_catalog
 ckan -c /etc/ckan/default/ckan.ini translation js
 ```
+
+## Overriding CKAN core translations (French)
+If you need to override missing CKAN core translations without touching CKAN source,
+add the overrides in:
+```
+ckanext/udc/i18n/fr/LC_MESSAGES/ckan.po
+```
+Then apply them with the plugin CLI:
+```shell
+ckan -c /etc/ckan/default/ckan.ini udc override-ckan-translations --locale fr
+```
+Notes:
+- The override file should contain only the strings you want to replace.
+- The command writes to `ckan.i18n_directory` and overwrites `ckan.po`/`ckan.mo` for that locale.
+- You can override a different file with `--source /path/to/ckan.po`.
+
+Optional: rebuild JS translations with:
+```shell
+ckan -c /etc/ckan/default/ckan.ini udc override-ckan-translations --locale fr --build-js
+```
