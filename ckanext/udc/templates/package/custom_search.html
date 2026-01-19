@@ -49,11 +49,11 @@
       <section class="module module-narrow module-shallow">
         <h2 class="module-heading">
             <i class="fa fa-filter"></i>
-            Advanced Filter
+            {{ _("Advanced Filter") }}
         </h2>
 
-        <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="Maturity Model Filter">
-          Show Filter
+        <button type="button" id="maturity-filter-btn" class="btn btn-secondary" style="margin: 12px" data-bs-toggle="modal" data-bs-target="#maturityModelFilter" title="{{ _('Maturity Model Filter') }}">
+          {{ _("Show Filter") }}
         </button>
         {{ h.snippet('package/snippets/package_search_popup.html', facet_titles=facet_titles) }}
       </section>
@@ -65,5 +65,4 @@
     <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">{{_('close')}}</span></a>
   </div>
 {% endblock %}
-
 

@@ -1,14 +1,14 @@
 # Translations template for ckanext-udc.
-# Copyright (C) 2025 ORGANIZATION
+# Copyright (C) 2026 ORGANIZATION
 # This file is distributed under the same license as the ckanext-udc project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-udc 0.0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-12-01 06:16-0500\n"
+"POT-Creation-Date: 2026-01-19 16:09-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,6 +70,7 @@ msgid "Search Catalogue Entries"
 msgstr ""
 
 #: ckanext/udc/helpers.py:91 ckanext/udc/templates/package/read_base.html:3
+#: ckanext/udc/templates/snippets/package_item.html:5
 msgid "Catalogue Entry"
 msgstr ""
 
@@ -85,48 +86,46 @@ msgstr ""
 msgid "There is no description for this catalogue entry"
 msgstr ""
 
-#: ckanext/udc/helpers.py:103 ckanext/udc/helpers.py:104
+#: ckanext/udc/helpers.py:101
 msgid "View Catalogue Entry"
 msgstr ""
 
-#: ckanext/udc/helpers.py:120 ckanext/udc/templates/header.html:24
-#: ckanext/udc/views.py:423
+#: ckanext/udc/helpers.py:123 ckanext/udc/templates/header.html:24
+#: ckanext/udc/views.py:424
 msgid "Organizations"
 msgstr ""
 
-#: ckanext/udc/helpers.py:125 ckanext/udc/templates/package/read_base.html:4
-#: ckanext/udc/views.py:428
+#: ckanext/udc/helpers.py:128 ckanext/udc/templates/package/read_base.html:4
+#: ckanext/udc/views.py:429
 msgid "Groups"
 msgstr ""
 
-#: ckanext/udc/helpers.py:130
-#: ckanext/udc/templates/package/snippets/additional_info.html:290
-#: ckanext/udc/views.py:433
+#: ckanext/udc/helpers.py:133 ckanext/udc/views.py:434
 msgid "Tags"
 msgstr ""
 
-#: ckanext/udc/helpers.py:131 ckanext/udc/views.py:434
+#: ckanext/udc/helpers.py:134 ckanext/udc/views.py:435
 msgid "Formats"
 msgstr ""
 
-#: ckanext/udc/helpers.py:132 ckanext/udc/views.py:435
+#: ckanext/udc/helpers.py:135 ckanext/udc/views.py:436
 msgid "Licenses"
 msgstr ""
 
-#: ckanext/udc/plugin.py:263
+#: ckanext/udc/plugin.py:275
 msgid "text"
 msgstr ""
 
-#: ckanext/udc/views.py:345 ckanext/udc_import/views.py:46
+#: ckanext/udc/views.py:346 ckanext/udc_import/views.py:46
 #: ckanext/udc_import/views.py:67
 msgid "Not authorized to see this page"
 msgstr ""
 
-#: ckanext/udc/views.py:508
+#: ckanext/udc/views.py:509
 msgid "Invalid search query: {error_message}"
 msgstr ""
 
-#: ckanext/udc/views.py:534
+#: ckanext/udc/views.py:535
 msgid "Parameter u\"{parameter_name}\" is not an integer"
 msgstr ""
 
@@ -173,16 +172,16 @@ msgstr ""
 msgid "Please select the license"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:296 ckanext/udc/assets/js/package.js:402
+#: ckanext/udc/assets/js/package.js:308 ckanext/udc/assets/js/package.js:414
 #: ckanext/udc/templates/package/macros/ckan_fields.html:17
 msgid "URL"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:303 ckanext/udc/assets/js/package.js:409
+#: ckanext/udc/assets/js/package.js:315 ckanext/udc/assets/js/package.js:421
 msgid "Auto-fill"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:311 ckanext/udc/assets/js/package.js:420
+#: ckanext/udc/assets/js/package.js:323 ckanext/udc/assets/js/package.js:432
 #: ckanext/udc/templates/package/custom_search.html:22
 #: ckanext/udc/templates/package/macros/ckan_fields.html:9
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:32
@@ -191,27 +190,26 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:323
+#: ckanext/udc/assets/js/package.js:335
 #: ckanext/udc/templates/package/custom_search.html:23
 #: ckanext/udc/templates/package/macros/ckan_fields.html:24
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:36
-#: ckanext/udc/templates/package/snippets/additional_info.html:280
 #: ckanext/udc/templates/package/snippets/package_form.html:128
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:11
 msgid "Description"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:412
+#: ckanext/udc/assets/js/package.js:424
 #: ckanext/udc/templates/snippets/search_form.html:29
 msgid "Remove"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:432
+#: ckanext/udc/assets/js/package.js:444
 msgid "Description (optional)"
 msgstr ""
 
-#: ckanext/udc/assets/js/package.js:721
-#: ckanext/udc/templates/package/snippets/additional_info.html:54
+#: ckanext/udc/assets/js/package.js:733
+#: ckanext/udc/templates/package/snippets/additional_info.html:44
 #: ckanext/udc/templates/package/snippets/package_form.html:44
 #: ckanext/udc/templates/package/snippets/package_search_popup.html:51
 msgid "Maturity Level"
@@ -249,7 +247,7 @@ msgid "GraphDB integration is not enabled"
 msgstr ""
 
 #: ckanext/udc/file_format/logic.py:30 ckanext/udc/file_format/logic.py:105
-#: ckanext/udc/licenses/logic/action.py:24
+#: ckanext/udc/licenses/logic/action.py:28
 msgid "You are not logged in"
 msgstr ""
 
@@ -269,31 +267,31 @@ msgstr ""
 msgid "You are not authorized to delete this file format"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:28
+#: ckanext/udc/licenses/logic/action.py:32
 msgid "license id is required"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:31
+#: ckanext/udc/licenses/logic/action.py:35
 msgid "license title is required"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:34
+#: ckanext/udc/licenses/logic/action.py:38
 msgid "license url is required"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:40
+#: ckanext/udc/licenses/logic/action.py:45
 msgid "license id already exists"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:70
+#: ckanext/udc/licenses/logic/action.py:73
 msgid "You are not authorized to delete this license"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:78
+#: ckanext/udc/licenses/logic/action.py:81
 msgid "The license is in use and cannot be deleted"
 msgstr ""
 
-#: ckanext/udc/licenses/logic/action.py:128
+#: ckanext/udc/licenses/logic/action.py:126
 msgid "You are not authorized to update this license"
 msgstr ""
 
@@ -514,7 +512,6 @@ msgstr ""
 #: ckanext/udc/templates/package/custom_search.html:24
 #: ckanext/udc/templates/package/macros/ckan_fields.html:207
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:50
-#: ckanext/udc/templates/package/snippets/additional_info.html:221
 #: ckanext/udc/templates/package/snippets/package_metadata_fields.html:8
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:94
 msgid "Source"
@@ -523,7 +520,6 @@ msgstr ""
 #: ckanext/udc/templates/package/custom_search.html:25
 #: ckanext/udc/templates/package/macros/ckan_fields.html:211
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:54
-#: ckanext/udc/templates/package/snippets/additional_info.html:272
 #: ckanext/udc/templates/package/snippets/package_metadata_fields.html:12
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:98
 msgid "Version"
@@ -532,14 +528,12 @@ msgstr ""
 #: ckanext/udc/templates/package/custom_search.html:26
 #: ckanext/udc/templates/package/macros/ckan_fields.html:216
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:58
-#: ckanext/udc/templates/package/snippets/additional_info.html:246
 msgid "Author"
 msgstr ""
 
 #: ckanext/udc/templates/package/custom_search.html:27
 #: ckanext/udc/templates/package/macros/ckan_fields.html:220
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:61
-#: ckanext/udc/templates/package/snippets/additional_info.html:236
 #: ckanext/udc/templates/package/snippets/package_metadata_fields.html:18
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:104
 msgid "Author Email"
@@ -548,7 +542,6 @@ msgstr ""
 #: ckanext/udc/templates/package/custom_search.html:28
 #: ckanext/udc/templates/package/macros/ckan_fields.html:224
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:64
-#: ckanext/udc/templates/package/snippets/additional_info.html:264
 #: ckanext/udc/templates/package/snippets/package_metadata_fields.html:22
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:108
 msgid "Maintainer"
@@ -557,7 +550,6 @@ msgstr ""
 #: ckanext/udc/templates/package/custom_search.html:29
 #: ckanext/udc/templates/package/macros/ckan_fields.html:228
 #: ckanext/udc/templates/package/macros/ckan_filter_fields.html:67
-#: ckanext/udc/templates/package/snippets/additional_info.html:254
 #: ckanext/udc/templates/package/snippets/package_metadata_fields.html:24
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:110
 msgid "Maintainer Email"
@@ -585,6 +577,19 @@ msgstr ""
 
 #: ckanext/udc/templates/package/custom_search.html:42
 msgid "Search datasets..."
+msgstr ""
+
+#: ckanext/udc/templates/package/custom_search.html:52
+msgid "Advanced Filter"
+msgstr ""
+
+#: ckanext/udc/templates/package/custom_search.html:55
+#: ckanext/udc/templates/package/snippets/package_search_popup.html:26
+msgid "Maturity Model Filter"
+msgstr ""
+
+#: ckanext/udc/templates/package/custom_search.html:56
+msgid "Show Filter"
 msgstr ""
 
 #: ckanext/udc/templates/package/edit_base.html:4
@@ -619,11 +624,11 @@ msgstr ""
 msgid "New dataset"
 msgstr ""
 
-#: ckanext/udc/templates/package/read.html:21
+#: ckanext/udc/templates/package/read.html:23
 msgid "AI Generated"
 msgstr ""
 
-#: ckanext/udc/templates/package/read.html:33
+#: ckanext/udc/templates/package/read.html:41
 msgid "Related Catalogue Entries:"
 msgstr ""
 
@@ -723,11 +728,11 @@ msgid "Tags / Keywords"
 msgstr ""
 
 #: ckanext/udc/templates/package/macros/ckan_fields.html:42
+#: ckanext/udc/templates/package/snippets/package_form.html:172
 msgid "eg. economy, mental health, government"
 msgstr ""
 
 #: ckanext/udc/templates/package/macros/ckan_fields.html:60
-#: ckanext/udc/templates/package/snippets/additional_info.html:318
 msgid "License"
 msgstr ""
 
@@ -798,7 +803,7 @@ msgid "Published"
 msgstr ""
 
 #: ckanext/udc/templates/package/macros/ckan_fields.html:177
-#: ckanext/udc/templates/package/snippets/additional_info.html:76
+#: ckanext/udc/templates/package/snippets/additional_info.html:66
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:81
 msgid "State"
 msgstr ""
@@ -841,23 +846,23 @@ msgstr ""
 msgid "joe@example.com"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/additional_info.html:38
+#: ckanext/udc/templates/package/snippets/additional_info.html:28
 msgid "Additional Info"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/additional_info.html:66
+#: ckanext/udc/templates/package/snippets/additional_info.html:56
 msgid "Field"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/additional_info.html:67
+#: ckanext/udc/templates/package/snippets/additional_info.html:57
 msgid "Value"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/additional_info.html:82
+#: ckanext/udc/templates/package/snippets/additional_info.html:72
 msgid "Last Updated"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/additional_info.html:90
+#: ckanext/udc/templates/package/snippets/additional_info.html:80
 msgid "Created"
 msgstr ""
 
@@ -866,11 +871,11 @@ msgstr ""
 msgid "Loading form..."
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/package_form.html:309
+#: ckanext/udc/templates/package/snippets/package_form.html:315
 msgid "Add another version"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/package_form.html:407
+#: ckanext/udc/templates/package/snippets/package_form.html:413
 msgid ""
 "The <i>data license</i> you select above only applies to the contents of any "
 "resource files that you add to this dataset. By submitting this form, you "
@@ -879,15 +884,15 @@ msgid ""
 "Database License</a>."
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/package_form.html:418
+#: ckanext/udc/templates/package/snippets/package_form.html:424
 msgid "Are you sure you want to delete this dataset?"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/package_form.html:418
+#: ckanext/udc/templates/package/snippets/package_form.html:424
 msgid "Delete"
 msgstr ""
 
-#: ckanext/udc/templates/package/snippets/package_form.html:422
+#: ckanext/udc/templates/package/snippets/package_form.html:428
 msgid "Next: Add Datasets"
 msgstr ""
 
@@ -897,10 +902,6 @@ msgstr ""
 
 #: ckanext/udc/templates/package/snippets/package_search_basic_information.html:65
 msgid "Public"
-msgstr ""
-
-#: ckanext/udc/templates/package/snippets/package_search_popup.html:26
-msgid "Maturity Model Filter"
 msgstr ""
 
 #: ckanext/udc/templates/package/snippets/package_search_popup.html:33
@@ -968,6 +969,11 @@ msgstr ""
 #: ckanext/udc/templates/package/snippets/stages.html:36
 #: ckanext/udc/templates/package/snippets/stages.html:38
 msgid "Add datasets"
+msgstr ""
+
+#: ckanext/udc/templates/snippets/multilingual_macros.html:29
+#: ckanext/udc/templates/snippets/multilingual_macros.html:57
+msgid "showing value for"
 msgstr ""
 
 #: ckanext/udc/templates/snippets/package_item.html:12

@@ -558,7 +558,13 @@ def custom_dataset_search():
 )
 def redirect_to_catalogue_search():
     # Redirect to the catalogue search page
-    new_url = re.sub(r'(/[\w-]*)?/dataset', r'\1/catalogue', request.url)
+    new_path = request.path.replace("/dataset", "/catalogue", 1)
+    query = request.query_string.decode("utf-8") if request.query_string else ""
+    lang = request.environ.get("CKAN_LANG")
+    is_default = request.environ.get("CKAN_LANG_IS_DEFAULT", True)
+    if lang and not is_default and not new_path.startswith(f"/{lang}/"):
+        new_path = f"/{lang}{new_path}"
+    new_url = f"{new_path}?{query}" if query else new_path
     return tk.redirect_to(new_url)
 
 
