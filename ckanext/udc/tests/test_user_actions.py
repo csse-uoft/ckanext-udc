@@ -27,16 +27,18 @@ class TestDeletedUsersList:
         result = helpers.call_action('deleted_users_list', context=context)
         
         # Verify
-        assert isinstance(result, list)
-        assert len(result) > 0
+        assert isinstance(result, dict)
+        assert result["total"] > 0
+        assert isinstance(result["results"], list)
         
         # Find our deleted user
-        deleted_user = next((u for u in result if u['id'] == user['id']), None)
+        deleted_user = next((u for u in result["results"] if u['id'] == user['id']), None)
         assert deleted_user is not None
         assert deleted_user['name'] == user['name']
         assert deleted_user['state'] == 'deleted'
         assert 'email' in deleted_user
         assert 'created' in deleted_user
+        assert 'about' in deleted_user
 
     def test_list_deleted_users_as_normal_user(self):
         """Normal users cannot list deleted users."""
@@ -63,13 +65,14 @@ class TestDeletedUsersList:
         
         # Purge any existing deleted users first
         context = {'user': sysadmin['name'], 'ignore_auth': True}
-        helpers.call_action('purge_deleted_users', context=context)
+        helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # List deleted users
         result = helpers.call_action('deleted_users_list', context=context)
         
-        assert isinstance(result, list)
-        assert len(result) == 0
+        assert isinstance(result, dict)
+        assert result["total"] == 0
+        assert result["results"] == []
 
     def test_list_multiple_deleted_users(self):
         """Can list multiple deleted users."""
@@ -91,7 +94,7 @@ class TestDeletedUsersList:
         result = helpers.call_action('deleted_users_list', context=context)
         
         # Verify all three are in the list
-        deleted_ids = [u['id'] for u in result]
+        deleted_ids = [u['id'] for u in result["results"]]
         assert user1['id'] in deleted_ids
         assert user2['id'] in deleted_ids
         assert user3['id'] in deleted_ids
@@ -107,7 +110,7 @@ class TestDeletedUsersList:
         result = helpers.call_action('deleted_users_list', context=context)
         
         # Verify active user is not in the list
-        deleted_ids = [u['id'] for u in result]
+        deleted_ids = [u['id'] for u in result["results"]]
         assert active_user['id'] not in deleted_ids
 
 
@@ -129,7 +132,7 @@ class TestPurgeDeletedUsers:
         
         # Purge deleted users
         context = {'user': sysadmin['name'], 'ignore_auth': False}
-        result = helpers.call_action('purge_deleted_users', context=context)
+        result = helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # Verify result
         assert result['success'] is True
@@ -165,10 +168,10 @@ class TestPurgeDeletedUsers:
         
         # Purge any existing deleted users first
         context = {'user': sysadmin['name'], 'ignore_auth': True}
-        helpers.call_action('purge_deleted_users', context=context)
+        helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # Purge again
-        result = helpers.call_action('purge_deleted_users', context=context)
+        result = helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         assert result['success'] is True
         assert result['count'] == 0
@@ -189,7 +192,7 @@ class TestPurgeDeletedUsers:
         
         # Purge deleted users
         context = {'user': sysadmin['name'], 'ignore_auth': False}
-        result = helpers.call_action('purge_deleted_users', context=context)
+        result = helpers.call_action('purge_deleted_users', context=context, ids=user_ids)
         
         # Verify result
         assert result['success'] is True
@@ -208,7 +211,7 @@ class TestPurgeDeletedUsers:
         
         # Purge deleted users
         context = {'user': sysadmin['name'], 'ignore_auth': False}
-        helpers.call_action('purge_deleted_users', context=context)
+        helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # Verify active user still exists
         user_obj = model.User.get(active_user['id'])
@@ -239,7 +242,7 @@ class TestPurgeDeletedUsers:
         model.Session.commit()
         
         context = {'user': sysadmin['name'], 'ignore_auth': False}
-        helpers.call_action('purge_deleted_users', context=context)
+        helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # Verify membership is gone
         member = model.Session.query(model.Member).filter(
@@ -265,21 +268,21 @@ class TestPurgeDeletedUsers:
         
         # Step 1: List deleted users
         deleted_list = helpers.call_action('deleted_users_list', context=context)
-        initial_count = len(deleted_list)
+        initial_count = deleted_list["total"]
         assert initial_count >= 2
         
-        deleted_ids = [u['id'] for u in deleted_list]
+        deleted_ids = [u['id'] for u in deleted_list["results"]]
         assert user1['id'] in deleted_ids
         assert user2['id'] in deleted_ids
         
         # Step 2: Purge deleted users
-        purge_result = helpers.call_action('purge_deleted_users', context=context)
+        purge_result = helpers.call_action('purge_deleted_users', context=context, ids=deleted_ids)
         assert purge_result['success'] is True
         assert purge_result['count'] == initial_count
         
         # Step 3: Verify list is now empty
         deleted_list_after = helpers.call_action('deleted_users_list', context=context)
-        assert len(deleted_list_after) == 0
+        assert deleted_list_after["total"] == 0
         
         # Step 4: Verify users are completely gone
         assert model.User.get(user1['id']) is None
@@ -306,7 +309,7 @@ class TestUserManagementIntegration:
         model.Session.commit()
         
         context = {'user': sysadmin['name'], 'ignore_auth': False}
-        helpers.call_action('purge_deleted_users', context=context)
+        helpers.call_action('purge_deleted_users', context=context, ids=[])
         
         # Verify dataset still exists
         dataset_obj = model.Package.get(dataset_id)
@@ -329,4 +332,27 @@ class TestUserManagementIntegration:
         
         # This should fail because the user is deleted
         with pytest.raises((tk.NotAuthorized, tk.ObjectNotFound)):
-            helpers.call_action('purge_deleted_users', context=context)
+            helpers.call_action('purge_deleted_users', context=context, ids=[])
+
+
+@pytest.mark.usefixtures("clean_db", "with_plugins")
+class TestUserList:
+    """Tests for the udc_user_list action."""
+
+    def test_list_users_as_sysadmin(self):
+        sysadmin = factories.Sysadmin()
+        user = factories.User()
+
+        context = {'user': sysadmin['name'], 'ignore_auth': False}
+        result = helpers.call_action('udc_user_list', context=context, page=1, page_size=25)
+
+        assert isinstance(result, dict)
+        assert result["total"] >= 1
+        assert any(u["id"] == user["id"] for u in result["results"])
+
+    def test_list_users_as_normal_user(self):
+        user = factories.User()
+        context = {'user': user['name'], 'ignore_auth': False}
+
+        with pytest.raises(tk.NotAuthorized):
+            helpers.call_action('udc_user_list', context=context, page=1, page_size=25)
