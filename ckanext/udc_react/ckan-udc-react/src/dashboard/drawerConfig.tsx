@@ -13,6 +13,7 @@ import CKANSystemStats from '../udrc/SystemStats';
 import ManageLicenses from '../udrc/License/ManageLicenses';
 import ManageUsers from '../udrc/User/ManageUsers';
 import DeletedUsers from '../udrc/User/DeletedUsers';
+import ManageOrganizations from '../udrc/Organization/ManageOrganizations';
 
 
 export interface DrawerItem {
@@ -105,6 +106,12 @@ const drawerConfig: DrawerConfig = {
           icon: <People />,
           path: `/${REACT_PATH}/system-config/users`,
           component: ManageUsers,
+        },
+        {
+          text: "Organization Management",
+          icon: <People />,
+          path: `/${REACT_PATH}/system-config/organizations`,
+          component: ManageOrganizations,
         },
         {
           text: "Deleted Users",

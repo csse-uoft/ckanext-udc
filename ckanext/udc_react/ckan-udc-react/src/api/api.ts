@@ -157,7 +157,7 @@ export interface CKANUser {
 }
 
 export async function getOrganizations(): Promise<CKANOrganization[]> {
-  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/organization_list?all_fields=true&type=organization&limit=10000");
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_organization_list_min");
   return result.result;
 }
 
@@ -346,6 +346,46 @@ export interface UserListFilters {
   sysadmin?: boolean;
 }
 
+export interface OrganizationSummary {
+  id: string;
+  name: string;
+  title?: string;
+  description?: string;
+  state?: string;
+  created?: string;
+}
+
+export interface OrganizationPackageSummary {
+  id: string;
+  name: string;
+  title?: string;
+  state?: string;
+  private?: boolean;
+  metadata_modified?: string | null;
+}
+
+export interface OrganizationListResponse {
+  results: OrganizationSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface OrganizationPackageListResponse {
+  organization: OrganizationSummary;
+  results: OrganizationPackageSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface OrganizationListFilters {
+  q?: string;
+  name?: string;
+  title?: string;
+  state?: string;
+}
+
 export async function listUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/udc_user_list", {
     method: "POST",
@@ -358,6 +398,83 @@ export async function listUsers(params: { page: number; page_size: number; filte
     throw result.error;
   }
   return result.result as UserListResponse;
+}
+
+export async function listOrganizations(params: {
+  page: number;
+  page_size: number;
+  filters?: OrganizationListFilters;
+}) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/udc_organization_list", {
+    method: "POST",
+    body: JSON.stringify(params),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as OrganizationListResponse;
+}
+
+export async function listOrganizationPackages(params: {
+  org_id: string;
+  page: number;
+  page_size: number;
+  filters?: OrganizationListFilters;
+}) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_organization_packages_list",
+    {
+      method: "POST",
+      body: JSON.stringify(params),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as OrganizationPackageListResponse;
+}
+
+export async function listOrganizationPackageIds(params: {
+  org_id: string;
+  filters?: OrganizationListFilters;
+}) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_organization_packages_ids",
+    {
+      method: "POST",
+      body: JSON.stringify(params),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as { organization: OrganizationSummary; ids: string[]; total: number };
+}
+
+export async function deleteOrganizationPackages(data: { org_id: string; ids: string[] }) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_organization_packages_delete",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result;
 }
 
 export async function listDeletedUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {
