@@ -90,6 +90,13 @@ from ckanext.udc.user.actions import (
     udc_user_reset_password,
     udc_user_delete,
 )
+from ckanext.udc.organization.actions import (
+    udc_organization_list,
+    udc_organization_packages_list,
+    udc_organization_packages_ids,
+    udc_organization_packages_delete,
+)
+from ckanext.udc.organization import auth as organization_auth
 from ckanext.udc.user import auth as user_auth
 from .i18n import (
     udc_lang_object,
@@ -631,6 +638,11 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "udc_user_list": udc_user_list,
             "udc_user_reset_password": udc_user_reset_password,
             "udc_user_delete": udc_user_delete,
+            # Organization management
+            "udc_organization_list": udc_organization_list,
+            "udc_organization_packages_list": udc_organization_packages_list,
+            "udc_organization_packages_ids": udc_organization_packages_ids,
+            "udc_organization_packages_delete": udc_organization_packages_delete,
         }
 
     def get_auth_functions(self):
@@ -643,6 +655,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "udc_user_list": user_auth.udc_user_list,
             "udc_user_reset_password": user_auth.udc_user_reset_password,
             "udc_user_delete": user_auth.udc_user_delete,
+            "udc_organization_list": organization_auth.udc_organization_list,
+            "udc_organization_packages_list": organization_auth.udc_organization_packages_list,
+            "udc_organization_packages_ids": organization_auth.udc_organization_packages_ids,
+            "udc_organization_packages_delete": organization_auth.udc_organization_packages_delete,
         }
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
