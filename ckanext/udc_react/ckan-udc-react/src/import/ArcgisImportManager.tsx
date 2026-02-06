@@ -16,6 +16,7 @@ import { json } from "@codemirror/lang-json";
 import {
   DataGrid,
   GridColDef,
+  GridColumnVisibilityModel,
   GridRenderCellParams,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
@@ -57,7 +58,7 @@ const ArcgisImportManager = () => {
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusLogs, setStatusLogs] = useState<any[]>([]);
   const [query, setQuery] = useState("");
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     discoverable: false,
     updated_at: false,
   });
@@ -534,7 +535,7 @@ const ArcgisImportManager = () => {
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={setSelectionModel}
           columnVisibilityModel={columnVisibilityModel}
-          onColumnVisibilityModelChange={setColumnVisibilityModel}
+          onColumnVisibilityModelChange={(model) => setColumnVisibilityModel(model)}
           loading={loading}
           disableRowSelectionOnClick
           pageSizeOptions={[10, 25, 50, 100]}

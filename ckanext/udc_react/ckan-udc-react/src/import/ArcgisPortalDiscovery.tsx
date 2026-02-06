@@ -21,6 +21,7 @@ import {
 import {
   DataGrid,
   GridColDef,
+  GridColumnVisibilityModel,
   GridPaginationModel,
   GridRenderCellParams,
   GridRowSelectionModel,
@@ -79,7 +80,7 @@ const ArcgisPortalDiscovery: React.FC = () => {
     page: 0,
     pageSize: 25,
   });
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     portalName: false,
     orgId: false,
   });
@@ -986,7 +987,7 @@ const ArcgisPortalDiscovery: React.FC = () => {
           rowSelectionModel={selectionModel}
           onRowSelectionModelChange={setSelectionModel}
           columnVisibilityModel={columnVisibilityModel}
-          onColumnVisibilityModelChange={setColumnVisibilityModel}
+          onColumnVisibilityModelChange={(model) => setColumnVisibilityModel(model)}
           sortModel={sortModel}
           onSortModelChange={setSortModel}
           loading={loading}
@@ -1069,8 +1070,8 @@ const PortalGrid = React.memo(
     onPaginationModelChange: (model: GridPaginationModel) => void;
     rowSelectionModel: GridRowSelectionModel;
     onRowSelectionModelChange: (model: GridRowSelectionModel) => void;
-    columnVisibilityModel: Record<string, boolean>;
-    onColumnVisibilityModelChange: (model: Record<string, boolean>) => void;
+    columnVisibilityModel: GridColumnVisibilityModel;
+    onColumnVisibilityModelChange: (model: GridColumnVisibilityModel) => void;
     sortModel: GridSortModel;
     onSortModelChange: (model: GridSortModel) => void;
     loading: boolean;

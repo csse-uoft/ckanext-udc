@@ -292,7 +292,7 @@ export async function deleteArcgisAutoImportConfigs(payload: { config_ids: strin
   return result.result as {
     deleted: string[];
     skipped: Array<[string, string]>;
-    blocked: Array<{ id: string; imported_count: number; owner_org?: string | null }>;
+    blocked: Array<{ id: string; imported_count: number; owner_org?: string | null; reason?: string | null }>;
   };
 }
 
