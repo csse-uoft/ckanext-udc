@@ -30,8 +30,12 @@
       </ul>
     </li>
 
-    {{ h.build_nav_main(
-      ('home.about', _('About')) ) }}
+    {% if request.endpoint %}
+      {{ h.build_nav_main(
+        ('home.about', _('About')) ) }}
+    {% else %}
+      <li><a href="{{ h.url_for('home.about') }}">{{_('About')}}</a></li>
+    {% endif %}
 
     <li><a href="/udrc/faq/create-catalogue-entry">{{_('FAQ')}}</a></li>
   </ul>

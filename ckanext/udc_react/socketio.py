@@ -281,6 +281,8 @@ def initSocketIO(app):
             log.error(log_msg)
         elif log_level == "debug":
             log.debug(log_msg)
+        elif log_level == "warning":
+            log.warning(log_msg)
         elif log_level == "exception":
             log.exception(log_msg)
         else:
