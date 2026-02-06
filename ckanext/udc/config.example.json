@@ -884,6 +884,7 @@
             "fields": [
                 {
                     "name": "number_of_rows",
+                    "type": "number",
                     "label": {
                         "en": "Number of data rows",
                         "fr": "Nombre de lignes de données"
@@ -900,6 +901,7 @@
                 },
                 {
                     "name": "number_of_columns",
+                    "type": "number",
                     "label": {
                         "en": "Number of data columns",
                         "fr": "Nombre de colonnes de données"
@@ -916,6 +918,7 @@
                 },
                 {
                     "name": "number_of_cells",
+                    "type": "number",
                     "label": {
                         "en": "Number of data cells",
                         "fr": "Nombre de cellules de données"
@@ -932,6 +935,7 @@
                 },
                 {
                     "name": "number_of_triples",
+                    "type": "number",
                     "label": {
                         "en": "Number of data relations",
                         "fr": "Nombre de relations de données"
@@ -948,6 +952,7 @@
                 },
                 {
                     "name": "number_of_entities",
+                    "type": "number",
                     "label": {
                         "en": "Number of entities",
                         "fr": "Nombre d’entités"
@@ -964,6 +969,7 @@
                 },
                 {
                     "name": "number_of_properties",
+                    "type": "number",
                     "label": {
                         "en": "Number of data properties",
                         "fr": "Nombre de propriétés de données"
