@@ -95,6 +95,8 @@ class CKANBasedImport(BaseImport):
                         # Delete all packages that were previously imported
                         _delete_all_imports()
                         imported_id_map = {}
+                        self._imported_map_pending += 1
+                        self._persist_imported_id_map(imported_id_map, force=True)
                     else:
                         # Get all packages that are deleted from the remote server, Remove them in ours
                         for remote_id, package_id_to_remove in [
@@ -106,6 +108,8 @@ class CKANBasedImport(BaseImport):
                                 purge_package(self.build_context(), package_id_to_remove)
                                 self.logger.finished_one('deleted', package_id_to_remove, package_to_delete['name'], package_to_delete['title'])
                                 imported_id_map.pop(remote_id, None)
+                                self._imported_map_pending += 1
+                                self._persist_imported_id_map(imported_id_map)
                             except Exception as e:
                                 self.logger.error(f"ERROR: Failed to get package {package_id_to_remove} from remote")
                                 self.logger.exception(e)
@@ -123,6 +127,8 @@ class CKANBasedImport(BaseImport):
                             remote_id, mapped_id, name = result
                             if mapped_id:
                                 imported_id_map[remote_id] = mapped_id
+                                self._imported_map_pending += 1
+                                self._persist_imported_id_map(imported_id_map)
                         except Exception as e:
                             self.logger.error('ERROR: A package import failed.')
                             self.logger.exception(e)
@@ -133,9 +139,7 @@ class CKANBasedImport(BaseImport):
                     # Cleanup
                     self.socket_client.executor = None
                         
-                self.import_config.other_data["imported_id_map"] = imported_id_map
-                if self.import_config.other_data.get("imported_ids"):
-                    del self.import_config.other_data["imported_ids"]
+                self._persist_imported_id_map(imported_id_map, force=True)
             else:
                 self.logger.error(f'ERROR: Remote endpoint is not alive!')
             

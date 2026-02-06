@@ -38,11 +38,14 @@ class ArcGISBasedImport(BaseImport):
     """
     name_prefix = ""
     source_portal = ""
+    language = None
 
     def __init__(self, context, import_config: 'CUDCImportConfig', job_id: str):
         super().__init__(context, import_config, job_id)
-        self.base_api = import_config.other_config.get("base_api")
+        other_config = import_config.other_config or {}
+        self.base_api = other_config.get("base_api")
         self.source_portal = getattr(self, "source_portal", "") or ""
+        self.language = other_config.get("language") or getattr(self, "language", None)
         
         # Validate that base_api is provided
         if not self.base_api:
@@ -291,11 +294,22 @@ class ArcGISBasedImport(BaseImport):
         source_portal: str,
     ) -> dict:
         attributes = src.get("attributes") or {}
+        language_value = (
+            (self.language or "").strip()
+            or (attributes.get("culture") or "").strip()
+        )
+        language_value = language_value.lower()
+        language_key = "fr" if language_value.startswith("fr") else None
 
         target["id"] = src.get("id", "")
         target["name"] = self._generate_name(src.get("id", ""), attributes.get("name", ""))
         target["title"] = title
         target["notes"] = notes
+        if language_key:
+            if title:
+                target["title_translated"] = {language_key: title}
+            if notes:
+                target["notes_translated"] = {language_key: notes}
 
         created_ms = attributes.get("created")
         if created_ms:
@@ -339,6 +353,15 @@ class ArcGISBasedImport(BaseImport):
         tags = self._build_tags(attributes)
         if tags:
             target["tags"] = tags
+            if language_key:
+                tag_values = [
+                    tag.get("display_name") or tag.get("name")
+                    for tag in tags
+                    if isinstance(tag.get("display_name") or tag.get("name"), str)
+                ]
+                target["tags_translated"] = {
+                    language_key: tag_values
+                }
 
         self._apply_license(attributes, target)
 
@@ -347,7 +370,7 @@ class ArcGISBasedImport(BaseImport):
             target["access_category"] = access_category
 
         dataset_id = src.get("id", "")
-        target["resources"] = self._build_resources(attributes, dataset_id)
+        target["resources"] = self._build_resources(attributes, src)
 
         landing = self._landing_url(attributes, src.get("id", ""))
         if landing:
@@ -376,20 +399,36 @@ class ArcGISBasedImport(BaseImport):
 
         if attributes.get("owner"):
             target["author"] = attributes["owner"]
-            target["owner"] = attributes["owner"]
+            if language_key:
+                target["owner"] = {language_key: attributes["owner"]}
+            else:
+                target["owner"] = attributes["owner"]
 
         org_name = attributes.get("orgName") or attributes.get("organization") or attributes.get("source")
         if org_name:
-            target["publisher"] = org_name
-            target["access_steward"] = org_name
+            if language_key:
+                target["publisher"] = {language_key: org_name}
+                target["access_steward"] = {language_key: org_name}
+            else:
+                target["publisher"] = org_name
+                target["access_steward"] = org_name
 
         org_email = attributes.get("orgContactEmail")
         if isinstance(org_email, str) and org_email:
             target["access_steward_email"] = org_email.replace("mailto:", "")
 
         culture = attributes.get("culture")
-        if culture:
-            target["language"] = culture
+        language_raw = (self.language or culture or "").strip()
+        if language_raw:
+            normalized = language_raw.lower().replace("_", "-")
+            lang_map = {
+                "en-ca": "http://id.loc.gov/vocabulary/iso639-1/en",
+                "fr-ca": "http://id.loc.gov/vocabulary/iso639-1/fr",
+            }
+            if normalized.startswith("fr"):
+                target["language"] = lang_map["fr-ca"]
+            elif normalized.startswith("en"):
+                target["language"] = lang_map["en-ca"]
 
         if attributes.get("recordCount") is not None:
             target["number_of_rows"] = str(attributes.get("recordCount"))
@@ -406,7 +445,10 @@ class ArcGISBasedImport(BaseImport):
 
         provenance = attributes.get("source")
         if provenance:
-            target["provenance"] = provenance
+            if language_key:
+                target["provenance"] = {language_key: provenance}
+            else:
+                target["provenance"] = provenance
 
         import json as _json
         extras = self._build_import_extras(attributes, source_portal, src.get("id", ""))
@@ -433,10 +475,11 @@ class ArcGISBasedImport(BaseImport):
             return True
         return False
 
-    def _build_resources(self, attributes: dict, dataset_id: str) -> List[dict]:
+    def _build_resources(self, attributes: dict, dataset: dict) -> List[dict]:
         resources = []
 
-        service_url = attributes.get("url")
+        dataset_links = (dataset or {}).get("links") or {}
+        service_url = attributes.get("url") or dataset_links.get("esriRest")
         layers = attributes.get("layers") or []
         if service_url and isinstance(layers, list):
             slug = attributes.get("slug")
@@ -471,6 +514,16 @@ class ArcGISBasedImport(BaseImport):
                 "format": service_format,
             })
 
+        content_type = attributes.get("content") or attributes.get("type")
+        item_id = attributes.get("itemId") or attributes.get("id") or dataset.get("id")
+        if content_type == "Image" and item_id:
+            resources.append({
+                "name": "Image Download",
+                "description": "Download image from ArcGIS content item",
+                "url": f"https://www.arcgis.com/sharing/rest/content/items/{item_id}/data",
+                "format": "Image",
+            })
+
         for idx, item in enumerate(attributes.get("additionalResources") or [], start=1):
             if not isinstance(item, dict):
                 continue
@@ -486,7 +539,7 @@ class ArcGISBasedImport(BaseImport):
                 "format": self._format_from_url(extra_url),
             })
 
-        # Downloads intentionally omitted: keep only layers as resources.
+        # Downloads intentionally omitted: keep only layers (and image content) as resources.
 
         return resources
 
@@ -669,6 +722,8 @@ class ArcGISBasedImport(BaseImport):
                         # Delete all datasets that were previously imported
                         _delete_all_imports()
                         imported_id_map = {}
+                        self._imported_map_pending += 1
+                        self._persist_imported_id_map(imported_id_map, force=True)
                     else:
                         # Get all datasets that are deleted from the remote server, Remove them in ours
                         for dataset_id_to_remove in [
@@ -693,6 +748,9 @@ class ArcGISBasedImport(BaseImport):
                                 ]
                                 for k in keys_to_remove:
                                     imported_id_map.pop(k, None)
+                                if keys_to_remove:
+                                    self._imported_map_pending += 1
+                                    self._persist_imported_id_map(imported_id_map)
                             except Exception as e:
                                 self.logger.error(
                                     f"ERROR: Failed to get package {dataset_id_to_remove} from remote"
@@ -719,6 +777,8 @@ class ArcGISBasedImport(BaseImport):
                             remote_id, mapped_id, name = result
                             if mapped_id:
                                 imported_id_map[remote_id] = mapped_id
+                                self._imported_map_pending += 1
+                                self._persist_imported_id_map(imported_id_map)
                         except Exception as e:
                             self.logger.error('ERROR: A dataset import failed.')
                             self.logger.exception(e)
@@ -729,9 +789,7 @@ class ArcGISBasedImport(BaseImport):
                     # Cleanup
                     self.socket_client.executor = None
                 
-                self.import_config.other_data["imported_id_map"] = imported_id_map
-                if self.import_config.other_data.get("imported_ids"):
-                    del self.import_config.other_data["imported_ids"]
+                self._persist_imported_id_map(imported_id_map, force=True)
             else:
                 self.logger.error(f'ERROR: Remote endpoint is not alive!')
             

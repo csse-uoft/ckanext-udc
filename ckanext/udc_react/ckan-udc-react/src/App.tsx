@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Footer from './base/footer'
 import { AuthProvider } from './api/authContext';
 import { CircularProgress, Container } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import FAQPage from './tutorial/FAQPage';
 import RequestOrganizationAccess from './requestOrgAccess/RequestOrganizationAccess';
 import ApproveRequest from './requestOrgAccess/ApproveRequest';
@@ -13,6 +14,17 @@ const DrawerDashboard = lazy(() => import('./dashboard/drawer'));
 
 
 export default function App() {
+  const theme = createTheme({
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+          },
+        },
+      },
+    },
+  });
 
   let router = createBrowserRouter([
     {
@@ -53,8 +65,10 @@ export default function App() {
     },
   ]);
 
-  return <>
-    <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />
-    <Footer />
-  </>;
+  return (
+    <ThemeProvider theme={theme}>
+      <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />
+      <Footer />
+    </ThemeProvider>
+  );
 }

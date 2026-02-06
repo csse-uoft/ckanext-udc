@@ -10,6 +10,7 @@ from ckan.lib.search.common import SearchIndexError
 from sqlalchemy.exc import IntegrityError
 
 import threading
+import time
 from typing import List, Dict, cast
 from .deduplication import find_duplicated_packages, process_duplication
 
@@ -182,6 +183,8 @@ class BaseImport:
         self.context = context
         self.import_config = import_config
         self.job_id = job_id
+        self._imported_map_pending = 0
+        self._last_imported_map_persist = 0.0
 
     def build_context(self):
         if not self.context:
@@ -198,6 +201,32 @@ class BaseImport:
             },
         )
         return context
+
+    def _persist_imported_id_map(self, imported_id_map, *, force: bool = False):
+        if not self.import_config:
+            return
+        if self.import_config.other_data is None:
+            self.import_config.other_data = {}
+
+        now = time.monotonic()
+        if not force:
+            # Throttle writes so we don't commit on every dataset.
+            if self._imported_map_pending < 25 and (now - self._last_imported_map_persist) < 30:
+                return
+
+        # Persist the mapping to survive main-process restarts during long imports.
+        self.import_config.other_data["imported_id_map"] = imported_id_map
+        if self.import_config.other_data.get("imported_ids"):
+            del self.import_config.other_data["imported_ids"]
+
+        try:
+            model.Session.add(self.import_config)
+            model.Session.commit()
+            self._imported_map_pending = 0
+            self._last_imported_map_persist = now
+        except Exception:
+            # Failed commit should not poison future DB operations.
+            model.Session.rollback()
 
     def map_to_cudc_package(self, src: dict, target: dict):
         """

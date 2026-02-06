@@ -6,6 +6,8 @@ import ConfigManagementPage from '../qa/ConfigManagementPage';
 import ChatGPTSummarySettings from '../chatgptSummary/ChatGPTSummarySettings';
 import ManagerSummary from '../chatgptSummary/ManageSummary';
 import { RealtimeImportStatus } from '../import/realtime/RealtimeImportStatus';
+import ArcgisPortalDiscovery from '../import/ArcgisPortalDiscovery';
+import ArcgisImportManager from '../import/ArcgisImportManager';
 import { REACT_PATH } from '../constants';
 import UDRCConfigPage from '../udrc/Settings';
 import SystemReload from '../udrc/SystemReload';
@@ -55,7 +57,19 @@ const drawerConfig: DrawerConfig = {
           icon: <CloudSync />,
           path: `/${REACT_PATH}/realtime-status`,
           component: RealtimeImportStatus,
-        }
+        },
+        {
+          text: "ArcGIS Portal Discovery",
+          icon: <CloudSync />,
+          path: `/${REACT_PATH}/import/arcgis-discovery`,
+          component: ArcgisPortalDiscovery,
+        },
+        {
+          text: "ArcGIS Imports",
+          icon: <CloudSync />,
+          path: `/${REACT_PATH}/import/arcgis-imports`,
+          component: ArcgisImportManager,
+        },
       ]
     },
     {

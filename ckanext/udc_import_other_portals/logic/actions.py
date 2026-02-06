@@ -1,8 +1,9 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 
+import requests
 from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportJob
 from ckanext.udc_import_other_portals.jobs import job_run_import, delete_organization_packages
 
@@ -10,15 +11,45 @@ from ckan.types import Context
 import ckan.logic as logic
 import ckan.authz as authz
 import ckan.lib.jobs as jobs
+from sqlalchemy.orm import load_only
 
 from .base import BaseImport
 from ckanext.udc_import_other_portals.scheduler import sync_cron_jobs
+from ckanext.udc.solr.config import get_udc_langs, get_default_lang
+from babel import Locale
 
 
 log = logging.getLogger(__name__)
 
 # We only allow a single instance running
 import_instance: BaseImport = None
+
+
+def _language_label(code: str, fallback: str) -> str:
+    default_lang = (fallback or get_default_lang() or "en").replace("-", "_")
+    try:
+        display_locale = Locale.parse(default_lang)
+        target = Locale.parse(code.replace("-", "_"))
+        label = target.get_display_name(display_locale)
+        if isinstance(label, str) and label:
+            return label[0].upper() + label[1:]
+    except Exception:
+        pass
+    return code.upper()
+
+
+def _normalize_language(value: str, allowed: List[str]) -> Optional[str]:
+    if not value:
+        return None
+    normalized = value.strip().lower().replace("_", "-")
+    allowed_map = {lang.lower(): lang for lang in allowed}
+    if normalized in allowed_map:
+        return allowed_map[normalized]
+    if "-" in normalized:
+        prefix = normalized.split("-", 1)[0]
+        if prefix in allowed_map:
+            return allowed_map[prefix]
+    return None
 
 
 @logic.side_effect_free
@@ -41,6 +72,169 @@ def cudc_import_configs_get(context: Context, data_dict):
     for config in configs:
         result[config.id] = config.as_dict()
     return result
+
+
+@logic.side_effect_free
+def cudc_import_configs_list(context: Context, data_dict):
+    """
+    List import configs with minimal fields for UI lists.
+    """
+    model = context["model"]
+    user = context["user"]
+
+    # If not sysadmin.
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    configs = (
+        model.Session.query(CUDCImportConfig)
+        .options(load_only("id", "name", "platform", "updated_at", "other_config"))
+        .order_by(CUDCImportConfig.created_at)
+        .all()
+    )
+    results: List[Dict[str, Any]] = []
+    for config in configs:
+        auto_arcgis = bool((config.other_config or {}).get("auto_arcgis"))
+        results.append(
+            {
+                "id": config.id,
+                "name": config.name,
+                "platform": config.platform,
+                "updated_at": config.updated_at.isoformat() if config.updated_at else None,
+                "auto_arcgis": auto_arcgis,
+            }
+        )
+    return results
+
+
+@logic.side_effect_free
+def cudc_import_language_options(context: Context, data_dict):
+    """
+    List supported language codes and labels for import configs.
+    """
+    user = context["user"]
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    langs = get_udc_langs()
+    default_lang = langs[0] if langs else get_default_lang() or "en"
+    labels = {code: _language_label(code, default_lang) for code in langs}
+    return {"languages": langs, "default": default_lang, "labels": labels}
+
+
+@logic.side_effect_free
+def cudc_import_config_show(context: Context, data_dict):
+    """
+    Get a single import config by uuid.
+    """
+    user = context["user"]
+
+    # If not sysadmin.
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    if not isinstance(data_dict, dict):
+        raise logic.ValidationError("Input should be a dict.")
+
+    config_id = data_dict.get("uuid") or data_dict.get("id")
+    if not config_id:
+        raise logic.ValidationError("uuid should be provided.")
+
+    config = CUDCImportConfig.get(config_id)
+    if not config:
+        raise logic.ValidationError("import config does not exists.")
+
+    return config.as_dict()
+
+
+@logic.side_effect_free
+def cudc_import_remote_orgs_list(context: Context, data_dict):
+    """
+    List organizations from a remote CKAN instance via server-side request.
+    """
+    user = context["user"]
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    if not isinstance(data_dict, dict):
+        raise logic.ValidationError("Input should be a dict.")
+
+    base_api = data_dict.get("base_api")
+    if not isinstance(base_api, str) or not base_api.strip():
+        raise logic.ValidationError("base_api should be provided.")
+
+    base = base_api.strip().rstrip("/")
+    if base.endswith("/api/3/action"):
+        url = f"{base}/organization_list?all_fields=true&limit=10000"
+    elif base.endswith("/api/3"):
+        url = f"{base}/action/organization_list?all_fields=true&limit=10000"
+    elif base.endswith("/api"):
+        url = f"{base}/3/action/organization_list?all_fields=true&limit=10000"
+    else:
+        url = f"{base}/api/3/action/organization_list?all_fields=true&limit=10000"
+
+    try:
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:
+        log.warning("Failed to fetch remote organizations from %s: %s", url, exc)
+        return []
+
+    if not isinstance(payload, dict) or payload.get("success") is False:
+        return []
+
+    orgs = payload.get("result") or []
+    results = []
+    for org in orgs:
+        if not isinstance(org, dict):
+            continue
+        if org.get("package_count", 0) <= 0:
+            continue
+        name = org.get("title") or org.get("display_name") or org.get("name") or org.get("id")
+        results.append(
+            {
+                "id": org.get("id"),
+                "name": name or "",
+                "description": org.get("description") or "",
+            }
+        )
+    return results
+
+
+@logic.side_effect_free
+def cudc_organization_list_min(context: Context, data_dict):
+    """
+    Return minimal organization fields for UI selectors.
+    """
+    model = context["model"]
+    user = context["user"]
+
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    groups = (
+        model.Session.query(model.Group)
+        .filter(model.Group.type == "organization")
+        .filter(model.Group.state == "active")
+        .options(load_only("id", "name", "title", "description"))
+        .order_by(model.Group.title)
+        .all()
+    )
+
+    results: List[Dict[str, Any]] = []
+    for group in groups:
+        title = group.title or group.name or ""
+        results.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "title": title,
+                "display_name": title,
+                "description": group.description or "",
+            }
+        )
+    return results
 
 
 def cudc_import_config_update(context: Context, data: Dict[str, Any]):
@@ -89,6 +283,15 @@ def cudc_import_config_update(context: Context, data: Dict[str, Any]):
     import_config = data.get("import_config")
     if not isinstance(import_config, dict):
         raise logic.ValidationError("import_config codes should be a dict.")
+
+    other_config = import_config.get("other_config") or {}
+    if isinstance(other_config, dict) and other_config.get("language"):
+        allowed_langs = get_udc_langs()
+        normalized = _normalize_language(other_config.get("language"), allowed_langs)
+        if not normalized:
+            raise logic.ValidationError({"language": ["Unsupported language."]})
+        other_config["language"] = normalized
+        import_config["other_config"] = other_config
 
     if "uuid" in import_config:
         current_config = CUDCImportConfig.get(import_config["uuid"])

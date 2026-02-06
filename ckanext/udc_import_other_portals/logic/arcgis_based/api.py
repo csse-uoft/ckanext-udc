@@ -1,15 +1,25 @@
 """
 ArcGIS Hub API client utilities
 """
+import logging
+from urllib.parse import urljoin
+
 import requests
 from requests.adapters import HTTPAdapter, Retry
-from urllib.parse import urljoin
-import logging
+
+from .http_utils import get_with_fast_fail
 
 logger = logging.getLogger(__name__)
 
 
-def get_site_scope_group_ids(base_api):
+def _normalize_base_api(base_api):
+    base = (base_api or "").rstrip("/")
+    if base.endswith("/api/v3"):
+        base = base[:-7]
+    return base
+
+
+def get_site_scope_group_ids(base_api, timeout=10):
     """
     Get the group IDs that define the Hub site scope.
     
@@ -17,22 +27,27 @@ def get_site_scope_group_ids(base_api):
     belong to this specific Hub site (and not other organizations).
     
     :param base_api: The base URL of the ArcGIS Hub instance
+    :param timeout: Request timeout in seconds (int) or (connect, read) tuple
     :return: List of group IDs that define the site scope
     """
     session = requests.Session()
     retries = Retry(
-        total=10, 
-        backoff_factor=1, 
-        status_forcelist=[104, 502, 503, 504]
+        total=6,
+        connect=0,
+        read=3,
+        backoff_factor=1,
+        status_forcelist=[104, 502, 503, 504],
     )
     session.mount('https://', HTTPAdapter(max_retries=retries))
     session.mount('http://', HTTPAdapter(max_retries=retries))
     
-    url = f"{base_api}/api/search/v1/catalog"
+    base = _normalize_base_api(base_api)
+    url = f"{base}/api/search/v1/catalog"
     
     try:
         logger.info(f"Fetching site scope from catalog: {url}")
-        response = session.get(url, timeout=30)
+        request_timeout = timeout if isinstance(timeout, tuple) else (5, timeout)
+        response = get_with_fast_fail(session.get, url, timeout=request_timeout)
         response.raise_for_status()
         catalog = response.json()
         
@@ -45,7 +60,14 @@ def get_site_scope_group_ids(base_api):
         for filter_obj in filters:
             predicates = filter_obj.get('predicates', [])
             for predicate in predicates:
-                groups = predicate.get('group', [])
+                group_value = predicate.get('group', [])
+                groups = []
+                if isinstance(group_value, dict):
+                    groups = group_value.get('any') or group_value.get('all') or []
+                elif isinstance(group_value, list):
+                    groups = group_value
+                elif isinstance(group_value, str):
+                    groups = [group_value]
                 group_ids.extend(groups)
         
         # Remove duplicates while preserving order
@@ -54,10 +76,11 @@ def get_site_scope_group_ids(base_api):
         logger.info(f"Found {len(group_ids)} group IDs defining site scope")
         return group_ids
         
+    except ValueError:
+        raise
     except requests.RequestException as e:
         logger.error(f"Failed to get site scope group IDs: {e}")
-        logger.warning("Falling back to unfiltered dataset retrieval (may include other organizations)")
-        return []
+        raise ValueError(f"Failed to get site scope group IDs from {url}: {e}")
 
 
 def get_all_datasets(base_api, page_size=100, max_results=None, cb=None):
@@ -75,15 +98,17 @@ def get_all_datasets(base_api, page_size=100, max_results=None, cb=None):
     """
     session = requests.Session()
     retries = Retry(
-        total=10, 
-        backoff_factor=1, 
+        total=10,
+        connect=0,
+        backoff_factor=1,
         status_forcelist=[104, 502, 503, 504]
     )
     session.mount('https://', HTTPAdapter(max_retries=retries))
     session.mount('http://', HTTPAdapter(max_retries=retries))
     
+    base = _normalize_base_api(base_api)
     # First, get the site scope group IDs
-    group_ids = get_site_scope_group_ids(base_api)
+    group_ids = get_site_scope_group_ids(base)
     
     datasets = []
     page_number = 1
@@ -98,7 +123,7 @@ def get_all_datasets(base_api, page_size=100, max_results=None, cb=None):
     
     while True:
         # Construct the API request URL
-        url = f"{base_api}/api/v3/datasets"
+        url = f"{base}/api/v3/datasets"
         params = {
             'page[size]': page_size,
             'page[number]': page_number
@@ -114,7 +139,7 @@ def get_all_datasets(base_api, page_size=100, max_results=None, cb=None):
         
         try:
             # Make the API request
-            response = session.get(url, params=params)
+            response = get_with_fast_fail(session.get, url, params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -145,7 +170,7 @@ def get_all_datasets(base_api, page_size=100, max_results=None, cb=None):
             
             # Follow the next link (already has all parameters encoded)
             # Use urljoin to handle both absolute and relative URLs
-            url = urljoin(base_api, next_link)
+            url = urljoin(base, next_link)
             page_number += 1
             # Clear params since next_link already contains them
             params = {}
@@ -168,17 +193,19 @@ def get_dataset(dataset_id, base_api):
     """
     session = requests.Session()
     retries = Retry(
-        total=10, 
-        backoff_factor=1, 
+        total=10,
+        connect=0,
+        backoff_factor=1,
         status_forcelist=[104, 502, 503, 504]
     )
     session.mount('https://', HTTPAdapter(max_retries=retries))
     session.mount('http://', HTTPAdapter(max_retries=retries))
     
-    url = f"{base_api}/api/v3/datasets/{dataset_id}"
+    base = _normalize_base_api(base_api)
+    url = f"{base}/api/v3/datasets/{dataset_id}"
     
     try:
-        response = session.get(url)
+        response = get_with_fast_fail(session.get, url)
         response.raise_for_status()
         data = response.json()
         return data.get('data')
@@ -196,11 +223,14 @@ def check_site_alive(base_api):
     """
     try:
         # Check catalog endpoint first (more reliable)
-        response = requests.get(f"{base_api}/api/search/v1/catalog", timeout=10)
+        base = _normalize_base_api(base_api)
+        response = get_with_fast_fail(requests.get, f"{base}/api/search/v1/catalog", timeout=10)
         if response.status_code == 200:
             return True
         # Fallback to datasets endpoint
-        response = requests.get(f"{base_api}/api/v3/datasets?page[size]=1", timeout=10)
+        response = get_with_fast_fail(requests.get, f"{base}/api/v3/datasets?page[size]=1", timeout=10)
         return response.status_code == 200
-    except:
+    except ValueError:
+        return False
+    except Exception:
         return False

@@ -73,7 +73,9 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
       socket.on('finish_one', (data: FinishedPackage) => {
         if (data.data.duplications)
           console.log("Finished package:", data);
-        setFinishedPackages((prevPackages) => [...prevPackages, data]);
+        setFinishedPackages((prevPackages) =>
+          Array.isArray(prevPackages) ? [...prevPackages, data] : [data]
+        );
       });
 
       socket.on('job_started', (job: RunningJob) => {
@@ -126,7 +128,7 @@ export function RealtimeImportPanel(props: ImportPanelProps) {
       if (status.progress)
         setImportProgress(status.progress);
       setImportLogs(status.logs || []);
-      setFinishedPackages(status.finished);
+      setFinishedPackages(Array.isArray(status.finished) ? status.finished : []);
     });
   }, [selectedJob]);
 

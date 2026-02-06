@@ -1,28 +1,33 @@
-import { Container } from '@mui/material';
-import DynamicTabs, { IDynamicTab } from './tabs';
+import { Container, Typography } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2';
 import { useEffect, useState } from 'react';
 import { useApi } from '../api/useApi';
-import { IImportConfig } from './types';
+import { CKANOrganization, ImportConfig, ImportConfigListItem } from '../api/api';
 import ImportPanel from './ImportPanel';
+import ImportConfigList, { ImportListItem } from './components/ImportConfigList';
 
 export default function ImportDashboard() {
   const { api, executeApiCall } = useApi();
-  const [tabs, setTabs] = useState<IDynamicTab[]>([]);
+  const [configs, setConfigs] = useState<ImportListItem[]>([]);
+  const [selectedConfigId, setSelectedConfigId] = useState<string>('');
+  const [organizations, setOrganizations] = useState<CKANOrganization[]>([]);
+  const [selectedConfig, setSelectedConfig] = useState<ImportConfig | null>(null);
 
   const load = async (option?: string) => {
     // Get organizations
-    const organizations = await executeApiCall(api.getOrganizations);
+    const [organizations, importConfigs] = await Promise.all([
+      executeApiCall(api.getOrganizations),
+      executeApiCall(api.getImportConfigList),
+    ]);
+    setOrganizations(organizations);
 
-    const importConfigs: IImportConfig = await executeApiCall(api.getImportConfigs);
-    const newTabs = [];
-    for (const [uuid, config] of Object.entries(importConfigs)) {
-      const { code, name } = config;
-      newTabs.push({
-        key: uuid, label: name, panel: <ImportPanel defaultConfig={{ uuid, ...config }} onUpdate={requestRefresh} organizations={organizations} />
-      })
+    const items: ImportListItem[] = (importConfigs as ImportConfigListItem[])
+      .filter((config) => !config.auto_arcgis)
+      .map((config) => ({ id: config.id, name: config.name }));
+    setConfigs(items);
+    if (!selectedConfigId && items.length > 0) {
+      setSelectedConfigId(items[0].id);
     }
-    newTabs.push({ key: "new-import", label: "New Import", panel: <ImportPanel onUpdate={requestRefresh} organizations={organizations} /> });
-    setTabs(newTabs);
   }
   const requestRefresh = () => {
     load();
@@ -32,9 +37,55 @@ export default function ImportDashboard() {
     load();
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    if (!selectedConfigId) {
+      setSelectedConfig(null);
+      return;
+    }
+    executeApiCall(() => api.getImportConfig(selectedConfigId))
+      .then((config) => {
+        if (active) {
+          setSelectedConfig(config);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSelectedConfig(null);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [api, executeApiCall, selectedConfigId]);
+
   return (
     <Container>
-      <DynamicTabs tabs={tabs} />
+      <Typography variant="h5" paddingBottom={2}>Import</Typography>
+      <Grid container spacing={2}>
+        <Grid xs={12} md={4}>
+          <ImportConfigList
+            items={[{ id: 'new-import', name: 'New Import' }, ...configs]}
+            selectedId={selectedConfigId || 'new-import'}
+            onSelect={(id) => {
+              setSelectedConfigId(id === 'new-import' ? '' : id);
+            }}
+            height={700}
+          />
+        </Grid>
+        <Grid xs={12} md={8}>
+          {selectedConfigId ? (
+            <ImportPanel
+              key={selectedConfigId}
+              defaultConfig={selectedConfig ? { uuid: selectedConfigId, ...selectedConfig } : undefined}
+              onUpdate={requestRefresh}
+              organizations={organizations}
+            />
+          ) : (
+            <ImportPanel onUpdate={requestRefresh} organizations={organizations} />
+          )}
+        </Grid>
+      </Grid>
     </Container>
   );
 }

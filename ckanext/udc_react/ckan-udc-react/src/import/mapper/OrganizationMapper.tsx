@@ -18,10 +18,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import { useApi } from '../../api/useApi';
+import { CKANOrganization, RemoteOrganizationSummary } from '../../api/api';
 
 interface Organization {
   id: string;
@@ -36,6 +40,7 @@ interface OrganizationMapperProps {
 }
 
 const OrganizationMapper: React.FC<OrganizationMapperProps> = ({ externalBaseApi, onChange, defaultValue }) => {
+  const { api, executeApiCall } = useApi();
   const [organizationsA, setOrganizationsA] = useState<Organization[]>([]);
   const [organizationsB, setOrganizationsB] = useState<Organization[]>([]);
   const [filteredOrganizationsB, setFilteredOrganizationsB] = useState<Organization[]>([]);
@@ -44,41 +49,61 @@ const OrganizationMapper: React.FC<OrganizationMapperProps> = ({ externalBaseApi
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [mapping, setMapping] = useState<{ [k: string]: string }>(defaultValue || {});
   const [loading, setLoading] = useState<boolean>(false);
+  const [internalLoaded, setInternalLoaded] = useState(false);
+  const [externalLoadedBaseApi, setExternalLoadedBaseApi] = useState<string | null>(null);
 
-  const fetchOrganizations = async (baseApi: string) => {
+  const mapInternalOrg = (org: CKANOrganization): Organization => ({
+    id: org.id,
+    name: org.title || org.display_name || org.name,
+    description: org.description || '',
+  });
+
+  const mapExternalOrg = (org: RemoteOrganizationSummary): Organization => ({
+    id: org.id,
+    name: org.name,
+    description: org.description || '',
+  });
+
+  const loadOrganizations = async () => {
+    if (!modalOpen) {
+      return;
+    }
+    if (!externalBaseApi) {
+      return;
+    }
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch(`${baseApi}/3/action/organization_list?all_fields=true&limit=10000`);
-      const data = await response.json();
-      return data.result
-        .filter((org: any) => org.package_count > 0)
-        .reduce((acc: { [key: string]: Organization }, org: any) => {
-          acc[org.id] = {
-            id: org.id,
-            name: org.title,
-            description: org.description,
-          };
-          return acc;
-        }, {});
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      return {};
+      if (!internalLoaded) {
+        const internalOrgs = await executeApiCall(api.getOrganizations);
+        const filteredInternal = (internalOrgs || []).filter(
+          (org) => org.package_count == null || (org.package_count || 0) > 0
+        );
+        setOrganizationsA(filteredInternal.map(mapInternalOrg));
+        setInternalLoaded(true);
+      }
+      if (externalLoadedBaseApi !== externalBaseApi) {
+        const externalOrgs = await executeApiCall(() => api.getRemoteOrganizations(externalBaseApi));
+        const mapped = (externalOrgs || []).map(mapExternalOrg);
+        setOrganizationsB(mapped);
+        setFilteredOrganizationsB(mapped);
+        setExternalLoadedBaseApi(externalBaseApi);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const fetchedOrganizationsA = await fetchOrganizations('/api');
-      setOrganizationsA(Object.values(fetchedOrganizationsA));
-      const fetchedOrganizationsB = await fetchOrganizations(externalBaseApi);
-      setOrganizationsB(Object.values(fetchedOrganizationsB));
-      setFilteredOrganizationsB(Object.values(fetchedOrganizationsB));
-      setLoading(false);
-    };
-    fetchData();
+    if (modalOpen) {
+      loadOrganizations();
+    }
+  }, [modalOpen, externalBaseApi]);
+
+  useEffect(() => {
+    setOrganizationsB([]);
+    setFilteredOrganizationsB([]);
+    setExternalLoadedBaseApi(null);
+    setSelectedExternalOrg(null);
   }, [externalBaseApi]);
 
   useEffect(() => {
@@ -134,8 +159,16 @@ const OrganizationMapper: React.FC<OrganizationMapperProps> = ({ externalBaseApi
         Organization Mapping
       </Button>
       <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="lg">
-        <DialogTitle id="alert-dialog-title">
-          {"Map Organizations"}
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}
+        >
+          <span>Map Organizations</span>
+          <Tooltip title="Close">
+            <IconButton aria-label="Close" onClick={handleCloseModal} size="small">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </DialogTitle>
         <DialogContent>
           {loading ? (
@@ -217,9 +250,11 @@ const OrganizationMapper: React.FC<OrganizationMapperProps> = ({ externalBaseApi
                             primary={externalOrg ? externalOrg.name : `External Org ID: ${externalId}`}
                             secondary={internalOrg ? `Mapped to: ${internalOrg.name}` : `Internal Org ID: ${internalId}`}
                           />
-                          <IconButton edge="end" onClick={() => handleDeleteMapping(externalId)}>
-                            <DeleteIcon />
-                          </IconButton>
+                          <Tooltip title="Remove mapping">
+                            <IconButton edge="end" onClick={() => handleDeleteMapping(externalId)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
                         </ListItem>
                       );
                     })}

@@ -39,6 +39,58 @@ export async function getImportConfigs() {
   return importConfig.result;
 }
 
+export type ImportConfigListItem = {
+  id: string;
+  name: string;
+  platform?: string;
+  updated_at?: string | null;
+  auto_arcgis?: boolean;
+};
+
+export async function getImportConfigList() {
+  const importConfig = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_configs_list");
+  return importConfig.result as ImportConfigListItem[];
+}
+
+export async function getImportConfig(uuid: string) {
+  const importConfig = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_config_show", {
+    method: "POST",
+    body: JSON.stringify({ uuid }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return importConfig.result as ImportConfig;
+}
+
+export type ImportLanguageOptions = {
+  languages: string[];
+  default: string;
+  labels: Record<string, string>;
+};
+
+export async function getImportLanguageOptions() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_language_options");
+  return result.result as ImportLanguageOptions;
+}
+
+export type RemoteOrganizationSummary = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
+export async function getRemoteOrganizations(base_api: string): Promise<RemoteOrganizationSummary[]> {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_remote_orgs_list", {
+    method: "POST",
+    body: JSON.stringify({ base_api }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as RemoteOrganizationSummary[];
+}
+
 export async function updateImportConfig(importConfig: { uuid?: string, name: string, code: string }) {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_config_update", {
     method: "POST",
@@ -94,6 +146,154 @@ export async function deleteImportLog(logId: string) {
   });
 
   return result.result;
+}
+
+export interface ArcgisPortalCandidate {
+  id: string;
+  title: string;
+  url: string;
+  orgId: string;
+  tags: string[];
+  snippet: string;
+  description: string;
+  matchedTerms: string[];
+  matchReasons?: string[];
+  score: number;
+  portalName?: string;
+  datasetCount?: number;
+  countsUpdatedAt?: string | null;
+  raw?: Record<string, unknown>;
+}
+
+export interface ArcgisPortalDiscoveryResult {
+  total: number;
+  arcgis_root: string;
+  results: ArcgisPortalCandidate[];
+  updated_at?: string | null;
+  counts_updated_at?: string | null;
+}
+
+export interface ArcgisPortalKeywordGroup {
+  label: string;
+  terms: string[];
+}
+
+export interface ArcgisPortalDiscoveryConfig {
+  keyword_groups: ArcgisPortalKeywordGroup[];
+  updated_at?: string | null;
+}
+
+export interface ImportConfig {
+  id: string;
+  name: string;
+  notes?: string;
+  code: string;
+  platform?: string;
+  owner_org?: string;
+  stop_on_error?: boolean;
+  created_by?: string;
+  other_config?: Record<string, unknown>;
+  other_data?: Record<string, unknown>;
+  cron_schedule?: string;
+  is_running?: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_run_at?: string | null;
+  portal_snapshot?: ArcgisPortalCandidate;
+  datasetCount?: number;
+  countsUpdatedAt?: string | null;
+  discoverable?: boolean | null;
+}
+
+export interface ArcgisAutoImportConfigsResponse {
+  total: number;
+  results: ImportConfig[];
+  counts_updated_at?: string | null;
+}
+
+export async function discoverArcgisPortals(payload?: { arcgis_root?: string; concurrency?: number }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_hub_portal_discovery", {
+    method: "POST",
+    body: JSON.stringify(payload ?? {}),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as ArcgisPortalDiscoveryResult;
+}
+
+export async function getArcgisPortalDiscovery() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_hub_portal_discovery_get");
+  return result.result as ArcgisPortalDiscoveryResult;
+}
+
+export async function updateArcgisPortalDiscoveryCounts(payload: { portal_ids?: string[]; concurrency?: number; count_mode?: "fast" | "accurate" }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_hub_portal_discovery_counts", {
+    method: "POST",
+    body: JSON.stringify(payload ?? {}),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as ArcgisPortalDiscoveryResult & { counts_updated_at?: string | null };
+}
+
+export async function getArcgisPortalDiscoveryConfig() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_hub_portal_discovery_config_get");
+  return result.result as ArcgisPortalDiscoveryConfig;
+}
+
+export async function getArcgisPortalDiscoveryConfigDefault() {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/arcgis_hub_portal_discovery_config_default"
+  );
+  return result.result as ArcgisPortalDiscoveryConfig;
+}
+
+export async function updateArcgisPortalDiscoveryConfig(payload: { keyword_groups: ArcgisPortalKeywordGroup[] }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_hub_portal_discovery_config_update", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as ArcgisPortalDiscoveryConfig;
+}
+
+export async function getArcgisAutoImportConfigs() {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_auto_import_configs_get");
+  return result.result as ArcgisAutoImportConfigsResponse;
+}
+
+export async function createArcgisAutoImportConfigs(payload: { portal_ids: string[] }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_auto_import_configs_create", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as {
+    created: ImportConfig[];
+    skipped: Array<[string, string]>;
+    errors: Array<[string, string]>;
+  };
+}
+
+export async function deleteArcgisAutoImportConfigs(payload: { config_ids: string[] }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_auto_import_configs_delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as {
+    deleted: string[];
+    skipped: Array<[string, string]>;
+    blocked: Array<{ id: string; imported_count: number; owner_org?: string | null }>;
+  };
 }
 
 export async function getConfig(configKey: string) {

@@ -1,14 +1,14 @@
-import { Container, Card, CardContent, Alert, Typography, Box, IconButton, Button, FormControl, InputLabel, Select, MenuItem} from '@mui/material';
+import { Container, Card, CardContent, Alert, Typography, Box, IconButton, Button, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
-import DynamicTabs, { IDynamicTab } from './tabs';
 
-import CodeMirror from "@uiw/react-codemirror";
 import { useEffect, useState } from 'react';
-import { IImportConfig } from './types';
+import { ImportConfigListItem } from '../api/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useApi } from '../api/useApi';
 import { FinishedPackagesTable } from './realtime/FinishedPackagesTable';
 import { FinishedPackage } from './realtime/types';
+import ImportConfigList, { ImportListItem } from './components/ImportConfigList';
+import { formatLocalTimestamp } from './utils/time';
 
 
 export interface ImportPanelProps {
@@ -51,11 +51,13 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h5" component="div">
-            Run At: {new Date(data.run_at).toLocaleString()}
+            Run At: {formatLocalTimestamp(data.run_at)}
           </Typography>
-          <IconButton onClick={() => onDelete(data.id)} color="error" aria-label="delete">
-            <DeleteIcon />
-          </IconButton>
+          <Tooltip title="Delete log">
+            <IconButton onClick={() => onDelete(data.id)} color="error" aria-label="delete">
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
         {data.has_error && (
           <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
@@ -134,7 +136,7 @@ function ImportLogsPanel(props: ImportPanelProps) {
           >
             {importLogs.map((log: LogData) => (
               <MenuItem key={log.id} value={log.id}>
-                {new Date(log.run_at).toLocaleString()}
+                {formatLocalTimestamp(log.run_at)}
               </MenuItem>
             ))}
           </Select>
@@ -153,17 +155,46 @@ function ImportLogsPanel(props: ImportPanelProps) {
 export function ImportStatus() {
   const {api, executeApiCall} = useApi();
 
-  const [tabs, setTabs] = useState<IDynamicTab[]>([]);
+  const [configs, setConfigs] = useState<ImportListItem[]>([]);
+  const [selectedConfigId, setSelectedConfigId] = useState<string>('');
+  const [requestedConfigId, setRequestedConfigId] = useState<string>('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const configId = params.get('configId') || '';
+    if (configId) {
+      setRequestedConfigId(configId);
+      setSelectedConfigId(configId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!requestedConfigId || configs.length === 0) {
+      return;
+    }
+    const hasRequested = configs.some((item) => item.id === requestedConfigId);
+    if (hasRequested && selectedConfigId !== requestedConfigId) {
+      setSelectedConfigId(requestedConfigId);
+    }
+  }, [configs, requestedConfigId, selectedConfigId]);
 
   const load = async (option?: string) => {
-    const importConfigs: IImportConfig = await executeApiCall(api.getImportConfigs);
-    const newTabs = [];
-    for (const [uuid, { code, name }] of Object.entries(importConfigs)) {
-      newTabs.push({
-        key: uuid, label: name, panel: <ImportLogsPanel uuid={uuid} defaultCode={code} defaultName={name} onUpdate={requestRefresh} />
-      })
+    const importConfigs = await executeApiCall(api.getImportConfigList);
+    const items: ImportListItem[] = (importConfigs as ImportConfigListItem[]).map((config) => {
+      const updated = config.updated_at ? formatLocalTimestamp(config.updated_at) : '';
+      return { id: config.id, name: config.name, subtitle: updated ? `Updated: ${updated}` : undefined };
+    });
+    setConfigs(items);
+    if (requestedConfigId) {
+      const hasRequested = items.some((item) => item.id === requestedConfigId);
+      if (hasRequested) {
+        setSelectedConfigId(requestedConfigId);
+        return;
+      }
     }
-    setTabs(newTabs);
+    if (!selectedConfigId && items.length > 0) {
+      setSelectedConfigId(items[0].id);
+    }
   }
   const requestRefresh = () => {
     load();
@@ -173,15 +204,47 @@ export function ImportStatus() {
     load();
   }, []);
 
+  if (configs.length === 0) return "Loading...";
 
-  if (tabs.length === 0)
-    return "Loading..."
-
-  return <Container>
-    <Typography variant='h5' paddingBottom={2}>Import Status</Typography>
-
-    <DynamicTabs tabs={tabs} />
-  </Container>
+  return (
+    <Container>
+      <Typography variant='h5' paddingBottom={2}>Import Status</Typography>
+      <Grid container spacing={2}>
+        <Grid xs={12} md={4}>
+          <ImportConfigList
+            items={configs}
+            selectedId={selectedConfigId}
+            onSelect={(id) => {
+              setSelectedConfigId(id);
+              const params = new URLSearchParams(window.location.search);
+              if (id) {
+                params.set("configId", id);
+              } else {
+                params.delete("configId");
+              }
+              const query = params.toString();
+              const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+              window.history.replaceState(null, "", nextUrl);
+            }}
+            height={700}
+          />
+        </Grid>
+        <Grid xs={12} md={8}>
+          {selectedConfigId ? (
+            <ImportLogsPanel
+              key={selectedConfigId}
+              uuid={selectedConfigId}
+              defaultCode=""
+              defaultName=""
+              onUpdate={requestRefresh}
+            />
+          ) : (
+            <Typography variant="body2">Select an import to view status.</Typography>
+          )}
+        </Grid>
+      </Grid>
+    </Container>
+  );
 
 
 }

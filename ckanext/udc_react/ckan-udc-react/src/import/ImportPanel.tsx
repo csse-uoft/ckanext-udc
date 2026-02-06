@@ -5,7 +5,7 @@ import { python } from '@codemirror/lang-python';
 import { useEffect, useMemo, useState } from 'react';
 import { SaveOutlined, PlayArrowOutlined, DeleteForeverOutlined } from '@mui/icons-material';
 import { useApi } from '../api/useApi';
-import { CKANOrganization } from '../api/api';
+import { CKANOrganization, ImportLanguageOptions } from '../api/api';
 import OrganizationMapper from './mapper/OrganizationMapper';
 import { REACT_PATH } from '../constants';
 
@@ -22,11 +22,12 @@ export interface ImportPanelProps {
       base_api?: string;
       org_mapping?: { [k: string]: string };
       delete_previously_imported?: boolean;
+      language?: string;
     };
     cron_schedule?: string;
     platform?: string;
-    created_at?: string;
-    updated_at?: string;
+    created_at?: string | null;
+    updated_at?: string | null;
   };
   onUpdate: (option?: string) => void;
   organizations: CKANOrganization[];
@@ -184,21 +185,29 @@ const resolveCronPreset = (cron: string) => {
 export default function ImportPanel(props: ImportPanelProps) {
   const { api, executeApiCall } = useApi();
 
-  const [importConfig, setImportConfig] = useState({
-    uuid: props.defaultConfig?.uuid,
-    name: props.defaultConfig?.name ?? "",
-    code: props.defaultConfig?.code ?? "",
-    notes: props.defaultConfig?.notes ?? "",
-    owner_org: props.defaultConfig?.owner_org ?? "",
-    stop_on_error: props.defaultConfig?.stop_on_error ?? false,
-    cron_schedule: props.defaultConfig?.cron_schedule ?? "",
-    platform: props.defaultConfig?.platform ?? "ckan",
-    other_config: props.defaultConfig?.other_config ?? {},
+  const buildImportConfig = (config?: ImportPanelProps["defaultConfig"]) => ({
+    uuid: config?.uuid,
+    name: config?.name ?? "",
+    code: config?.code ?? "",
+    notes: config?.notes ?? "",
+    owner_org: config?.owner_org ?? "",
+    stop_on_error: config?.stop_on_error ?? false,
+    cron_schedule: config?.cron_schedule ?? "",
+    platform: config?.platform ?? "ckan",
+    other_config: config?.other_config ?? {},
   });
+
+  const [importConfig, setImportConfig] = useState(() => buildImportConfig(props.defaultConfig));
+  const [languageOptions, setLanguageOptions] = useState<ImportLanguageOptions | null>(null);
 
   const [loading, setLoading] = useState({ save: false, saveAndRun: false, delete: false });
   const [cronPreset, setCronPreset] = useState(() => resolveCronPreset(importConfig.cron_schedule));
   const [customCron, setCustomCron] = useState(() => parseCron(importConfig.cron_schedule));
+  const [languageLoading, setLanguageLoading] = useState(false);
+
+  useEffect(() => {
+    setImportConfig(buildImportConfig(props.defaultConfig));
+  }, [props.defaultConfig?.uuid]);
 
   useEffect(() => {
     const preset = resolveCronPreset(importConfig.cron_schedule);
@@ -207,6 +216,30 @@ export default function ImportPanel(props: ImportPanelProps) {
       setCustomCron(parseCron(importConfig.cron_schedule));
     }
   }, [importConfig.cron_schedule]);
+
+  useEffect(() => {
+    let active = true;
+    setLanguageLoading(true);
+    executeApiCall(api.getImportLanguageOptions)
+      .then((result) => {
+        if (active) {
+          setLanguageOptions(result);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLanguageOptions(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLanguageLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [api, executeApiCall]);
 
   const getCodePlaceholder = () => {
     if (importConfig.platform === 'arcgis') {
@@ -428,6 +461,32 @@ class MyImport(CKANBasedImport):
                 fullWidth
               />
             </Grid>
+            {importConfig.platform === 'arcgis' && languageOptions && (
+              <Grid xs={12} md={6}>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="import-language-label" shrink>
+                    Language
+                  </InputLabel>
+                  <Select
+                    labelId="import-language-label"
+                    value={importConfig.other_config.language || ""}
+                    label="Language"
+                    onChange={handleChangeOtherConfig("language")}
+                    disabled={languageLoading}
+                  >
+                    <MenuItem value="">
+                      <em>Auto (portal culture)</em>
+                    </MenuItem>
+                    {languageOptions.languages.map((code) => (
+                      <MenuItem key={code} value={code}>
+                        {languageOptions.labels?.[code] || code.toUpperCase()}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>Choose one of the supported languages.</FormHelperText>
+                </FormControl>
+              </Grid>
+            )}
 
             <Grid xs={12} sx={{ mt: 2 }}>
               <FormControl fullWidth variant="standard">
