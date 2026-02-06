@@ -10,12 +10,28 @@ import ckan.plugins.toolkit as tk
 from typing import Dict
 from .logic.actions import (
     cudc_import_configs_get,
+    cudc_import_configs_list,
+    cudc_import_config_show,
+    cudc_import_remote_orgs_list,
+    cudc_organization_list_min,
     cudc_import_config_delete,
     cudc_import_config_update,
     cudc_import_run,
     cudc_import_logs_get,
     cudc_import_log_delete,
     cudc_clear_organization,
+    cudc_import_language_options,
+)
+from .logic.arcgis_based.actions import (
+    arcgis_hub_portal_discovery,
+    arcgis_hub_portal_discovery_get,
+    arcgis_hub_portal_discovery_counts,
+    arcgis_hub_portal_discovery_config_get,
+    arcgis_hub_portal_discovery_config_default,
+    arcgis_hub_portal_discovery_config_update,
+    arcgis_auto_import_configs_get,
+    arcgis_auto_import_configs_create,
+    arcgis_auto_import_configs_delete,
 )
 from .logic.relationships import init_relationships
 from .scheduler import sync_cron_jobs
@@ -48,10 +64,24 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
     def get_actions(self) -> Dict[str, Action]:
         return {
             "cudc_import_configs_get": cudc_import_configs_get,
+            "cudc_import_configs_list": cudc_import_configs_list,
+            "cudc_import_config_show": cudc_import_config_show,
+            "cudc_import_remote_orgs_list": cudc_import_remote_orgs_list,
+            "cudc_organization_list_min": cudc_organization_list_min,
             "cudc_import_config_update": cudc_import_config_update,
             "cudc_import_run": cudc_import_run,
             "cudc_import_config_delete": cudc_import_config_delete,
             "cudc_import_logs_get": cudc_import_logs_get,
             "cudc_import_log_delete": cudc_import_log_delete,
             "cudc_clear_organization": cudc_clear_organization,
+            "cudc_import_language_options": cudc_import_language_options,
+            "arcgis_hub_portal_discovery": arcgis_hub_portal_discovery,
+            "arcgis_hub_portal_discovery_get": arcgis_hub_portal_discovery_get,
+            "arcgis_hub_portal_discovery_counts": arcgis_hub_portal_discovery_counts,
+            "arcgis_hub_portal_discovery_config_get": arcgis_hub_portal_discovery_config_get,
+            "arcgis_hub_portal_discovery_config_default": arcgis_hub_portal_discovery_config_default,
+            "arcgis_hub_portal_discovery_config_update": arcgis_hub_portal_discovery_config_update,
+            "arcgis_auto_import_configs_get": arcgis_auto_import_configs_get,
+            "arcgis_auto_import_configs_create": arcgis_auto_import_configs_create,
+            "arcgis_auto_import_configs_delete": arcgis_auto_import_configs_delete,
         }
