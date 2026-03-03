@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   Box,
   Button,
@@ -48,6 +48,8 @@ const ManageUsers: React.FC = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserSummary | null>(null);
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [selectAllLoading, setSelectAllLoading] = useState(false);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [aboutTarget, setAboutTarget] = useState<UserSummary | null>(null);
 
@@ -75,6 +77,65 @@ const ManageUsers: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, [paginationModel, filters]);
+
+  const fetchAllUserIds = async () => {
+    const ids: string[] = [];
+    let page = 1;
+    const pageSize = 500;
+    let totalCount = 0;
+
+    do {
+      const result = await executeApiCall(() =>
+        api.listUsers({
+          page,
+          page_size: pageSize,
+          filters,
+        })
+      );
+      if (page === 1) {
+        totalCount = result.total;
+      }
+      ids.push(...result.results.map((user) => user.id));
+      if (!result.results.length) {
+        break;
+      }
+      page += 1;
+    } while (ids.length < totalCount);
+
+    return ids;
+  };
+
+  const handleSelectionChange = async (model: GridRowSelectionModel) => {
+    if (!users.length || !total || total <= users.length || model.length !== users.length) {
+      setSelectionModel(model);
+      return;
+    }
+
+    const currentPageIds = new Set(users.map((user) => user.id));
+    let selectedCurrentPageCount = 0;
+    for (const id of model) {
+      if (currentPageIds.has(String(id))) {
+        selectedCurrentPageCount += 1;
+      }
+    }
+    const isHeaderSelectAllOnPage = selectedCurrentPageCount === users.length;
+    if (!isHeaderSelectAllOnPage) {
+      setSelectionModel(model);
+      return;
+    }
+
+    try {
+      setSelectAllLoading(true);
+      const allIds = await fetchAllUserIds();
+      setSelectionModel(allIds);
+    } catch (err) {
+      setError("Failed to select all users across all pages.");
+      setErrorDialogOpen(true);
+      setSelectionModel(model);
+    } finally {
+      setSelectAllLoading(false);
+    }
+  };
 
   const handleApplyFilters = () => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
@@ -105,13 +166,18 @@ const ManageUsers: React.FC = () => {
   };
 
   const handleDeleteUser = async () => {
-    if (!deleteTarget) {
+    const selectedIds =
+      deleteTarget?.id ? [deleteTarget.id] : selectionModel.map((id) => String(id));
+    if (!selectedIds.length) {
       return;
     }
     try {
-      await executeApiCall(() => api.deleteUser({ id: deleteTarget.id }));
+      for (const id of selectedIds) {
+        await executeApiCall(() => api.deleteUser({ id }));
+      }
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
+      setSelectionModel([]);
       fetchUsers();
     } catch (err) {
       setError("Failed to delete user.");
@@ -228,18 +294,35 @@ const ManageUsers: React.FC = () => {
         <Button variant="text" onClick={handleClearFilters}>
           Clear
         </Button>
+        <Button
+          variant="outlined"
+          color="error"
+          disabled={!selectionModel.length}
+          onClick={() => {
+            setDeleteTarget(null);
+            setDeleteDialogOpen(true);
+          }}
+        >
+          Delete Selected ({selectionModel.length})
+        </Button>
       </Box>
 
       <DataGrid
         rows={users}
         columns={columns}
-        loading={loading}
+        loading={loading || selectAllLoading}
+        checkboxSelection
         disableRowSelectionOnClick
+        keepNonExistentRowsSelected
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
-        pageSizeOptions={[25, 50, 100]}
+        pageSizeOptions={[25, 50, 100, 1000, 5000]}
         paginationMode="server"
         rowCount={total}
+        rowSelectionModel={selectionModel}
+        onRowSelectionModelChange={(model) => {
+          void handleSelectionChange(model);
+        }}
       />
 
       <Dialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)}>
@@ -266,10 +349,12 @@ const ManageUsers: React.FC = () => {
       </Dialog>
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete User</DialogTitle>
+        <DialogTitle>{deleteTarget ? "Delete User" : "Delete Users"}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Delete user {deleteTarget?.name}? This will mark the user as deleted.
+            {deleteTarget
+              ? `Delete user ${deleteTarget.name}? This will mark the user as deleted.`
+              : `Delete ${selectionModel.length} selected user(s)? This will mark them as deleted.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
