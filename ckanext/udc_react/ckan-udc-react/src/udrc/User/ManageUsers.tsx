@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DataGrid, GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   Box,
@@ -9,8 +9,10 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  LinearProgress,
   TextField,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import LockResetOutlined from "@mui/icons-material/LockResetOutlined";
@@ -48,10 +50,18 @@ const ManageUsers: React.FC = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserSummary | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteDoneCount, setDeleteDoneCount] = useState(0);
+  const [deleteTotalCount, setDeleteTotalCount] = useState(0);
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
   const [selectAllLoading, setSelectAllLoading] = useState(false);
+  const [selectAllScannedCount, setSelectAllScannedCount] = useState(0);
+  const [selectAllTotalCount, setSelectAllTotalCount] = useState(0);
+  const [selectAllFetchedCount, setSelectAllFetchedCount] = useState(0);
+  const selectAllCancelRef = useRef(false);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [aboutTarget, setAboutTarget] = useState<UserSummary | null>(null);
+  const isSelectableUser = (user: UserSummary) => !user.sysadmin;
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -83,8 +93,12 @@ const ManageUsers: React.FC = () => {
     let page = 1;
     const pageSize = 500;
     let totalCount = 0;
+    let fetchedCount = 0;
 
     do {
+      if (selectAllCancelRef.current) {
+        return { ids, cancelled: true };
+      }
       const result = await executeApiCall(() =>
         api.listUsers({
           page,
@@ -94,46 +108,70 @@ const ManageUsers: React.FC = () => {
       );
       if (page === 1) {
         totalCount = result.total;
+        setSelectAllTotalCount(result.total);
       }
-      ids.push(...result.results.map((user) => user.id));
+      fetchedCount += result.results.length;
+      setSelectAllScannedCount(fetchedCount);
+      ids.push(...result.results.filter(isSelectableUser).map((user) => user.id));
+      setSelectAllFetchedCount(ids.length);
       if (!result.results.length) {
         break;
       }
+      if (selectAllCancelRef.current) {
+        return { ids, cancelled: true };
+      }
       page += 1;
-    } while (ids.length < totalCount);
+    } while (fetchedCount < totalCount);
 
-    return ids;
+    return { ids, cancelled: false };
   };
 
   const handleSelectionChange = async (model: GridRowSelectionModel) => {
-    if (!users.length || !total || total <= users.length || model.length !== users.length) {
-      setSelectionModel(model);
+    const nonSelectablePageIds = new Set(
+      users.filter((user) => !isSelectableUser(user)).map((user) => user.id)
+    );
+    const sanitizedModel = model.filter((id) => !nonSelectablePageIds.has(String(id)));
+    const selectableOnPage = users.filter(isSelectableUser).length;
+
+    if (
+      !users.length ||
+      !total ||
+      total <= users.length ||
+      selectableOnPage === 0 ||
+      sanitizedModel.length !== selectableOnPage
+    ) {
+      setSelectionModel(sanitizedModel);
       return;
     }
 
-    const currentPageIds = new Set(users.map((user) => user.id));
+    const currentPageIds = new Set(users.filter(isSelectableUser).map((user) => user.id));
     let selectedCurrentPageCount = 0;
-    for (const id of model) {
+    for (const id of sanitizedModel) {
       if (currentPageIds.has(String(id))) {
         selectedCurrentPageCount += 1;
       }
     }
-    const isHeaderSelectAllOnPage = selectedCurrentPageCount === users.length;
+    const isHeaderSelectAllOnPage = selectedCurrentPageCount === selectableOnPage;
     if (!isHeaderSelectAllOnPage) {
-      setSelectionModel(model);
+      setSelectionModel(sanitizedModel);
       return;
     }
 
     try {
       setSelectAllLoading(true);
-      const allIds = await fetchAllUserIds();
-      setSelectionModel(allIds);
+      setSelectAllScannedCount(0);
+      setSelectAllTotalCount(0);
+      setSelectAllFetchedCount(0);
+      selectAllCancelRef.current = false;
+      const { ids } = await fetchAllUserIds();
+      setSelectionModel(ids);
     } catch (err) {
       setError("Failed to select all users across all pages.");
       setErrorDialogOpen(true);
-      setSelectionModel(model);
+      setSelectionModel(sanitizedModel);
     } finally {
       setSelectAllLoading(false);
+      selectAllCancelRef.current = false;
     }
   };
 
@@ -146,6 +184,12 @@ const ManageUsers: React.FC = () => {
     setFilterDraft({ q: "", name: "", fullname: "", email: "", about: "" });
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
     setFilters({});
+  };
+
+  const handleSelectAllPage = () => {
+    const ids = new Set(selectionModel.map((id) => String(id)));
+    users.filter(isSelectableUser).forEach((user) => ids.add(user.id));
+    setSelectionModel(Array.from(ids));
   };
 
   const handleResetPassword = async () => {
@@ -171,17 +215,36 @@ const ManageUsers: React.FC = () => {
     if (!selectedIds.length) {
       return;
     }
+    setDeleteLoading(true);
+    setDeleteDoneCount(0);
+    setDeleteTotalCount(selectedIds.length);
     try {
+      let done = 0;
+      const failedIds: string[] = [];
       for (const id of selectedIds) {
-        await executeApiCall(() => api.deleteUser({ id }));
+        try {
+          await executeApiCall(() => api.deleteUser({ id }));
+        } catch (err) {
+          failedIds.push(id);
+        }
+        done += 1;
+        setDeleteDoneCount(done);
       }
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
-      setSelectionModel([]);
+      setSelectionModel(failedIds);
       fetchUsers();
+      if (failedIds.length) {
+        setError(
+          `Delete finished with partial failures. Succeeded: ${selectedIds.length - failedIds.length}, failed: ${failedIds.length}.`
+        );
+        setErrorDialogOpen(true);
+      }
     } catch (err) {
       setError("Failed to delete user.");
       setErrorDialogOpen(true);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -294,6 +357,9 @@ const ManageUsers: React.FC = () => {
         <Button variant="text" onClick={handleClearFilters}>
           Clear
         </Button>
+        <Button variant="text" onClick={handleSelectAllPage}>
+          Select All on Page
+        </Button>
         <Button
           variant="outlined"
           color="error"
@@ -305,7 +371,31 @@ const ManageUsers: React.FC = () => {
         >
           Delete Selected ({selectionModel.length})
         </Button>
+        {selectAllLoading && (
+          <Button
+            variant="text"
+            color="warning"
+            onClick={() => {
+              selectAllCancelRef.current = true;
+            }}
+          >
+            Cancel Select All ({selectAllFetchedCount})
+          </Button>
+        )}
       </Box>
+      {selectAllLoading && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Selecting users... scanned {selectAllScannedCount}
+            {selectAllTotalCount ? ` / ${selectAllTotalCount}` : ""}, selected{" "}
+            {selectAllFetchedCount} (excluding sysadmin)
+          </Typography>
+          <LinearProgress
+            variant={selectAllTotalCount ? "determinate" : "indeterminate"}
+            value={selectAllTotalCount ? (selectAllScannedCount / selectAllTotalCount) * 100 : undefined}
+          />
+        </Box>
+      )}
 
       <DataGrid
         rows={users}
@@ -313,9 +403,12 @@ const ManageUsers: React.FC = () => {
         loading={loading || selectAllLoading}
         checkboxSelection
         disableRowSelectionOnClick
+        isRowSelectable={(params) => isSelectableUser(params.row)}
         keepNonExistentRowsSelected
         paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
+        onPaginationModelChange={(model) =>
+          setPaginationModel({ page: model.page, pageSize: model.pageSize })
+        }
         pageSizeOptions={[25, 50, 100, 1000, 5000]}
         paginationMode="server"
         rowCount={total}
@@ -348,7 +441,14 @@ const ManageUsers: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          if (!deleteLoading) {
+            setDeleteDialogOpen(false);
+          }
+        }}
+      >
         <DialogTitle>{deleteTarget ? "Delete User" : "Delete Users"}</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -356,11 +456,24 @@ const ManageUsers: React.FC = () => {
               ? `Delete user ${deleteTarget.name}? This will mark the user as deleted.`
               : `Delete ${selectionModel.length} selected user(s)? This will mark them as deleted.`}
           </DialogContentText>
+          {deleteLoading && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                Deleting... {deleteDoneCount} / {deleteTotalCount}
+              </Typography>
+              <LinearProgress
+                variant={deleteTotalCount ? "determinate" : "indeterminate"}
+                value={deleteTotalCount ? (deleteDoneCount / deleteTotalCount) * 100 : undefined}
+              />
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteUser} color="error" variant="contained">
-            Delete
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleteLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteUser} color="error" variant="contained" disabled={deleteLoading}>
+            {deleteLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
