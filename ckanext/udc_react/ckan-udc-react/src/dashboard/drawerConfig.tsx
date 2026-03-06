@@ -16,6 +16,7 @@ import ManageLicenses from '../udrc/License/ManageLicenses';
 import ManageUsers from '../udrc/User/ManageUsers';
 import DeletedUsers from '../udrc/User/DeletedUsers';
 import ManageOrganizations from '../udrc/Organization/ManageOrganizations';
+import DeletedOrganizations from '../udrc/Organization/DeletedOrganizations';
 
 
 export interface DrawerItem {
@@ -132,6 +133,12 @@ const drawerConfig: DrawerConfig = {
           icon: <PersonOff />,
           path: `/${REACT_PATH}/system-config/users/deleted`,
           component: DeletedUsers,
+        },
+        {
+          text: "Deleted Organizations",
+          icon: <PersonOff />,
+          path: `/${REACT_PATH}/system-config/organizations/deleted`,
+          component: DeletedOrganizations,
         },
         {
           text: "System Config",

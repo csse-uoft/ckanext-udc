@@ -47,6 +47,7 @@ const DeletedUsers: React.FC = () => {
   const [selectAllScannedCount, setSelectAllScannedCount] = useState(0);
   const [selectAllTotalCount, setSelectAllTotalCount] = useState(0);
   const [selectAllFetchedCount, setSelectAllFetchedCount] = useState(0);
+  const [selectAllWarning, setSelectAllWarning] = useState<string | null>(null);
   const selectAllCancelRef = useRef(false);
   const isSelectableUser = (user: UserSummary) => !user.sysadmin;
 
@@ -98,18 +99,25 @@ const DeletedUsers: React.FC = () => {
     const pageSize = 500;
     let totalCount = 0;
     let fetchedCount = 0;
+    let hadErrors = false;
 
     do {
       if (selectAllCancelRef.current) {
-        return { ids, cancelled: true };
+        return { ids, cancelled: true, hadErrors };
       }
-      const result = await executeApiCall(() =>
-        api.listDeletedUsers({
-          page,
-          page_size: pageSize,
-          filters,
-        })
-      );
+      let result;
+      try {
+        result = await executeApiCall(() =>
+          api.listDeletedUsers({
+            page,
+            page_size: pageSize,
+            filters,
+          })
+        );
+      } catch (err) {
+        hadErrors = true;
+        break;
+      }
       if (page === 1) {
         totalCount = result.total;
         setSelectAllTotalCount(result.total);
@@ -122,12 +130,12 @@ const DeletedUsers: React.FC = () => {
         break;
       }
       if (selectAllCancelRef.current) {
-        return { ids, cancelled: true };
+        return { ids, cancelled: true, hadErrors };
       }
       page += 1;
     } while (fetchedCount < totalCount);
 
-    return { ids, cancelled: false };
+    return { ids, cancelled: false, hadErrors };
   };
 
   const handleSelectionChange = async (model: GridRowSelectionModel) => {
@@ -166,12 +174,16 @@ const DeletedUsers: React.FC = () => {
       setSelectAllScannedCount(0);
       setSelectAllTotalCount(0);
       setSelectAllFetchedCount(0);
+      setSelectAllWarning(null);
       selectAllCancelRef.current = false;
-      const { ids } = await fetchAllDeletedUserIds();
+      const { ids, hadErrors } = await fetchAllDeletedUserIds();
       setSelectionModel(ids);
+      if (hadErrors) {
+        setSelectAllWarning(
+          "Select-all partially completed due to fetch errors. Selected users are the ones fetched successfully."
+        );
+      }
     } catch (err) {
-      setError("Failed to select all deleted users across all pages.");
-      setErrorDialogOpen(true);
       setSelectionModel(sanitizedModel);
     } finally {
       setSelectAllLoading(false);
@@ -298,6 +310,11 @@ const DeletedUsers: React.FC = () => {
             value={selectAllTotalCount ? (selectAllScannedCount / selectAllTotalCount) * 100 : undefined}
           />
         </Box>
+      )}
+      {selectAllWarning && !selectAllLoading && (
+        <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
+          {selectAllWarning}
+        </Typography>
       )}
 
       <DataGrid

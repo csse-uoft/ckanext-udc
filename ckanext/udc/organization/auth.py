@@ -34,3 +34,20 @@ def udc_organization_packages_delete(context: Context, data_dict: dict) -> AuthR
         return {"success": True}
     return {"success": False, "msg": "Only sysadmins can delete organization packages."}
 
+
+def udc_deleted_organization_list(context: Context, data_dict: dict) -> AuthResult:
+    if _is_sysadmin(context):
+        return {"success": True}
+    return {"success": False, "msg": "Only sysadmins can list deleted organizations."}
+
+
+def udc_organization_delete(context: Context, data_dict: dict) -> AuthResult:
+    if _is_sysadmin(context):
+        return {"success": True}
+    return {"success": False, "msg": "Only sysadmins can delete organizations."}
+
+
+def udc_purge_deleted_organizations(context: Context, data_dict: dict) -> AuthResult:
+    if _is_sysadmin(context):
+        return {"success": True}
+    return {"success": False, "msg": "Only sysadmins can purge deleted organizations."}

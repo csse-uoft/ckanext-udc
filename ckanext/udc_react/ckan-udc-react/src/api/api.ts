@@ -553,6 +553,8 @@ export interface OrganizationSummary {
   description?: string;
   state?: string;
   created?: string;
+  creator_user_id?: string | null;
+  creator_user_state?: string | null;
 }
 
 export interface OrganizationPackageSummary {
@@ -584,6 +586,7 @@ export interface OrganizationListFilters {
   name?: string;
   title?: string;
   state?: string;
+  creator_deleted_or_purged?: boolean;
 }
 
 export async function listUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {
@@ -612,6 +615,27 @@ export async function listOrganizations(params: {
       "Content-Type": "application/json",
     },
   });
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as OrganizationListResponse;
+}
+
+export async function listDeletedOrganizations(params: {
+  page: number;
+  page_size: number;
+  filters?: OrganizationListFilters;
+}) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_deleted_organization_list",
+    {
+      method: "POST",
+      body: JSON.stringify(params),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
   if (!result.success) {
     throw result.error;
   }
@@ -675,6 +699,40 @@ export async function deleteOrganizationPackages(data: { org_id: string; ids: st
     throw result.error;
   }
   return result.result;
+}
+
+export async function deleteOrganizations(data: { ids: string[] }) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_organization_delete",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as { success: boolean; deleted: number; errors: { id: string; error: string }[] };
+}
+
+export async function purgeDeletedOrganizations(data: { ids: string[] }) {
+  const result = await fetchWithErrorHandling(
+    baseURL + "/api/3/action/udc_purge_deleted_organizations",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!result.success) {
+    throw result.error;
+  }
+  return result.result as { success: boolean; purged: number; errors: { id: string; error: string }[] };
 }
 
 export async function listDeletedUsers(params: { page: number; page_size: number; filters?: UserListFilters }) {

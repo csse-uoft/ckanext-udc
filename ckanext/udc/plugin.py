@@ -92,6 +92,9 @@ from ckanext.udc.user.actions import (
 )
 from ckanext.udc.organization.actions import (
     udc_organization_list,
+    udc_deleted_organization_list,
+    udc_organization_delete,
+    udc_purge_deleted_organizations,
     udc_organization_packages_list,
     udc_organization_packages_ids,
     udc_organization_packages_delete,
@@ -640,6 +643,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "udc_user_delete": udc_user_delete,
             # Organization management
             "udc_organization_list": udc_organization_list,
+            "udc_deleted_organization_list": udc_deleted_organization_list,
+            "udc_organization_delete": udc_organization_delete,
+            "udc_purge_deleted_organizations": udc_purge_deleted_organizations,
             "udc_organization_packages_list": udc_organization_packages_list,
             "udc_organization_packages_ids": udc_organization_packages_ids,
             "udc_organization_packages_delete": udc_organization_packages_delete,
@@ -656,6 +662,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "udc_user_reset_password": user_auth.udc_user_reset_password,
             "udc_user_delete": user_auth.udc_user_delete,
             "udc_organization_list": organization_auth.udc_organization_list,
+            "udc_deleted_organization_list": organization_auth.udc_deleted_organization_list,
+            "udc_organization_delete": organization_auth.udc_organization_delete,
+            "udc_purge_deleted_organizations": organization_auth.udc_purge_deleted_organizations,
             "udc_organization_packages_list": organization_auth.udc_organization_packages_list,
             "udc_organization_packages_ids": organization_auth.udc_organization_packages_ids,
             "udc_organization_packages_delete": organization_auth.udc_organization_packages_delete,

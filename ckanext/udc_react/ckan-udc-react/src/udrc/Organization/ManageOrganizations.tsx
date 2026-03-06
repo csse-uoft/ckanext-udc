@@ -3,11 +3,13 @@ import { DataGrid, GridColDef, GridPaginationModel, GridRowSelectionModel } from
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   TextField,
   Typography,
@@ -32,9 +34,17 @@ const ManageOrganizations: React.FC = () => {
     page: 0,
     pageSize: 25,
   });
-  const [orgFilterDraft, setOrgFilterDraft] = useState<OrganizationListFilters>({ q: "", name: "", title: "" });
+  const [orgFilterDraft, setOrgFilterDraft] = useState<OrganizationListFilters>({
+    q: "",
+    name: "",
+    title: "",
+    creator_deleted_or_purged: false,
+  });
   const [orgFilters, setOrgFilters] = useState<OrganizationListFilters>({});
   const [selectedOrg, setSelectedOrg] = useState<OrganizationSummary | null>(null);
+  const [orgSelection, setOrgSelection] = useState<GridRowSelectionModel>([]);
+  const [orgDeleteDialogOpen, setOrgDeleteDialogOpen] = useState(false);
+  const [orgDeleteLoading, setOrgDeleteLoading] = useState(false);
 
   const [packages, setPackages] = useState<OrganizationPackageSummary[]>([]);
   const [packageTotal, setPackageTotal] = useState(0);
@@ -114,9 +124,52 @@ const ManageOrganizations: React.FC = () => {
   };
 
   const handleClearOrgFilters = () => {
-    setOrgFilterDraft({ q: "", name: "", title: "" });
+    setOrgFilterDraft({ q: "", name: "", title: "", creator_deleted_or_purged: false });
     setOrgPaginationModel((prev) => ({ ...prev, page: 0 }));
     setOrgFilters({});
+  };
+
+  const handleSelectAllOrganizationsOnPage = () => {
+    const ids = new Set(orgSelection.map((id) => String(id)));
+    organizations.forEach((org) => ids.add(org.id));
+    setOrgSelection(Array.from(ids));
+  };
+
+  const handleDeleteSelectedOrganizations = async () => {
+    const selectedOrgIds = orgSelection.map((id) => String(id));
+    if (!selectedOrgIds.length) {
+      return;
+    }
+
+    setOrgDeleteLoading(true);
+    try {
+      const result = await executeApiCall(() =>
+        api.deleteOrganizations({
+          ids: selectedOrgIds,
+        })
+      );
+      setOrgDeleteDialogOpen(false);
+      if (result.errors?.length) {
+        setError(
+          `Organization delete completed with partial failures. Deleted: ${result.deleted}, failed: ${result.errors.length}.`
+        );
+        setErrorDialogOpen(true);
+      }
+      const failedIds = (result.errors || []).map((item) => item.id);
+      setOrgSelection(failedIds);
+      if (selectedOrg && selectedOrgIds.includes(selectedOrg.id) && !failedIds.includes(selectedOrg.id)) {
+        setSelectedOrg(null);
+        setPackages([]);
+        setPackageTotal(0);
+        setPackageSelection([]);
+      }
+      loadOrganizations();
+    } catch (err) {
+      setError("Failed to delete organizations.");
+      setErrorDialogOpen(true);
+    } finally {
+      setOrgDeleteLoading(false);
+    }
   };
 
   const handleApplyPackageFilters = () => {
@@ -269,6 +322,23 @@ const ManageOrganizations: React.FC = () => {
             size="small"
           />
         </Box>
+        <Box sx={{ mb: 1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(orgFilterDraft.creator_deleted_or_purged)}
+                onChange={(e) =>
+                  setOrgFilterDraft((prev) => ({
+                    ...prev,
+                    creator_deleted_or_purged: e.target.checked,
+                  }))
+                }
+                size="small"
+              />
+            }
+            label="Only show organizations whose creator is deleted or purged"
+          />
+        </Box>
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           <Button variant="contained" size="small" onClick={handleApplyOrgFilters}>
             Apply
@@ -276,18 +346,36 @@ const ManageOrganizations: React.FC = () => {
           <Button variant="text" size="small" onClick={handleClearOrgFilters}>
             Clear
           </Button>
+          <Button variant="text" size="small" onClick={handleSelectAllOrganizationsOnPage}>
+            Select All on Page
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            disabled={orgSelection.length === 0}
+            onClick={() => setOrgDeleteDialogOpen(true)}
+          >
+            Delete Selected ({orgSelection.length})
+          </Button>
         </Box>
         <DataGrid
           rows={organizations}
           columns={orgColumns}
           loading={orgLoading}
+          checkboxSelection
+          keepNonExistentRowsSelected
           disableRowSelectionOnClick
           paginationModel={orgPaginationModel}
-          onPaginationModelChange={setOrgPaginationModel}
+          onPaginationModelChange={(model) =>
+            setOrgPaginationModel({ page: model.page, pageSize: model.pageSize })
+          }
           pageSizeOptions={[25, 50, 100]}
           paginationMode="server"
           rowCount={orgTotal}
           getRowId={(row) => row.id}
+          rowSelectionModel={orgSelection}
+          onRowSelectionModelChange={(model) => setOrgSelection(model)}
           onRowClick={(params) => {
             setSelectedOrg(params.row);
             setPackagePaginationModel((prev) => ({ ...prev, page: 0 }));
@@ -355,7 +443,9 @@ const ManageOrganizations: React.FC = () => {
           loading={packageLoading}
           disableRowSelectionOnClick
           paginationModel={packagePaginationModel}
-          onPaginationModelChange={setPackagePaginationModel}
+          onPaginationModelChange={(model) =>
+            setPackagePaginationModel({ page: model.page, pageSize: model.pageSize })
+          }
           pageSizeOptions={[25, 50, 100]}
           paginationMode="server"
           rowCount={packageTotal}
@@ -378,6 +468,26 @@ const ManageOrganizations: React.FC = () => {
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleDeleteSelected} color="error" variant="contained" disabled={deleteLoading}>
             {deleteLoading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={orgDeleteDialogOpen} onClose={() => setOrgDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Organizations</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Delete {orgSelection.length} organization(s)? This will mark them as deleted.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOrgDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleDeleteSelectedOrganizations}
+            color="error"
+            variant="contained"
+            disabled={orgDeleteLoading}
+          >
+            {orgDeleteLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
