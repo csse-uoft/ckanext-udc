@@ -1,0 +1,89 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Email Verification') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Login'), named_route='user.login') }}</li>
+  <li class="active">{{ _('Email Verification') }}</li>
+{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      <h1 class="page-heading">{{ _('Email Verification Required') }}</h1>
+      <p>
+        {{ _('Your account is not verified yet. Please check your email and complete verification before logging in.') }}
+      </p>
+
+      <div class="control-group">
+        <label class="control-label" for="udc-pending-login-identifier">{{ _('Username or Email') }}</label>
+        <div class="controls">
+          <input
+            id="udc-pending-login-identifier"
+            type="text"
+            class="control-medium"
+            value="{{ login_identifier }}"
+          />
+          <div class="form-actions" style="margin-top: 8px;">
+            <button type="button" id="udc-pending-resend-button" class="btn btn-default">
+              {{ _("Resend Verification Email") }}
+            </button>
+            <a class="btn btn-primary" href="{{ h.url_for('user.login') }}">{{ _('Back to Login') }}</a>
+          </div>
+          <p class="muted" style="margin-top: 6px; margin-bottom: 0;">
+            {{ _("You can resend once every %(seconds)s seconds.", seconds=resend_cooldown_seconds) }}
+          </p>
+          <p id="udc-pending-resend-message" class="muted" style="margin-top: 4px; margin-bottom: 0;"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function() {
+      var resendButton = document.getElementById("udc-pending-resend-button");
+      var messageNode = document.getElementById("udc-pending-resend-message");
+      var loginInput = document.getElementById("udc-pending-login-identifier");
+      if (!resendButton || !messageNode || !loginInput) return;
+
+      function setMessage(text, isError) {
+        messageNode.textContent = text || "";
+        messageNode.style.color = isError ? "#a94442" : "#3c763d";
+      }
+
+      resendButton.addEventListener("click", function() {
+        var login = (loginInput.value || "").trim();
+        if (!login) {
+          setMessage("{{ _('Please enter your username or email first.') }}", true);
+          return;
+        }
+
+        resendButton.disabled = true;
+        setMessage("{{ _('Sending verification email...') }}", false);
+
+        fetch("{{ h.url_for('udc_captcha.resend_verification') }}?login=" + encodeURIComponent(login), {
+          credentials: "same-origin"
+        })
+          .then(function(response) {
+            return response.json().then(function(payload) {
+              return {
+                ok: response.ok && payload && payload.success,
+                payload: payload || {}
+              };
+            });
+          })
+          .then(function(result) {
+            var text = result.payload.message || "{{ _('Unable to process the request right now.') }}";
+            setMessage(text, !result.ok);
+          })
+          .catch(function() {
+            setMessage("{{ _('Unable to process the request right now.') }}", true);
+          })
+          .finally(function() {
+            resendButton.disabled = false;
+          });
+      });
+    })();
+  </script>
+{% endblock %}
+

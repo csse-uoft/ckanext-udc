@@ -89,6 +89,7 @@ setup(
         udc_theme=ckanext.udc_theme.plugin:UdcThemePlugin
         udc_import_other_portals=ckanext.udc_import_other_portals.plugin:UdcImportOtherPortalsPlugin
         udc_react=ckanext.udc_react.plugin:UdcReactPlugin
+        udc_captcha=ckanext.udc_captcha.plugin:UdcCaptchaPlugin
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan

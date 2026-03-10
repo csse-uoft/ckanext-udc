@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-udc 0.0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-01-19 16:09-0500\n"
+"POT-Creation-Date: 2026-03-10 09:42-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -112,7 +112,7 @@ msgstr ""
 msgid "Licenses"
 msgstr ""
 
-#: ckanext/udc/plugin.py:275
+#: ckanext/udc/plugin.py:285
 msgid "text"
 msgstr ""
 
@@ -359,11 +359,11 @@ msgstr ""
 msgid "Request to Join an Organization"
 msgstr ""
 
-#: ckanext/udc/templates/header.html:34
+#: ckanext/udc/templates/header.html:35 ckanext/udc/templates/header.html:37
 msgid "About"
 msgstr ""
 
-#: ckanext/udc/templates/header.html:36
+#: ckanext/udc/templates/header.html:40
 msgid "FAQ"
 msgstr ""
 
@@ -425,6 +425,11 @@ msgstr ""
 
 #: ckanext/udc/templates/home/snippets/search.html:13
 msgid "Search"
+msgstr ""
+
+#: ckanext/udc/templates/home/snippets/search.html:17
+#: ckanext/udc/templates/package/custom_search.html:52
+msgid "Advanced Filter"
 msgstr ""
 
 #: ckanext/udc/templates/home/snippets/search.html:26
@@ -579,10 +584,6 @@ msgstr ""
 msgid "Search datasets..."
 msgstr ""
 
-#: ckanext/udc/templates/package/custom_search.html:52
-msgid "Advanced Filter"
-msgstr ""
-
 #: ckanext/udc/templates/package/custom_search.html:55
 #: ckanext/udc/templates/package/snippets/package_search_popup.html:26
 msgid "Maturity Model Filter"
@@ -626,10 +627,6 @@ msgstr ""
 
 #: ckanext/udc/templates/package/read.html:23
 msgid "AI Generated"
-msgstr ""
-
-#: ckanext/udc/templates/package/read.html:41
-msgid "Related Catalogue Entries:"
 msgstr ""
 
 #: ckanext/udc/templates/package/resource_edit_base.html:4
@@ -990,6 +987,113 @@ msgstr ""
 
 #: ckanext/udc/version/actions.py:113
 msgid "You must be logged in to use this action"
+msgstr ""
+
+#: ckanext/udc_captcha/email_verification.py:108
+msgid "Verify your email address"
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:39
+#, python-format
+msgid ""
+"Registration successful. Please check your email (%(email)s) and verify your "
+"account before logging in."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:86
+msgid "Verification link has expired. Please register again."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:89
+msgid "Invalid verification link."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:94
+msgid "User not found for this verification link."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:100
+msgid "Verification link does not match this account email."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:107
+msgid "Email verified. You can now log in."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:109
+msgid "Email is already verified. You can log in."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/new_user_form.html:13
+#: ckanext/udc_captcha/templates/user/new_user_form.html:23
+msgid "Verification Code"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/new_user_form.html:17
+msgid "Refresh"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/new_user_form.html:24
+msgid "Enter the code shown above"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:3
+#: ckanext/udc_captcha/templates/user/pending_verification.html:7
+msgid "Email Verification"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:6
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:22
+msgid "Login"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:13
+msgid "Email Verification Required"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:15
+msgid ""
+"Your account is not verified yet. Please check your email and complete "
+"verification before logging in."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:19
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:14
+msgid "Username or Email"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:29
+msgid "Resend Verification Email"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:31
+msgid "Back to Login"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:34
+#, python-format
+msgid "You can resend once every %(seconds)s seconds."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:57
+msgid "Please enter your username or email first."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:62
+msgid "Sending verification email..."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/pending_verification.html:76
+#: ckanext/udc_captcha/templates/user/pending_verification.html:80
+msgid "Unable to process the request right now."
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:16
+msgid "Password"
+msgstr ""
+
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:18
+msgid "Remember me"
 msgstr ""
 
 #: ckanext/udc_import/auth.py:18

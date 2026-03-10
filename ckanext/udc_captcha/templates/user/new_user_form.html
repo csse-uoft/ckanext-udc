@@ -1,0 +1,54 @@
+{% ckan_extends %}
+{% import "macros/form.html" as form %}
+
+{% block captcha %}
+  {% set captcha = h.udc_captcha_generate() %}
+  <div class="control-group">
+    <div class="controls">
+      <input type="hidden" id="field-captcha-token" name="captcha_token" value="{{ captcha.token }}">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <img
+          id="udc-captcha-image"
+          src="{{ captcha.image_data_uri }}"
+          alt="{{ _('Verification Code') }}"
+          style="height:56px; width:auto; border:1px solid #cbd5e1; border-radius:6px;"
+        />
+        <button type="button" id="udc-captcha-refresh" class="btn btn-default">
+          {{ _("Refresh") }}
+        </button>
+      </div>
+      {{ form.input(
+        "captcha_answer",
+        id="field-captcha-answer",
+        label=_("Verification Code"),
+        placeholder=_("Enter the code shown above"),
+        value="",
+        error=errors.captcha_answer,
+        classes=["control-medium"],
+        is_required=True
+      ) }}
+      {% if errors.captcha_token %}
+        <span class="error-block">{{ errors.captcha_token[0] if errors.captcha_token is sequence else errors.captcha_token }}</span>
+      {% endif %}
+    </div>
+  </div>
+  <script>
+    (function() {
+      var refreshButton = document.getElementById("udc-captcha-refresh");
+      var image = document.getElementById("udc-captcha-image");
+      var tokenInput = document.getElementById("field-captcha-token");
+      if (!refreshButton || !image || !tokenInput) return;
+
+      refreshButton.addEventListener("click", function() {
+        fetch("{{ h.url_for('udc_captcha.new_captcha') }}", { credentials: "same-origin" })
+          .then(function(response) { return response.json(); })
+          .then(function(payload) {
+            if (!payload || !payload.success) return;
+            image.src = payload.image_data_uri;
+            tokenInput.value = payload.token;
+          })
+          .catch(function() {});
+      });
+    })();
+  </script>
+{% endblock %}

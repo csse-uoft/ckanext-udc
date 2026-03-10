@@ -1,0 +1,2 @@
+"""UDC captcha plugin package."""
+
