@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-udc 0.0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-03-10 09:42-0400\n"
+"POT-Creation-Date: 2026-03-10 09:47-0400\n"
 "PO-Revision-Date: 2025-11-26 14:37-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -1073,7 +1073,7 @@ msgstr "Vous devez être connecté pour utiliser cette action"
 msgid "Verify your email address"
 msgstr "Vérifiez votre adresse courriel"
 
-#: ckanext/udc_captcha/views.py:39
+#: ckanext/udc_captcha/views.py:41
 #, python-format
 msgid ""
 "Registration successful. Please check your email (%(email)s) and verify "
@@ -1082,40 +1082,52 @@ msgstr ""
 "Inscription réussie. Veuillez vérifier votre courriel (%(email)s) et "
 "activer votre compte avant de vous connecter."
 
-#: ckanext/udc_captcha/views.py:86
+#: ckanext/udc_captcha/views.py:65
+msgid "Verification code expired. Please refresh and try again."
+msgstr "Le code de vérification a expiré. Veuillez rafraîchir et réessayer."
+
+#: ckanext/udc_captcha/views.py:68
+msgid "Incorrect verification code."
+msgstr "Code de vérification incorrect."
+
+#: ckanext/udc_captcha/views.py:116
 msgid "Verification link has expired. Please register again."
 msgstr "Le lien de vérification a expiré. Veuillez vous réinscrire."
 
-#: ckanext/udc_captcha/views.py:89
+#: ckanext/udc_captcha/views.py:119
 msgid "Invalid verification link."
 msgstr "Lien de vérification invalide."
 
-#: ckanext/udc_captcha/views.py:94
+#: ckanext/udc_captcha/views.py:124
 msgid "User not found for this verification link."
 msgstr "Aucun utilisateur trouvé pour ce lien de vérification."
 
-#: ckanext/udc_captcha/views.py:100
+#: ckanext/udc_captcha/views.py:130
 msgid "Verification link does not match this account email."
 msgstr "Le lien de vérification ne correspond pas au courriel de ce compte."
 
-#: ckanext/udc_captcha/views.py:107
+#: ckanext/udc_captcha/views.py:137
 msgid "Email verified. You can now log in."
 msgstr "Courriel vérifié. Vous pouvez maintenant vous connecter."
 
-#: ckanext/udc_captcha/views.py:109
+#: ckanext/udc_captcha/views.py:139
 msgid "Email is already verified. You can log in."
 msgstr "Le courriel est déjà vérifié. Vous pouvez vous connecter."
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:13
 #: ckanext/udc_captcha/templates/user/new_user_form.html:23
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:25
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:35
 msgid "Verification Code"
 msgstr "Code de vérification"
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:17
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:29
 msgid "Refresh"
 msgstr "Rafraîchir"
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:24
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:37
 msgid "Enter the code shown above"
 msgstr "Entrez le code affiché ci-dessus"
 
@@ -1125,24 +1137,24 @@ msgid "Email Verification"
 msgstr "Vérification du courriel"
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:6
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:22
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:47
 msgid "Login"
 msgstr "Connexion"
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:13
 msgid "Email Verification Required"
-msgstr "Vérification du courriel"
+msgstr "Vérification du courriel requise"
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:15
 msgid ""
 "Your account is not verified yet. Please check your email and complete "
 "verification before logging in."
 msgstr ""
-"Votre compte n'est pas encore vérifié. Renvoyez le courriel de "
-"vérification et terminez la vérification avant de vous connecter."
+"Votre compte n'est pas encore vérifié. Veuillez consulter votre courriel "
+"et terminer la vérification avant de vous connecter."
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:19
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:14
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:15
 msgid "Username or Email"
 msgstr "Nom d'utilisateur ou courriel"
 
@@ -1172,11 +1184,11 @@ msgstr "Envoi du courriel de vérification..."
 msgid "Unable to process the request right now."
 msgstr "Impossible de traiter la demande pour le moment."
 
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:16
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:17
 msgid "Password"
 msgstr "Mot de passe"
 
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:18
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:43
 msgid "Remember me"
 msgstr "Se souvenir de moi"
 
@@ -1287,4 +1299,3 @@ msgstr "Langue"
 
 #~ msgid "Related Catalogue Entries:"
 #~ msgstr "Entrées de catalogue associées :"
-

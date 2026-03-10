@@ -7,13 +7,15 @@ import ckan.plugins.toolkit as tk
 from flask import Blueprint, jsonify, redirect, request, session
 
 from .captcha import (
+    CaptchaExpiredError,
+    CaptchaInvalidError,
     EmailVerificationExpiredError,
     EmailVerificationInvalidError,
     generate_captcha,
+    validate_captcha,
     validate_email_verification_token,
 )
-from .config_utils import get_bool
-from .config_utils import get_int
+from .config_utils import get_bool, get_int
 from .email_verification import (
     find_user_by_login_identifier,
     get_resend_cooldown_seconds,
@@ -39,6 +41,34 @@ def redirect_pending_registration_to_login():
         tk._("Registration successful. Please check your email (%(email)s) and verify your account before logging in.", email=email)
     )
     return redirect(tk.h.url_for("user.login"))
+
+
+@bp.before_app_request
+def validate_login_captcha():
+    if request.method != "POST":
+        return None
+    if request.path.rstrip("/") != "/user/login":
+        return None
+    if not (get_bool("ckanext.udc_captcha.enabled", True) and get_bool("ckanext.udc_captcha.login_enabled", True)):
+        return None
+
+    token = (request.form.get("captcha_token") or "").strip()
+    answer = (request.form.get("captcha_answer") or "").strip()
+    ttl_seconds = get_int(
+        "ckanext.udc_captcha.login_ttl_seconds",
+        get_int("ckanext.udc_captcha.ttl_seconds", 300, min_value=1),
+        min_value=1,
+    )
+    try:
+        validate_captcha(token=token, answer=answer, ttl_seconds=ttl_seconds)
+    except CaptchaExpiredError:
+        tk.h.flash_error(tk._("Verification code expired. Please refresh and try again."))
+        return redirect(tk.h.url_for("user.login"))
+    except CaptchaInvalidError:
+        tk.h.flash_error(tk._("Incorrect verification code."))
+        return redirect(tk.h.url_for("user.login"))
+
+    return None
 
 
 @bp.before_app_request

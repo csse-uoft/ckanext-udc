@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-udc 0.0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-03-10 09:42-0400\n"
+"POT-Creation-Date: 2026-03-10 09:47-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -993,47 +993,59 @@ msgstr ""
 msgid "Verify your email address"
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:39
+#: ckanext/udc_captcha/views.py:41
 #, python-format
 msgid ""
 "Registration successful. Please check your email (%(email)s) and verify your "
 "account before logging in."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:86
+#: ckanext/udc_captcha/views.py:65
+msgid "Verification code expired. Please refresh and try again."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:68
+msgid "Incorrect verification code."
+msgstr ""
+
+#: ckanext/udc_captcha/views.py:116
 msgid "Verification link has expired. Please register again."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:89
+#: ckanext/udc_captcha/views.py:119
 msgid "Invalid verification link."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:94
+#: ckanext/udc_captcha/views.py:124
 msgid "User not found for this verification link."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:100
+#: ckanext/udc_captcha/views.py:130
 msgid "Verification link does not match this account email."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:107
+#: ckanext/udc_captcha/views.py:137
 msgid "Email verified. You can now log in."
 msgstr ""
 
-#: ckanext/udc_captcha/views.py:109
+#: ckanext/udc_captcha/views.py:139
 msgid "Email is already verified. You can log in."
 msgstr ""
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:13
 #: ckanext/udc_captcha/templates/user/new_user_form.html:23
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:25
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:35
 msgid "Verification Code"
 msgstr ""
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:17
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:29
 msgid "Refresh"
 msgstr ""
 
 #: ckanext/udc_captcha/templates/user/new_user_form.html:24
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:37
 msgid "Enter the code shown above"
 msgstr ""
 
@@ -1043,7 +1055,7 @@ msgid "Email Verification"
 msgstr ""
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:6
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:22
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:47
 msgid "Login"
 msgstr ""
 
@@ -1058,7 +1070,7 @@ msgid ""
 msgstr ""
 
 #: ckanext/udc_captcha/templates/user/pending_verification.html:19
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:14
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:15
 msgid "Username or Email"
 msgstr ""
 
@@ -1088,11 +1100,11 @@ msgstr ""
 msgid "Unable to process the request right now."
 msgstr ""
 
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:16
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:17
 msgid "Password"
 msgstr ""
 
-#: ckanext/udc_captcha/templates/user/snippets/login_form.html:18
+#: ckanext/udc_captcha/templates/user/snippets/login_form.html:43
 msgid "Remember me"
 msgstr ""
 

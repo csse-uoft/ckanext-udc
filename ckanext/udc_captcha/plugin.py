@@ -77,6 +77,13 @@ def udc_email_verification_resend_cooldown_seconds() -> int:
     return get_resend_cooldown_seconds()
 
 
+def udc_login_captcha_enabled() -> bool:
+    """Template helper: whether login captcha is enabled."""
+    return get_bool("ckanext.udc_captcha.enabled", True) and get_bool(
+        "ckanext.udc_captcha.login_enabled", True
+    )
+
+
 def _captcha_required(context: dict[str, Any]) -> bool:
     if not get_bool("ckanext.udc_captcha.enabled", True):
         return False
@@ -149,6 +156,8 @@ class UdcCaptchaPlugin(plugins.SingletonPlugin):
                 "ckanext.udc_captcha.enabled": [ignore_missing, boolean_validator],
                 "ckanext.udc_captcha.ttl_seconds": [ignore_missing, int_validator],
                 "ckanext.udc_captcha.secret": [ignore_missing],
+                "ckanext.udc_captcha.login_enabled": [ignore_missing, boolean_validator],
+                "ckanext.udc_captcha.login_ttl_seconds": [ignore_missing, int_validator],
                 "ckanext.udc_captcha.email_verification_enabled": [ignore_missing, boolean_validator],
                 "ckanext.udc_captcha.email_verification_ttl_seconds": [ignore_missing, int_validator],
                 "ckanext.udc_captcha.resend_cooldown_seconds": [ignore_missing, int_validator],
@@ -164,6 +173,7 @@ class UdcCaptchaPlugin(plugins.SingletonPlugin):
             "udc_captcha_generate": udc_captcha_generate,
             "udc_email_verification_enabled": udc_email_verification_enabled,
             "udc_email_verification_resend_cooldown_seconds": udc_email_verification_resend_cooldown_seconds,
+            "udc_login_captcha_enabled": udc_login_captcha_enabled,
         }
 
     def get_blueprint(self):
