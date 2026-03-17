@@ -241,10 +241,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             self.dropdown_options.clear()
             for level in config["maturity_model"]:
                 for field in level["fields"]:
-                    if field.get("name"):
-                        all_fields.append(field["name"])
+                    field_name = field.get("name")
+                    if field.get("ckanField") == "portal_type":
+                        field_name = "portal_type"
+
+                    if field_name and field.get("name"):
+                        all_fields.append(field_name)
                     type = field.get("type")
-                    if field.get("name") and (
+                    if field_name and (
                         type == ""
                         or type is None
                         or type == "text"
@@ -253,14 +257,14 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                         or type == "number"
                         or type == "date"
                     ):
-                        self.facet_titles[field["name"]] = tk._(pick_locale(field["label"], 'en'))
-                        self.facet_titles_raw[field["name"]] = field["label"]
-                    if field.get("name") and (type == "text" or type is None):
-                        self.text_fields.append(field["name"])
+                        self.facet_titles[field_name] = tk._(pick_locale(field["label"], 'en'))
+                        self.facet_titles_raw[field_name] = field["label"]
+                    if field_name and (type == "text" or type is None):
+                        self.text_fields.append(field_name)
                     if field.get("type") == "date":
-                        self.date_fields.append(field["name"])
+                        self.date_fields.append(field_name)
                     if field.get("type") == "multiple_select":
-                        self.multiple_select_fields.append(field["name"])
+                        self.multiple_select_fields.append(field_name)
 
             # Preload ontologies
             if not self.disable_graphdb:
@@ -280,11 +284,16 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                         field.get("type") == "multiple_select"
                         or field.get("type") == "single_select"
                     ):
-                        options = self.dropdown_options[field["name"]] = {}
+                        field_name = field.get("name")
+                        if field.get("ckanField") == "portal_type":
+                            field_name = "portal_type"
+                        if not field_name:
+                            continue
+                        options = self.dropdown_options[field_name] = {}
                         for option in field["options"]:
                             options[option["value"]] = tk._(option["text"])
                         log.info(
-                            f"Dropdown options for field {field['name']} loaded: {len(options.keys())}"
+                            f"Dropdown options for field {field_name} loaded: {len(options.keys())}"
                         )
 
             # Update solr index
@@ -407,6 +416,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                     tk.get_validator("ignore_missing"),
                     tk.get_converter("convert_to_extras"),
                 ],
+                "portal_type": [
+                    tk.get_validator("ignore_missing"),
+                    tk.get_converter("convert_to_extras"),
+                ],
             }
         )
         return schema
@@ -499,6 +512,10 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                 ],
                 # ---- chatgpt summary ------
                 "summary": [
+                    tk.get_converter("convert_from_extras"),
+                    tk.get_validator("ignore_missing"),
+                ],
+                "portal_type": [
                     tk.get_converter("convert_from_extras"),
                     tk.get_validator("ignore_missing"),
                 ],
@@ -672,6 +689,9 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
 
     def dataset_facets(self, facets_dict: OrderedDict[str, Any], package_type: str):
         for name in self.facet_titles:
+            if name == "portal_type":
+                facets_dict[name] = pick_locale(self.facet_titles_raw[name])
+                continue
             if name in self.text_fields:
                 # The text fields (solr type=text) can be used as facets
                 # We need to use the builtin facet name

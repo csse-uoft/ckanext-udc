@@ -134,6 +134,10 @@ def _solr_field_for(param_kind: str, ui_field: str, lang: str,
         # if param_kind == 'fts': 
         #     return f"{ui_field}_ngram"
 
+    if ui_field == 'portal_type':
+        if param_kind == 'exact':
+            return 'extras_portal_type'
+
     # Everything else (selects / numbers / dates etc) use extras_*
     if param_kind in ('min', 'max'):
         return f"extras_{ui_field}"
@@ -333,6 +337,8 @@ def _facet_alias_map(facet_keys: list[str], lang: str) -> tuple[list[str], dict[
     for key in facet_keys:
         if key == "tags":
             alias_to_solr[key] = f"tags_{lang}_f"
+        elif key == "portal_type":
+            alias_to_solr[key] = "extras_portal_type"
         elif key.startswith("extras_"):
             alias_to_solr[key] = key
         elif key in text_fields:

@@ -228,6 +228,13 @@ class BaseImport:
             # Failed commit should not poison future DB operations.
             model.Session.rollback()
 
+    def _portal_type_label(self) -> str:
+        platform = (self.import_config.platform or "").strip().lower()
+        return {
+            "ckan": "CKAN",
+            "arcgis": "ArcGIS",
+        }.get(platform, platform.upper() if platform else "")
+
     def map_to_cudc_package(self, src: dict, target: dict):
         """
         Map source package to cudc package.
@@ -359,6 +366,9 @@ class BaseImport:
 
         # Save which import config it used
         package["cudc_import_config_id"] = self.import_config.id
+        portal_type = self._portal_type_label()
+        if portal_type:
+            package["portal_type"] = portal_type
 
         # Use different context for each package import
         # This will replace with the exisiting package

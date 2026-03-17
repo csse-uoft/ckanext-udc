@@ -19,6 +19,7 @@ SUPPORTED_CKAN_FIELDS = [
     "author_email",
     "maintainer",
     "maintainer_email",
+    "portal_type",
     "custom_fields",
 ]
 REQUIRED_CKAN_FIELDS = [

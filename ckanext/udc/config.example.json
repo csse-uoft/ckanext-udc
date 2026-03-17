@@ -207,6 +207,33 @@
                         "fr": "Cette donnée représente la zone géospatiale couverte par le jeu de données. Elle peut provenir d’une colonne de données ou être simplement définie par le créateur ou l’éditeur."
                     },
                     "category": "tempo_geo"
+                },
+                {
+                    "ckanField": "portal_type",
+                    "label": {
+                        "en": "Portal type",
+                        "fr": "Type de portail"
+                    },
+                    "type": "single_select",
+                    "short_description": {
+                        "en": "Platform type of the source portal.",
+                        "fr": "Type de plateforme du portail source."
+                    },
+                    "long_description": {
+                        "en": "Platform type of the portal this catalogue entry was imported from, such as CKAN or ArcGIS.",
+                        "fr": "Type de plateforme du portail à partir duquel cette fiche de catalogue a été importée, comme CKAN ou ArcGIS."
+                    },
+                    "category": "access",
+                    "options": [
+                        {
+                            "text": "CKAN",
+                            "value": "CKAN"
+                        },
+                        {
+                            "text": "ArcGIS",
+                            "value": "ArcGIS"
+                        }
+                    ]
                 }
             ]
         },

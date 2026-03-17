@@ -90,6 +90,8 @@ def _filter_facets_get(data_dict) -> dict[str, Any]:
     for key in facet_keys:
         if key == "tags":
             alias_to_solr[key] = f"tags_{lang}_f"
+        elif key == "portal_type":
+            alias_to_solr[key] = "extras_portal_type"
         # version relationship helper facets: use *_title_url for display
         # but map outward stable keys to URL-only Solr fields
         elif key == "version_dataset":
