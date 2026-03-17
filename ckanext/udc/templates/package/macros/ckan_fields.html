@@ -209,7 +209,7 @@
 {% endmacro%}
 
 {% macro portal_type(data, errors, short_description="", long_description="") %}
-  {% set opts = [] %}
+  {% set opts = [{'value': '', 'text': ''}] %}
   {% set field_label = _('Portal type') %}
   {% for level in h.config or [] %}
     {% for field in level.get('fields', []) %}
