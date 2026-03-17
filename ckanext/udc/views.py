@@ -95,7 +95,7 @@ CKAN_FTS_FIELDS = ["title", "notes", "url", "version",
                    "author", "author_email", "maintainer", "maintainer_email"]
 
 # Core string facets: exact match; optional _ngram if you enable Option B
-CORE_STRING_FACETS = ["organization", "license_id"]
+CORE_STRING_FACETS = ["organization", "groups", "license_id", "res_format"]
 
 def _solr_field_for(param_kind: str, ui_field: str, lang: str,
                     text_fields: set[str]) -> str | None:
@@ -146,6 +146,15 @@ def _solr_field_for(param_kind: str, ui_field: str, lang: str,
 
     return None
 
+
+def _solr_field_for_facet_param(param: str, lang: str,
+                                text_fields: set[str]) -> str | None:
+    """Map plain facet query params from the sidebar to concrete Solr fields."""
+    if param.startswith("extras_"):
+        return param
+
+    return _solr_field_for('exact', param, lang, text_fields)
+
 def _get_search_details() -> dict[str, Any]:
     fq = u''
 
@@ -161,7 +170,7 @@ def _get_search_details() -> dict[str, Any]:
     udc = plugins.get_plugin('udc')
     # Get the list of text fields from the udc plugin
     # Only the text fields support full text search
-    text_fields = udc.text_fields
+    text_fields = set(udc.text_fields)
 
     # Get the list of date fields from the udc plugin
     date_fields = udc.date_fields
@@ -232,6 +241,15 @@ def _get_search_details() -> dict[str, Any]:
                 continue
             fields_grouped.setdefault(solr_key, {'ui': ui_name})
             fields_grouped[solr_key]['max'] = value
+            continue
+
+        # Plain facet params from CKAN sidebar links use stable outward keys.
+        # Convert them into exact-match Solr filters instead of dropping them.
+        solr_key = _solr_field_for_facet_param(param, lang, text_fields)
+        if solr_key:
+            ui_name = param[7:] if param.startswith('extras_') else param
+            fields_grouped.setdefault(solr_key, {'ui': ui_name, 'fts': False, 'values': []})
+            fields_grouped[solr_key]['values'].append(value)
             continue
 
         # legacy / unknown -> pass-through as extras
