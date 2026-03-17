@@ -1,4 +1,5 @@
 {% import 'macros/form.html' as form %}
+{% import 'macros/locales.html' as locales with context %}
 {% set dataset_type = h.default_package_type() %}
 
 {# Notes: short description and long description are not available for title, license, organization, visibility #}
@@ -206,6 +207,46 @@
 {% macro source(data, errors, short_description="", long_description="")%}
   {{ _simple_text_field('url', label=_('Source'), id='field-source', placeholder=_('http://example.com/dataset.json'), value=data.url, error=errors.url, short_description=short_description, long_description=long_description) }}
 {% endmacro%}
+
+{% macro portal_type(data, errors, short_description="", long_description="") %}
+  {% set opts = [] %}
+  {% set field_label = _('Portal type') %}
+  {% for level in h.config or [] %}
+    {% for field in level.get('fields', []) %}
+      {% if field.get('ckanField') == 'portal_type' %}
+        {% set localized_label = locales.pick_locale(field.get('label'), h.lang() or 'en') %}
+        {% if localized_label %}
+          {% set field_label = localized_label %}
+        {% endif %}
+        {% for option in field.get('options', []) %}
+          {% set option_text = locales.pick_locale(option.get('text'), h.lang() or 'en') or option.get('text') or option.get('value') %}
+          {% do opts.append({'value': option.get('value'), 'text': option_text}) %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% call form.select(
+      'portal_type',
+      label=field_label,
+      id='field-portal_type',
+      selected=data.get('portal_type'),
+      options=opts,
+      error=errors.get('portal_type'),
+      classes=['control-medium']
+  ) %}
+    {% if short_description %}
+      <span class="form-text">
+        {{ short_description }}
+        {% if long_description %}
+          <button type="button" style="padding:0; border:none; background:none; color:inherit" data-bs-toggle="tooltip" data-bs-placement="right" title="{{long_description}}">
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+        {% endif %}
+      </span>
+    {% endif %}
+  {% endcall %}
+{% endmacro %}
 
 {% macro version(data, errors, short_description="", long_description="")%}
   {{ _simple_text_field('version', label=_('Version'), id='field-version', placeholder=_('1.0'), value=data.version, error=errors.version, short_description=short_description, long_description=long_description) }}

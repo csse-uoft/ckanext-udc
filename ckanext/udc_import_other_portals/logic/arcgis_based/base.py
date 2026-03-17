@@ -486,6 +486,7 @@ class ArcGISBasedImport(BaseImport):
 
         dataset_links = (dataset or {}).get("links") or {}
         service_url = attributes.get("url") or dataset_links.get("esriRest")
+        dataset_type = (attributes.get("type") or "").strip().lower()
         layers = attributes.get("layers") or []
         if service_url and isinstance(layers, list):
             slug = attributes.get("slug")
@@ -518,6 +519,14 @@ class ArcGISBasedImport(BaseImport):
                 "description": "Access via ArcGIS REST API",
                 "url": service_url,
                 "format": service_format,
+            })
+
+        if dataset_type in {"document link", "image service"} and service_url:
+            resources.append({
+                "name": attributes.get("type") or "Linked Resource",
+                "description": "Linked dataset resource",
+                "url": service_url,
+                "format": "HTML",
             })
 
         content_type = attributes.get("content") or attributes.get("type")

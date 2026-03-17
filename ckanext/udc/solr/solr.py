@@ -53,6 +53,60 @@ from .config import get_udc_langs
 log = logging.getLogger(__name__)
 
 
+def _resolve_extras_field_name(field: dict) -> tuple[str | None, str | None]:
+    ckan_field = field.get("ckanField")
+    if ckan_field and ckan_field != "portal_type":
+        return None, ckan_field
+    if ckan_field == "portal_type":
+        return "portal_type", ckan_field
+    return field.get("name"), ckan_field
+
+
+def _build_extras_field_definition(key: str, ftype: str, ckan_field: str | None) -> dict[str, object] | None:
+    if ftype is None or ftype == "text":
+        return None
+
+    if ftype in ("date", "datetime", "time"):
+        return {
+            "name": key,
+            "type": "date",
+            "multiValued": False,
+            "indexed": True,
+            "stored": True,
+            "docValues": True,
+        }
+
+    if ftype == "number":
+        return {
+            "name": key,
+            "type": "pfloat",
+            "multiValued": False,
+            "indexed": True,
+            "stored": True,
+            "docValues": True,
+        }
+
+    if ftype in ("multiple_select", "multiple_datasets"):
+        return {
+            "name": key,
+            "type": "string",
+            "multiValued": True,
+            "stored": True,
+            "indexed": True,
+        }
+
+    if ftype in ("single_select", "single_dataset"):
+        return {
+            "name": key,
+            "type": "string",
+            "multiValued": ckan_field == "portal_type",
+            "indexed": True,
+            "stored": True,
+        }
+
+    raise ValueError(f"Unknown field type: {ftype}")
+
+
 def update_solr_maturity_model_fields(maturity_model: list):
     """
     Update Solr schema to include fields needed by the maturity model AND
@@ -71,59 +125,23 @@ def update_solr_maturity_model_fields(maturity_model: list):
 
     # 2) Build the static 'extras_*' fields for NON-text types only
     new_fields = {}
+    managed_special_fields: set[str] = set()
+    special_field_status: dict[str, str] = {}
     for level in maturity_model:
         for field in level.get("fields", []):
-            if "ckanField" in field:
+            name, ckan_field = _resolve_extras_field_name(field)
+            if not name:
                 continue
 
             ftype = field.get("type")
-            name = field["name"]
             key = f"extras_{name}"
+            if ckan_field == "portal_type":
+                managed_special_fields.add(key)
 
-            # TEXT -> multilingual JSON now; do not add 'extras_<name>'
-            if ftype is None or ftype == "text":
+            field_definition = _build_extras_field_definition(key, ftype, ckan_field)
+            if field_definition is None:
                 continue
-
-            elif ftype in ("date", "datetime", "time"):
-                new_fields[key] = {
-                    "name": key,
-                    "type": "date",
-                    "multiValued": False,
-                    "indexed": True,
-                    "stored": True,
-                    "docValues": True,
-                }
-
-            elif ftype == "number":
-                new_fields[key] = {
-                    "name": key,
-                    "type": "pfloat",
-                    "multiValued": False,
-                    "indexed": True,
-                    "stored": True,
-                    "docValues": True,
-                }
-
-            elif ftype in ("multiple_select", "multiple_datasets"):
-                new_fields[key] = {
-                    "name": key,
-                    "type": "string",
-                    "multiValued": True,
-                    "stored": True,
-                    "indexed": True,
-                }
-
-            elif ftype in ("single_select", "single_dataset"):
-                new_fields[key] = {
-                    "name": key,
-                    "type": "string",
-                    "multiValued": False,
-                    "indexed": True,
-                    "stored": True,
-                }
-
-            else:
-                raise ValueError(f"Unknown field type: {ftype}")
+            new_fields[key] = field_definition
 
     # 3) Reconcile against existing 'extras_*' fields in Solr
     current_fields = get_extras_fields()
@@ -151,11 +169,16 @@ def update_solr_maturity_model_fields(maturity_model: list):
                     desired["multiValued"],
                     desired.get("docValues", False),
                 )
+                if current_field_name in managed_special_fields:
+                    special_field_status[current_field_name] = "replaced"
+            elif current_field_name in managed_special_fields:
+                special_field_status[current_field_name] = "unchanged"
             # remove from "to add"
             new_fields.pop(current_field_name)
 
     # add remaining new fields
-    for _, f in new_fields.items():
+    pending_new_fields = dict(new_fields)
+    for _, f in pending_new_fields.items():
         add_field(
             f["name"],
             f["type"],
@@ -164,11 +187,17 @@ def update_solr_maturity_model_fields(maturity_model: list):
             f["multiValued"],
             f.get("docValues", False),
         )
+        if f["name"] in managed_special_fields:
+            special_field_status[f["name"]] = "added"
 
-    if not new_fields:
+    if not pending_new_fields:
         log.info("No new 'extras_*' fields to add.")
     else:
-        log.info(f"Added {len(new_fields)} new 'extras_*' fields.")
+        log.info(f"Added {len(pending_new_fields)} new 'extras_*' fields.")
+
+    for special_field in sorted(managed_special_fields):
+        status = special_field_status.get(special_field, "missing-from-config")
+        log.info("Special CKAN facet field %s schema status: %s", special_field, status)
 
     # 4) Keep tags partial-search helper
     all_fields = get_fields()
