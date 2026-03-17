@@ -256,6 +256,12 @@ class ArcGISBasedImport(BaseImport):
         attributes = src.get("attributes") or {}
         title = attributes.get("name", "") or attributes.get("snippet", "")
         notes = attributes.get("description", "") or attributes.get("searchDescription", "")
+        snippet = attributes.get("snippet", "") or ""
+        dataset_type = (attributes.get("type", "") or "").strip().lower()
+
+        if snippet:
+            notes = f"{snippet}\n{notes}" if notes else snippet
+
         return self._map_common_fields(
             src,
             target,
