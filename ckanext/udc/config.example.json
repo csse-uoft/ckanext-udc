@@ -211,7 +211,7 @@
                 {
                     "ckanField": "portal_type",
                     "label": {
-                        "en": "Portal type",
+                        "en": "Portal Type",
                         "fr": "Type de portail"
                     },
                     "type": "single_select",
