@@ -204,6 +204,69 @@ To install ckanext-udc:
      sudo supervisorctl reload
      ```
 
+## Scheduled imports
+
+`udc_import_other_portals` scheduled imports are registered via `rq-scheduler`. Saving or updating an import config re-syncs the schedule automatically, but scheduled imports only run if both the CKAN worker and `rqscheduler` are running.
+
+### Local testing: worker + rqscheduler
+
+Start the local development processes described in `Run as a developer`, including both the CKAN worker and `rqscheduler`.
+
+Then, in the import UI, save an import config with a schedule that will fire soon, for example `* * * * *` for every minute, and confirm on the next tick that:
+
+- the worker logs show the scheduled job being picked up;
+- a new import log entry is created in the UDC import UI;
+- dataset changes appear as expected.
+
+Notes:
+
+- The Redis URL above matches the current CKAN config at `/etc/ckan/default/ckan.ini` via `ckan.redis.url`. If your deployment uses a different Redis instance, set `RQ_REDIS_URL` to that value instead.
+- You do not need to restart `rqscheduler` after every cron change. Saving the import config re-syncs the scheduled job automatically.
+
+### Running the Scheduler as a Service on Ubuntu
+
+On Ubuntu deployments, the simplest approach is to run `rqscheduler` under Supervisor alongside the CKAN worker.
+
+1. Make sure the extension and its Python requirements are installed in the CKAN virtualenv.
+2. Verify the command works manually first:
+
+    ```shell
+    source /usr/lib/ckan/default/bin/activate
+    RQ_REDIS_URL=redis://localhost:6379/0 rqscheduler --interval 60
+    ```
+
+3. Add a Supervisor program entry for the scheduler, for example in `/etc/supervisor/conf.d/ckan-rqscheduler.conf`:
+
+    ```ini
+    [program:ckan-rqscheduler]
+    command=/bin/bash -lc 'source /usr/lib/ckan/default/bin/activate && RQ_REDIS_URL=redis://localhost:6379/0 rqscheduler --interval 60'
+    directory=/usr/lib/ckan/default/src
+    user=www-data
+    autostart=true
+    autorestart=true
+    startsecs=5
+    stopasgroup=true
+    killasgroup=true
+    stdout_logfile=/var/log/ckan/rqscheduler.log
+    stderr_logfile=/var/log/ckan/rqscheduler.err.log
+    environment=HOME="/var/lib/ckan"
+    ```
+
+4. Reload Supervisor and start the service:
+
+    ```shell
+    sudo supervisorctl reread
+    sudo supervisorctl update
+    sudo supervisorctl start ckan-rqscheduler
+    ```
+
+5. Check that it stays up and is emitting heartbeats:
+
+    ```shell
+    sudo supervisorctl status ckan-rqscheduler
+    tail -f /var/log/ckan/rqscheduler.log
+    ```
+
 ## Configure deployment server to support websocket connection and use Gevent for multi-tasking
 
 1. Reinstall uwsgi with SSL support
@@ -234,9 +297,11 @@ To install ckanext-udc:
 2. Add to `/etc/ckan/default/ckan-uwsgi.ini`
     > Remove `enable-threads` and `threads` if exists, threading is not compitable with `gevent`.
     ```ini
-    gevent          =  100 # number of coroutine
+    gevent          =  1000 # number of coroutine
     http-websockets = true
     gevent-monkey-patch = true
+    log-x-forwarded-for = true
+    processes = 6
     ```
 
 3. Update nginx config `sudo nano /etc/nginx/sites-enabled/ckan`
@@ -263,10 +328,13 @@ None at present
 
 ### Run as a developer
 
+For scheduled imports, run four processes locally: CKAN, the React frontend, one CKAN worker, and one `rqscheduler` process.
+
 - CKAN main procress
     ```shell
+    cd /etc/ckan/default
     source /usr/lib/ckan/default/bin/activate
-    VITE_ORIGIN=http://<your-server-ip>:5173 WERKZEUG_DEBUG_PIN=223344 uwsgi --http :5000 --gevent 1000 --http-websockets --master --wsgi-file /etc/ckan/default/wsgi.py --callable application --module wsgi:application --py-autoreload=1
+    CKAN_INI=/etc/ckan/default/ckan.ini VITE_ORIGIN=http://<your-server-ip>:5173 WERKZEUG_DEBUG_PIN=223344 uwsgi --http :5000 --gevent 1000 --http-websockets --master --wsgi-file /etc/ckan/default/wsgi.py --callable application --py-autoreload=1
     ```
 - React Frontend
     ```shell
@@ -277,6 +345,11 @@ None at present
     ```shell
     source /usr/lib/ckan/default/bin/activate
     WERKZEUG_DEBUG_PIN=223344 ckan -c /etc/ckan/default/ckan.ini jobs worker
+    ```
+- `rqscheduler` process
+    ```shell
+    source /usr/lib/ckan/default/bin/activate
+    RQ_REDIS_URL=redis://localhost:6379/0 rqscheduler --verbose --interval 5
     ```
 
 ## Tests

@@ -25,7 +25,7 @@ export interface ImportPanelProps {
 }
 
 export interface FinishedPackage {
-  type: 'created' | 'updated' | 'deleted' | 'errored';
+  type: 'created' | 'updated' | 'deleted' | 'skipped' | 'errored';
   data: {
     id: string;
     name: string;

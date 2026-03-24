@@ -168,6 +168,8 @@ Schedules are stored on the import config and registered via `rq-scheduler`. Whe
 
 **Required**: run an `rq-scheduler` process alongside the CKAN workers so scheduled imports actually execute.
 
+For local startup, deployment, and Supervisor service examples for scheduled imports, see the repository README at [../../README.md](../../README.md).
+
 ## Monitoring and Logs
 
 - **Real-time Progress**: View live import status in the dashboard

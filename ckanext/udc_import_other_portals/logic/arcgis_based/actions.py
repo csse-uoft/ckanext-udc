@@ -20,6 +20,15 @@ from ckan.model.system_info import get_system_info, set_system_info
 from ckan.types import Context
 from ckanext.udc_import_other_portals.model import CUDCImportConfig, CUDCImportJob
 from ckanext.udc_import_other_portals.logic.base import get_package_ids_by_import_config_id
+from ckanext.udc_import_other_portals.logic.arcgis_based.settings import (
+    SOURCE_LAST_UPDATED_GLOBAL_CRON_KEY,
+    load_arcgis_auto_import_settings,
+    save_arcgis_auto_import_settings,
+)
+from ckanext.udc_import_other_portals.scheduler import (
+    SOURCE_LAST_UPDATED_CRON_KEY,
+    sync_cron_jobs,
+)
 from ckanext.udc.solr.config import get_udc_langs
 
 log = logging.getLogger(__name__)
@@ -719,23 +728,57 @@ def arcgis_auto_import_configs_get(context: Context, data_dict: Dict[str, Any]):
     has_portal_cache = bool(portal_results)
 
     configs = _auto_arcgis_configs()
+    settings = load_arcgis_auto_import_settings()
     config_ids = [config.id for config in configs]
-    last_run_by_config: Dict[str, Optional[str]] = {}
+    last_run_by_config: Dict[str, Dict[str, Optional[str]]] = {}
     if config_ids:
         rows = (
-            model.Session.query(CUDCImportJob.import_config_id, func.max(CUDCImportJob.run_at))
+            model.Session.query(
+                CUDCImportJob.import_config_id,
+                CUDCImportJob.run_at,
+                CUDCImportJob.other_data,
+            )
             .filter(CUDCImportJob.import_config_id.in_(config_ids))
-            .group_by(CUDCImportJob.import_config_id)
+            .order_by(CUDCImportJob.run_at.desc())
             .all()
         )
-        last_run_by_config = {
-            config_id: run_at.isoformat() if run_at else None for config_id, run_at in rows
-        }
+        for config_id, run_at, other_data in rows:
+            current = last_run_by_config.setdefault(
+                config_id,
+                {
+                    "last_run_at": None,
+                    "last_import_run_at": None,
+                    "last_refresh_run_at": None,
+                },
+            )
+            run_at_iso = run_at.isoformat() if run_at else None
+            if current["last_run_at"] is None:
+                current["last_run_at"] = run_at_iso
+
+            task_type = "import"
+            if isinstance(other_data, dict) and other_data.get("task_type") == "source_last_updated_refresh":
+                task_type = "source_last_updated_refresh"
+
+            if task_type == "source_last_updated_refresh":
+                if current["last_refresh_run_at"] is None:
+                    current["last_refresh_run_at"] = run_at_iso
+            elif current["last_import_run_at"] is None:
+                current["last_import_run_at"] = run_at_iso
 
     results = []
     for config in configs:
         item = config.as_dict()
-        item["last_run_at"] = last_run_by_config.get(config.id)
+        run_info = last_run_by_config.get(
+            config.id,
+            {
+                "last_run_at": None,
+                "last_import_run_at": None,
+                "last_refresh_run_at": None,
+            },
+        )
+        item["last_run_at"] = run_info["last_run_at"]
+        item["last_import_run_at"] = run_info["last_import_run_at"]
+        item["last_refresh_run_at"] = run_info["last_refresh_run_at"]
         portal_id = (config.other_config or {}).get("portal_id")
         portal_snapshot = (config.other_data or {}).get("portal_snapshot") or {}
         cached_snapshot = portal_map.get(portal_id) if portal_id else None
@@ -760,8 +803,45 @@ def arcgis_auto_import_configs_get(context: Context, data_dict: Dict[str, Any]):
         item["datasetCount"] = dataset_count
         item["countsUpdatedAt"] = portal_counts_updated_at
         item["discoverable"] = discoverable
+        item["source_last_updated_cron_schedule"] = (config.other_config or {}).get(
+            SOURCE_LAST_UPDATED_CRON_KEY
+        )
+        item["effective_source_last_updated_cron_schedule"] = (
+            item["source_last_updated_cron_schedule"]
+            or settings.get(SOURCE_LAST_UPDATED_GLOBAL_CRON_KEY)
+        )
         results.append(item)
-    return {"total": len(results), "results": results, "counts_updated_at": counts_updated_at}
+    return {
+        "total": len(results),
+        "results": results,
+        "counts_updated_at": counts_updated_at,
+        "global_source_last_updated_cron_schedule": settings.get(
+            SOURCE_LAST_UPDATED_GLOBAL_CRON_KEY
+        ),
+        "settings_updated_at": settings.get("updated_at"),
+    }
+
+
+def arcgis_auto_import_settings_update(context: Context, data_dict: Dict[str, Any]):
+    """Update global settings used by ArcGIS auto-import refresh scheduling."""
+    user = context["user"]
+    if not authz.is_sysadmin(user):
+        raise logic.NotAuthorized("Not authorized.")
+
+    if data_dict is None:
+        data_dict = {}
+
+    source_last_updated_cron_schedule = data_dict.get(SOURCE_LAST_UPDATED_GLOBAL_CRON_KEY)
+    if source_last_updated_cron_schedule is not None and not isinstance(
+        source_last_updated_cron_schedule, str
+    ):
+        raise logic.ValidationError({
+            SOURCE_LAST_UPDATED_GLOBAL_CRON_KEY: ["Cron schedule must be a string."],
+        })
+
+    settings = save_arcgis_auto_import_settings(source_last_updated_cron_schedule)
+    sync_cron_jobs()
+    return settings
 
 
 def arcgis_auto_import_configs_create(context: Context, data_dict: Dict[str, Any]):
@@ -779,6 +859,14 @@ def arcgis_auto_import_configs_create(context: Context, data_dict: Dict[str, Any
     portal_ids = data_dict.get("portal_ids") or []
     if not isinstance(portal_ids, list) or not portal_ids:
         raise logic.ValidationError({"portal_ids": ["Provide a list of portal ids."]})
+
+    source_last_updated_cron_schedule = data_dict.get(SOURCE_LAST_UPDATED_CRON_KEY)
+    if source_last_updated_cron_schedule is not None:
+        if not isinstance(source_last_updated_cron_schedule, str):
+            raise logic.ValidationError({
+                SOURCE_LAST_UPDATED_CRON_KEY: ["Cron schedule must be a string."],
+            })
+        source_last_updated_cron_schedule = source_last_updated_cron_schedule.strip() or None
 
     portal_cache = _load_portal_cache()
     portal_results = portal_cache.get("results") or []
@@ -848,6 +936,9 @@ def arcgis_auto_import_configs_create(context: Context, data_dict: Dict[str, Any
         }
         if language:
             other_config["language"] = language
+        if source_last_updated_cron_schedule:
+            # Store the refresh schedule in other_config so scheduler sync can register it.
+            other_config[SOURCE_LAST_UPDATED_CRON_KEY] = source_last_updated_cron_schedule
         other_data = {
             "portal_snapshot": portal,
         }
@@ -861,11 +952,15 @@ def arcgis_auto_import_configs_create(context: Context, data_dict: Dict[str, Any
             owner_org=owner_org,
             other_config=other_config,
             other_data=other_data,
+            cron_schedule=None,
             stop_on_error=False,
         )
         model.Session.add(new_config)
         model.Session.commit()
         created.append(new_config.as_dict())
+
+    if created:
+        sync_cron_jobs()
 
     return {"created": created, "skipped": skipped, "errors": errors}
 
@@ -925,4 +1020,6 @@ def arcgis_auto_import_configs_delete(context: Context, data_dict: Dict[str, Any
         deleted.append(config_id)
 
     model.Session.commit()
+    if deleted:
+        sync_cron_jobs()
     return {"deleted": deleted, "skipped": skipped, "blocked": blocked}

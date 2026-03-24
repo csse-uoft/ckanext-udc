@@ -46,6 +46,8 @@ export const FinishedPackagesTable: React.FC<FinishedPackagesTableProps> = ({ fi
         return <InfoIcon color="primary" />;
       case 'deleted':
         return <DeleteIcon color="error" />;
+      case 'skipped':
+        return <InfoIcon color="action" />;
       case 'errored':
         return <ErrorIcon color="error" />;
       default:
@@ -85,6 +87,7 @@ export const FinishedPackagesTable: React.FC<FinishedPackagesTableProps> = ({ fi
           <MenuItem value="created">Created</MenuItem>
           <MenuItem value="updated">Updated</MenuItem>
           <MenuItem value="deleted">Deleted</MenuItem>
+          <MenuItem value="skipped">Skipped</MenuItem>
           <MenuItem value="errored">Errored</MenuItem>
         </Select>
       </FormControl>

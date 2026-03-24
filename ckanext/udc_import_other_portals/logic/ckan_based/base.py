@@ -91,7 +91,7 @@ class CKANBasedImport(BaseImport):
                 # Remove packages that are removed from the remote
                 if len(imported_id_map):
 
-                    if self.import_config.other_config.get("delete_previously_imported"):
+                    if self.should_delete_previously_imported_for_run():
                         # Delete all packages that were previously imported
                         _delete_all_imports()
                         imported_id_map = {}

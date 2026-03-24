@@ -2,7 +2,7 @@ import { Container, Card, CardContent, Alert, Typography, Box, IconButton, Butto
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
 
 import { useEffect, useState } from 'react';
-import { ImportConfigListItem } from '../api/api';
+import { ImportConfigListItem, ImportJobLog } from '../api/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useApi } from '../api/useApi';
 import { FinishedPackagesTable } from './realtime/FinishedPackagesTable';
@@ -18,28 +18,21 @@ export interface ImportPanelProps {
   onUpdate: (option?: string) => void
 }
 
-interface LogData {
-  has_error: boolean;
-  has_warning: boolean;
-  id: string;
-  import_config_id: string;
-  logs: string;
-  other_data: {
-    finished?: FinishedPackage[];
-  };
-  run_at: string;
-  run_by: string;
-}
-
 interface LogPanelProps {
-  data: LogData;
+  data: ImportJobLog;
   onDelete: (id: string) => void;
 }
+
+const getTaskType = (log: ImportJobLog) =>
+  log.other_data?.task_type === 'source_last_updated_refresh' ? 'source_last_updated_refresh' : 'import';
+
+const getTaskTypeLabel = (log: ImportJobLog) =>
+  getTaskType(log) === 'source_last_updated_refresh' ? 'Refresh Job' : 'Full Import';
 
 const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
   const handleDownloadLogs = () => {
     const element = document.createElement('a');
-    const file = new Blob([data.logs], { type: 'text/plain' });
+    const file = new Blob([data.logs || ''], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `logs_${data.id}.txt`;
     document.body.appendChild(element); // Required for this to work in FireFox
@@ -51,7 +44,7 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h5" component="div">
-            Run At: {formatLocalTimestamp(data.run_at)}
+            {getTaskTypeLabel(data)} at {formatLocalTimestamp(data.run_at || null)}
           </Typography>
           <Tooltip title="Delete log">
             <IconButton onClick={() => onDelete(data.id)} color="error" aria-label="delete">
@@ -78,12 +71,18 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
         <Typography variant="body2" color="text.secondary">
           Run By: {data.run_by}
         </Typography>
+        {getTaskType(data) === 'source_last_updated_refresh' ? (
+          <Typography variant="body2" color="text.secondary">
+            Refreshed: {Number(data.other_data?.refreshed || 0)}, Skipped: {Number(data.other_data?.skipped || 0)}
+          </Typography>
+        ) : null}
         <Button variant="contained" color="primary" onClick={handleDownloadLogs} sx={{ mt: 2 }}>
           Download Logs
         </Button>
         
-
-        <FinishedPackagesTable finishedPackages={data.other_data?.finished || []} />
+        {getTaskType(data) === 'import' ? (
+          <FinishedPackagesTable finishedPackages={(data.other_data?.finished || []) as FinishedPackage[]} />
+        ) : null}
         
       </CardContent>
     </Card>
@@ -93,11 +92,11 @@ const LogPanel: React.FC<LogPanelProps> = ({ data, onDelete }) => {
 
 function ImportLogsPanel(props: ImportPanelProps) {
   const { api, executeApiCall } = useApi();
-  const [importLogs, setImportLogs] = useState<LogData[]>([]);
+  const [importLogs, setImportLogs] = useState<ImportJobLog[]>([]);
   const [selectedLogId, setSelectedLogId] = useState<string>('');
 
   useEffect(() => {
-    executeApiCall(() => api.getImportLogsByConfigId(props.uuid)).then((logs: LogData[]) => {
+    executeApiCall(() => api.getImportLogsByConfigId(props.uuid)).then((logs: ImportJobLog[]) => {
       setImportLogs(logs);
       if (logs.length > 0) {
         setSelectedLogId(logs[0].id); // Set the first log as the default selected log
@@ -109,7 +108,7 @@ function ImportLogsPanel(props: ImportPanelProps) {
   const handleDeleteOne = async (id: string) => {
     await executeApiCall(() => api.deleteImportLog(id));
     setImportLogs(logs => {
-      logs.splice(logs.findIndex((log: LogData) => log.id === id), 1);
+      logs.splice(logs.findIndex((log: ImportJobLog) => log.id === id), 1);
       return [...logs];
     });
     if (selectedLogId === id) {
@@ -134,9 +133,9 @@ function ImportLogsPanel(props: ImportPanelProps) {
             value={selectedLogId}
             onChange={handleLogChange}
           >
-            {importLogs.map((log: LogData) => (
+            {importLogs.map((log: ImportJobLog) => (
               <MenuItem key={log.id} value={log.id}>
-                {formatLocalTimestamp(log.run_at)}
+                {getTaskTypeLabel(log)} - {formatLocalTimestamp(log.run_at || null)}
               </MenuItem>
             ))}
           </Select>

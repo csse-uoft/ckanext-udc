@@ -122,7 +122,7 @@ class CUDCImportJob(Base):
     
     @classmethod
     def get_by_config_id(cls, id):
-        return model.Session.query(cls).filter(cls.import_config_id == id).order_by(cls.run_at).all()
+        return model.Session.query(cls).filter(cls.import_config_id == id).order_by(cls.run_at.desc()).all()
     
     @classmethod
     def get_running_jobs_by_config_id(cls, id):
@@ -136,9 +136,11 @@ class CUDCImportJob(Base):
             "has_error": self.has_error,
             "import_config_id": self.import_config_id,
             "logs": self.logs,
-            "other_data": self.other_data,
+            "other_data": self.other_data or {},
             "run_at": self.run_at.isoformat() if self.run_at else None,
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
             "run_by": self.run_by,
+            "is_running": self.is_running,
         }
 
         return d
@@ -148,7 +150,7 @@ class CUDCImportJob(Base):
         return (
             model.Session.query(cls)
             .filter(cls.import_config_id == import_config_id)
-            .order_by(cls.run_at)
+            .order_by(cls.run_at.desc())
             .all()
         )
 

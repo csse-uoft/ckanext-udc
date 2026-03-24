@@ -69,6 +69,51 @@ export type ImportLanguageOptions = {
   labels: Record<string, string>;
 };
 
+export type ImportJobTaskType = "import" | "source_last_updated_refresh";
+
+export interface ImportJobOtherData {
+  task_type?: ImportJobTaskType;
+  finished?: unknown[];
+  refreshed?: number;
+  skipped?: number;
+  [key: string]: unknown;
+}
+
+export interface ImportJobLog {
+  id: string;
+  has_warning?: boolean;
+  has_error?: boolean;
+  import_config_id: string;
+  logs?: string;
+  other_data?: ImportJobOtherData;
+  run_at?: string | null;
+  finished_at?: string | null;
+  run_by?: string;
+  is_running?: boolean;
+}
+
+export interface ImportConfigOtherConfig {
+  org_import_mode?: string;
+  base_api?: string;
+  org_mapping?: Record<string, string>;
+  delete_previously_imported?: boolean;
+  language?: string;
+  source_last_updated_cron_schedule?: string | null;
+  [key: string]: unknown;
+}
+
+export interface UpdateImportConfigPayload {
+  uuid?: string;
+  name: string;
+  code: string;
+  notes?: string;
+  owner_org?: string;
+  stop_on_error?: boolean;
+  cron_schedule?: string;
+  platform?: string;
+  other_config?: ImportConfigOtherConfig;
+}
+
 export async function getImportLanguageOptions() {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_language_options");
   return result.result as ImportLanguageOptions;
@@ -91,7 +136,7 @@ export async function getRemoteOrganizations(base_api: string): Promise<RemoteOr
   return result.result as RemoteOrganizationSummary[];
 }
 
-export async function updateImportConfig(importConfig: { uuid?: string, name: string, code: string }) {
+export async function updateImportConfig(importConfig: UpdateImportConfigPayload) {
   const result = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_config_update", {
     method: "POST",
     body: JSON.stringify({ import_config: importConfig }),
@@ -133,7 +178,7 @@ export async function getImportStatus() {
 
 export async function getImportLogsByConfigId(configId: string) {
   const importConfig = await fetchWithErrorHandling(baseURL + "/api/3/action/cudc_import_logs_get?config_id=" + configId);
-  return importConfig.result;
+  return importConfig.result as ImportJobLog[];
 }
 
 export async function deleteImportLog(logId: string) {
@@ -183,6 +228,11 @@ export interface ArcgisPortalDiscoveryConfig {
   updated_at?: string | null;
 }
 
+export interface ArcgisAutoImportSettings {
+  source_last_updated_cron_schedule?: string | null;
+  updated_at?: string | null;
+}
+
 export interface ImportConfig {
   id: string;
   name: string;
@@ -192,23 +242,29 @@ export interface ImportConfig {
   owner_org?: string;
   stop_on_error?: boolean;
   created_by?: string;
-  other_config?: Record<string, unknown>;
+  other_config?: ImportConfigOtherConfig;
   other_data?: Record<string, unknown>;
   cron_schedule?: string;
   is_running?: boolean;
   created_at?: string | null;
   updated_at?: string | null;
   last_run_at?: string | null;
+  last_import_run_at?: string | null;
+  last_refresh_run_at?: string | null;
   portal_snapshot?: ArcgisPortalCandidate;
   datasetCount?: number;
   countsUpdatedAt?: string | null;
   discoverable?: boolean | null;
+  source_last_updated_cron_schedule?: string | null;
+  effective_source_last_updated_cron_schedule?: string | null;
 }
 
 export interface ArcgisAutoImportConfigsResponse {
   total: number;
   results: ImportConfig[];
   counts_updated_at?: string | null;
+  global_source_last_updated_cron_schedule?: string | null;
+  settings_updated_at?: string | null;
 }
 
 export async function discoverArcgisPortals(payload?: { arcgis_root?: string; concurrency?: number }) {
@@ -294,6 +350,17 @@ export async function deleteArcgisAutoImportConfigs(payload: { config_ids: strin
     skipped: Array<[string, string]>;
     blocked: Array<{ id: string; imported_count: number; owner_org?: string | null; reason?: string | null }>;
   };
+}
+
+export async function updateArcgisAutoImportSettings(payload: { source_last_updated_cron_schedule?: string | null }) {
+  const result = await fetchWithErrorHandling(baseURL + "/api/3/action/arcgis_auto_import_settings_update", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return result.result as ArcgisAutoImportSettings;
 }
 
 export async function getConfig(configKey: string) {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import traceback
 import logging
 import time
@@ -271,6 +272,7 @@ class ArcGISBasedImport(BaseImport):
         )
 
     def _build_import_extras(self, attributes: dict, source_portal: str, source_id: str) -> List[dict]:
+        """Build the ArcGIS-specific import extras payload stored alongside the package."""
         extras = []
         layer_info = attributes.get("layer") or {}
 
@@ -286,9 +288,76 @@ class ArcGISBasedImport(BaseImport):
             field_names = [f.get("name") for f in fields_list if f.get("name")]
             if field_names:
                 extras.append({"key": "fields", "value": ", ".join(field_names[:20])})
+        source_modified_ms = attributes.get("itemModified") or attributes.get("modified")
+        if source_modified_ms:
+            try:
+                # Keep upstream update time in import extras so it can be refreshed independently.
+                extras.append({
+                    "key": "source_last_updated",
+                    "value": self._ms_to_iso(source_modified_ms),
+                })
+            except Exception:
+                pass
         extras.append({"key": "source_portal", "value": source_portal})
         extras.append({"key": "source_id", "value": source_id})
         return extras
+
+    def _source_last_updated_from_attributes(self, attributes: dict) -> Optional[str]:
+        source_modified_ms = (attributes or {}).get("itemModified") or (attributes or {}).get("modified")
+        if not source_modified_ms:
+            return None
+        try:
+            return self._ms_to_iso(source_modified_ms)
+        except Exception:
+            return None
+
+    def _source_last_updated_from_package(self, package: dict) -> Optional[str]:
+        import_extras = package.get("udc_import_extras") or []
+        if isinstance(import_extras, str):
+            try:
+                import_extras = json.loads(import_extras)
+            except ValueError:
+                import_extras = []
+        if not isinstance(import_extras, list):
+            return None
+        for item in import_extras:
+            if isinstance(item, dict) and item.get("key") == "source_last_updated":
+                value = item.get("value")
+                if isinstance(value, str) and value:
+                    return value
+        return None
+
+    def _should_skip_existing_package(self, src: dict, mapped_id: Optional[str]) -> bool:
+        if not mapped_id:
+            return False
+
+        current_source_last_updated = self._source_last_updated_from_attributes(src.get("attributes") or {})
+        if not current_source_last_updated:
+            return False
+
+        try:
+            existing_package = get_self_package(self.build_context(), mapped_id)
+        except Exception:
+            return False
+
+        existing_source_last_updated = self._source_last_updated_from_package(existing_package)
+        if existing_source_last_updated != current_source_last_updated:
+            return False
+
+        attributes = src.get("attributes") or {}
+        package_name = existing_package.get("name") or attributes.get("name") or src.get("id") or ""
+        package_title = existing_package.get("title") or attributes.get("name") or package_name
+        self.logger.info(
+            f"Skip unchanged package {package_name} ({mapped_id}): source_last_updated={current_source_last_updated}"
+        )
+        self.logger.finished_one(
+            "skipped",
+            mapped_id,
+            package_name,
+            package_title,
+            logs="Skipped because upstream source_last_updated has not changed.",
+        )
+        return True
 
     def _map_common_fields(
         self,
@@ -331,16 +400,16 @@ class ArcGISBasedImport(BaseImport):
             except Exception:
                 pass
 
+        source_modified_ms = attributes.get("itemModified") or attributes.get("modified")
         if created_ms:
             try:
                 target["published_date"] = self._ms_to_iso(created_ms).split("T")[0]
             except Exception:
                 pass
 
-        modified_ms = attributes.get("itemModified") or attributes.get("modified")
-        if modified_ms:
+        if source_modified_ms:
             try:
-                target["accessed_date"] = self._ms_to_iso(modified_ms).split("T")[0]
+                target["accessed_date"] = self._ms_to_iso(source_modified_ms).split("T")[0]
             except Exception:
                 pass
 
@@ -663,6 +732,12 @@ class ArcGISBasedImport(BaseImport):
                 continue
             yield dataset
 
+    def process_package(self, src, mapped_id=None):
+        if self._should_skip_existing_package(src, mapped_id):
+            attributes = src.get("attributes") or {}
+            return src.get("id"), mapped_id, attributes.get("name") or src.get("id") or ""
+        return super().process_package(src, mapped_id)
+
     def run_imports(self):
         """
         Run imports for all source datasets. Users should not override this.
@@ -733,7 +808,7 @@ class ArcGISBasedImport(BaseImport):
 
                 # Remove datasets that are removed from the remote
                 if len(imported_id_map):
-                    if self.import_config.other_config.get("delete_previously_imported"):
+                    if self.should_delete_previously_imported_for_run():
                         # Delete all datasets that were previously imported
                         _delete_all_imports()
                         imported_id_map = {}

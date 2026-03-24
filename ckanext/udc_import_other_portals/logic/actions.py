@@ -379,6 +379,12 @@ def cudc_import_run(context: Context, data: Dict[str, Any]):
     
     if not current_config.code:
         raise logic.ValidationError("Code does not existed.")
+
+    other_config = dict(current_config.other_config or {})
+    delete_previously_imported_once = bool(other_config.get("delete_previously_imported"))
+    if delete_previously_imported_once:
+        other_config["delete_previously_imported"] = False
+        current_config.other_config = other_config
     
     # if current_config.is_running:
     #     raise logic.ValidationError("Another import instance is running.")
@@ -394,7 +400,12 @@ def cudc_import_run(context: Context, data: Dict[str, Any]):
         "run_at": datetime.utcnow(),
         "run_by": userobj.id,
         "id": job_uuid,
-        "is_running": True
+        "is_running": True,
+        "other_data": {
+            "task_type": "import",
+            "run_mode": "manual",
+            "delete_previously_imported_once": delete_previously_imported_once,
+        },
     }
     import_log = CUDCImportJob(**import_log_data)
     model.Session.add(import_log)

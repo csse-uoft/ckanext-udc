@@ -72,6 +72,11 @@ class ImportLogger:
             self.current += 1
         elif type == 'deleted':
             self.socket_client.finish_one(type, data)
+        elif type == 'skipped':
+            if logs:
+                data["logs"] = logs
+            self.socket_client.finish_one(type, data)
+            self.current += 1
         elif type == 'errored':
             data["logs"] = logs
             self.socket_client.finish_one(type, data)

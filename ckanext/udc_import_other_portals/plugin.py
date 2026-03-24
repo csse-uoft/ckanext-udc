@@ -32,6 +32,7 @@ from .logic.arcgis_based.actions import (
     arcgis_auto_import_configs_get,
     arcgis_auto_import_configs_create,
     arcgis_auto_import_configs_delete,
+    arcgis_auto_import_settings_update,
 )
 from .logic.relationships import init_relationships
 from .scheduler import sync_cron_jobs
@@ -84,4 +85,5 @@ class UdcImportOtherPortalsPlugin(plugins.SingletonPlugin):
             "arcgis_auto_import_configs_get": arcgis_auto_import_configs_get,
             "arcgis_auto_import_configs_create": arcgis_auto_import_configs_create,
             "arcgis_auto_import_configs_delete": arcgis_auto_import_configs_delete,
+            "arcgis_auto_import_settings_update": arcgis_auto_import_settings_update,
         }

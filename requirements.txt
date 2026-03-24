@@ -2,11 +2,14 @@ requests==2.29.0
 PyLD==2.0.3
 rdflib==6.3.2
 graphdb-importer @ git+https://github.com/csse-uoft/graphdb-importer@f1cf9597833e909bd0e71aca9024877e73ac523b
-numpy>=1.24.4
-pandas>=2.0.3
-openai>=1.37.1
-Flask-SocketIO>=5.3.6
-python-socketio[client]>=5.11.3
+numpy==1.26.4
+pandas==2.0.3
+openai==1.37.1
+Flask-SocketIO==5.3.6
+python-socketio[client]==5.11.3
+typing-extensions>=4.14.1,<5
 pychalk>=1.0.0
-rq_scheduler==0.13.0
+# CKAN currently pins rq==1.11.0, which is compatible with rq-scheduler 0.11.x.
+# rq-scheduler 0.13+ expects Job.enqueue_at_front, which rq 1.11.0 does not expose.
+rq_scheduler==0.11.0
 rq==1.11.0

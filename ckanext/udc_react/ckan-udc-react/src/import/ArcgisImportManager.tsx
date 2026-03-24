@@ -26,14 +26,32 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import CloseIcon from "@mui/icons-material/Close";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { useApi } from "../api/useApi";
 import ErrorDialog from "../udrc/License/ErrorDialog";
 import ImportPanel from "./ImportPanel";
 import PortalDetailsDialog from "./components/PortalDetailsDialog";
-import { CKANOrganization, ImportConfig } from "../api/api";
+import CronScheduleEditor from "./components/CronScheduleEditor";
+import { CKANOrganization, ImportConfig, ImportJobLog, ImportJobTaskType } from "../api/api";
 import { formatLocalTimestamp } from "./utils/time";
+import { buildCron, CustomCronField, defaultCustomCron, getCronSummary, normalizeCronSelection, parseCron, resolveCronPreset } from "./utils/cron";
+
+const globalRefreshCronPresets = [
+  { id: "none", label: "Disabled", cron: "" },
+  { id: "hourly_15", label: "Every hour at minute 15", cron: "15 * * * *" },
+  { id: "daily_2am", label: "Daily at 2:00 AM", cron: "0 2 * * *" },
+  { id: "daily_6am", label: "Daily at 6:00 AM", cron: "0 6 * * *" },
+  { id: "weekdays_6am", label: "Weekdays at 6:00 AM", cron: "0 6 * * 1,2,3,4,5" },
+  { id: "custom", label: "Custom schedule", cron: "" },
+];
+
+const getTaskType = (log: ImportJobLog): ImportJobTaskType =>
+  log.other_data?.task_type === "source_last_updated_refresh" ? "source_last_updated_refresh" : "import";
+
+const getTaskTypeLabel = (taskType: ImportJobTaskType) =>
+  taskType === "source_last_updated_refresh" ? "Legacy Refresh Job" : "Import Run";
 
 const ArcgisImportManager = () => {
   const { api, executeApiCall } = useApi();
@@ -56,12 +74,24 @@ const ArcgisImportManager = () => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusTarget, setStatusTarget] = useState<ImportConfig | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
-  const [statusLogs, setStatusLogs] = useState<any[]>([]);
+  const [statusLogs, setStatusLogs] = useState<ImportJobLog[]>([]);
   const [query, setQuery] = useState("");
+  const [globalRefreshCron, setGlobalRefreshCron] = useState("");
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [settingsUpdatedAt, setSettingsUpdatedAt] = useState<string | null>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsCronPreset, setSettingsCronPreset] = useState("none");
+  const [settingsCustomCron, setSettingsCustomCron] = useState(() => parseCron(""));
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     discoverable: false,
     updated_at: false,
   });
+
+  const syncSettingsCronEditor = (cron: string) => {
+    const preset = resolveCronPreset(cron, globalRefreshCronPresets);
+    setSettingsCronPreset(preset);
+    setSettingsCustomCron(parseCron(cron));
+  };
 
   const load = async () => {
     setLoading(true);
@@ -71,6 +101,9 @@ const ArcgisImportManager = () => {
         executeApiCall(api.getOrganizations),
       ]);
       setConfigs(configResult.results ?? []);
+      setGlobalRefreshCron(configResult.global_source_last_updated_cron_schedule ?? "");
+      syncSettingsCronEditor(configResult.global_source_last_updated_cron_schedule ?? "");
+      setSettingsUpdatedAt(configResult.settings_updated_at ?? null);
       setOrganizations(orgs ?? []);
     } catch (err) {
       setError("Failed to load ArcGIS import configs.");
@@ -250,6 +283,52 @@ const ArcgisImportManager = () => {
     }
   };
 
+  const handleSaveGlobalRefreshCron = async () => {
+    const selectedPreset = globalRefreshCronPresets.find((preset) => preset.id === settingsCronPreset);
+    const nextCron = settingsCronPreset === "custom"
+      ? buildCron(settingsCustomCron)
+      : (selectedPreset?.cron ?? "");
+
+    setSettingsSaving(true);
+    try {
+      const result = await executeApiCall(() =>
+        api.updateArcgisAutoImportSettings({
+          source_last_updated_cron_schedule: nextCron || null,
+        })
+      );
+      setGlobalRefreshCron(result.source_last_updated_cron_schedule ?? "");
+      syncSettingsCronEditor(result.source_last_updated_cron_schedule ?? "");
+      setSettingsUpdatedAt(result.updated_at ?? null);
+      setSettingsDialogOpen(false);
+      await load();
+    } catch (err) {
+      setError("Failed to update ArcGIS auto-import refresh settings.");
+      setErrorDialogOpen(true);
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const handleOpenSettingsDialog = () => {
+    syncSettingsCronEditor(globalRefreshCron);
+    setSettingsDialogOpen(true);
+  };
+
+  const handleChangeSettingsCronPreset = (value: string) => {
+    setSettingsCronPreset(value);
+    if (value === "custom") {
+      setSettingsCustomCron(parseCron(globalRefreshCron));
+    }
+  };
+
+  const handleChangeSettingsCustomCron = (field: CustomCronField, value: string[]) => {
+    const normalized = normalizeCronSelection(value);
+    setSettingsCustomCron((current) => ({
+      ...current,
+      [field]: normalized,
+    }));
+  };
+
   const handleOpenStatus = async (config: ImportConfig) => {
     setStatusTarget(config);
     setStatusDialogOpen(true);
@@ -272,7 +351,7 @@ const ArcgisImportManager = () => {
     }
   };
 
-  const summarizeFinished = (log: any) => {
+  const summarizeFinished = (log: ImportJobLog) => {
     const finished = log?.other_data?.finished;
     if (!Array.isArray(finished)) {
       return null;
@@ -284,12 +363,22 @@ const ArcgisImportManager = () => {
       errored: 0,
     };
     finished.forEach((item) => {
-      const type = String(item?.type || "");
+      const type = String((item as Record<string, unknown> | undefined)?.type || "");
       if (type in counts) {
         counts[type as keyof typeof counts] += 1;
       }
     });
     return counts;
+  };
+
+  const summarizeRefresh = (log: ImportJobLog) => {
+    if (getTaskType(log) !== "source_last_updated_refresh") {
+      return null;
+    }
+    return {
+      refreshed: Number(log.other_data?.refreshed || 0),
+      skipped: Number(log.other_data?.skipped || 0),
+    };
   };
 
   const columns = useMemo<GridColDef<ImportConfig>[]>(
@@ -401,15 +490,35 @@ const ArcgisImportManager = () => {
         valueGetter: (_value: unknown, row: ImportConfig) => getImportedCount(row ?? ({} as ImportConfig)),
       },
       {
-        field: "last_run_at",
+        field: "last_import_run_at",
         headerName: "Last Run",
         minWidth: 190,
-        valueGetter: (_value: unknown, row: ImportConfig) => row?.last_run_at || "",
+        valueGetter: (_value: unknown, row: ImportConfig) => row?.last_import_run_at || "",
         renderCell: (params: GridRenderCellParams<ImportConfig>) => (
           <Typography variant="body2">
-            {formatLocalTimestamp(params.row?.last_run_at ?? null)}
+            {formatLocalTimestamp(params.row?.last_import_run_at ?? null)}
           </Typography>
         ),
+      },
+      {
+        field: "effective_source_last_updated_cron_schedule",
+        headerName: "Update Check Schedule",
+        minWidth: 220,
+        renderCell: (params: GridRenderCellParams<ImportConfig>) => {
+          const overrideCron = params.row?.source_last_updated_cron_schedule || "";
+          const effectiveCron = params.row?.effective_source_last_updated_cron_schedule || "";
+          if (!effectiveCron) {
+            return <Typography variant="body2">-</Typography>;
+          }
+          return (
+            <Box>
+              <Typography variant="body2">{effectiveCron}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                {overrideCron ? "Per-config override" : "Inherited from global"}
+              </Typography>
+            </Box>
+          );
+        },
       },
       {
         field: "datasetCount",
@@ -511,6 +620,13 @@ const ArcgisImportManager = () => {
             </IconButton>
           </span>
         </Tooltip>
+        <Tooltip title="Global update-check settings">
+          <span>
+            <IconButton aria-label="Global update-check settings" onClick={handleOpenSettingsDialog} size="small">
+              <SettingsOutlinedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
         <TextField
           label="Filter"
           value={query}
@@ -548,6 +664,56 @@ const ArcgisImportManager = () => {
         error={error || "Unexpected error"}
       />
 
+      <Dialog open={settingsDialogOpen} onClose={() => setSettingsDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}>
+          <span>ArcGIS Auto Import Settings</span>
+          <Tooltip title="Close">
+            <IconButton aria-label="Close" onClick={() => setSettingsDialogOpen(false)} size="small">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Configure when ArcGIS auto imports should check upstream source_last_updated. Each scheduled run executes the import, but only datasets with a newer upstream source_last_updated are updated; unchanged datasets are skipped. Per-config overrides still take precedence.
+            </Typography>
+            <CronScheduleEditor
+              idPrefix="global-refresh"
+              label="Global Update Check Schedule"
+              presetValue={settingsCronPreset}
+              presets={globalRefreshCronPresets}
+              onPresetChange={handleChangeSettingsCronPreset}
+              customCron={settingsCustomCron}
+              onCustomCronChange={handleChangeSettingsCustomCron}
+              selectHelperText="This schedule controls when ArcGIS auto imports check upstream last updated times. It does not force every dataset to be rewritten on each run."
+              previewLabel="Cron Preview"
+              previewValue={settingsCronPreset === "custom"
+                ? buildCron(settingsCustomCron)
+                : (globalRefreshCronPresets.find((preset) => preset.id === settingsCronPreset)?.cron || "")}
+              summaryText={getCronSummary(
+                settingsCronPreset === "custom"
+                  ? buildCron(settingsCustomCron)
+                  : (globalRefreshCronPresets.find((preset) => preset.id === settingsCronPreset)?.cron || ""),
+                settingsCustomCron,
+                { emptyText: "Disabled. No scheduled ArcGIS update checks will run.", prefix: "Runs" }
+              )}
+            />
+            <Typography variant="caption" color="text.secondary">
+              Last updated: {formatLocalTimestamp(settingsUpdatedAt)}
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+              <Button variant="outlined" onClick={() => setSettingsDialogOpen(false)} disabled={settingsSaving}>
+                Cancel
+              </Button>
+              <Button variant="contained" onClick={handleSaveGlobalRefreshCron} disabled={settingsSaving}>
+                {settingsSaving ? "Saving..." : "Save Settings"}
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="lg" fullWidth>
         <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}>
           <span>Edit Import Config</span>
@@ -561,6 +727,7 @@ const ArcgisImportManager = () => {
           {editTarget ? (
             <ImportPanel
               defaultConfig={{ uuid: editTarget.id, ...editTarget }}
+              globalArcgisRefreshCron={globalRefreshCron}
               onUpdate={() => {
                 setEditDialogOpen(false);
                 load();
@@ -625,7 +792,7 @@ const ArcgisImportManager = () => {
 
       <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}>
-          <span>Last Import Status</span>
+          <span>Import And Refresh Activity</span>
           <Tooltip title="Close">
             <IconButton aria-label="Close" onClick={() => setStatusDialogOpen(false)} size="small">
               <CloseIcon fontSize="small" />
@@ -642,13 +809,13 @@ const ArcgisImportManager = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              View full import status
+              View full activity status
             </a>
           </Typography>
           {statusLoading ? (
             <Typography variant="body2">Loading status logs...</Typography>
           ) : statusLogs.length === 0 ? (
-            <Typography variant="body2">No import logs found.</Typography>
+            <Typography variant="body2">No import or refresh logs found.</Typography>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {statusLogs.map((log) => (
@@ -661,11 +828,17 @@ const ArcgisImportManager = () => {
                     p: 2,
                   }}
                 >
+                  <Typography variant="body2">Type: {getTaskTypeLabel(getTaskType(log))}</Typography>
                   <Typography variant="body2">
                     Run at: {log.run_at ? new Date(log.run_at).toLocaleString() : "-"}
                   </Typography>
                   <Typography variant="body2">Status: {log.has_error ? "Error" : log.has_warning ? "Warning" : "OK"}</Typography>
                   <Typography variant="body2">Log ID: {log.id}</Typography>
+                  {summarizeRefresh(log) ? (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Refreshed: {summarizeRefresh(log)?.refreshed ?? 0}, skipped: {summarizeRefresh(log)?.skipped ?? 0}
+                    </Typography>
+                  ) : null}
                   {summarizeFinished(log) ? (
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       Finished: {summarizeFinished(log)?.created ?? 0} created,{" "}

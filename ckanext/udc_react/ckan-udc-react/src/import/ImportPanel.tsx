@@ -6,8 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { SaveOutlined, PlayArrowOutlined, DeleteForeverOutlined } from '@mui/icons-material';
 import { useApi } from '../api/useApi';
 import { CKANOrganization, ImportLanguageOptions } from '../api/api';
+import CronScheduleEditor from './components/CronScheduleEditor';
 import OrganizationMapper from './mapper/OrganizationMapper';
 import { REACT_PATH } from '../constants';
+import { buildCron, CustomCronField, defaultCustomCron, getCronSummary, normalizeCronSelection, parseCron, resolveCronPreset } from './utils/cron';
 
 export interface ImportPanelProps {
   defaultConfig?: {
@@ -23,6 +25,7 @@ export interface ImportPanelProps {
       org_mapping?: { [k: string]: string };
       delete_previously_imported?: boolean;
       language?: string;
+      source_last_updated_cron_schedule?: string | null;
     };
     cron_schedule?: string;
     platform?: string;
@@ -31,6 +34,7 @@ export interface ImportPanelProps {
   };
   onUpdate: (option?: string) => void;
   organizations: CKANOrganization[];
+  globalArcgisRefreshCron?: string | null;
 }
 
 const supportedPlatform = [
@@ -47,139 +51,23 @@ const cronPresets = [
   { id: "custom", label: "Custom schedule", cron: "" },
 ];
 
-const defaultCustomCron = {
-  minute: ["*"],
-  hour: ["*"],
-  dayOfMonth: ["*"],
-  month: ["*"],
-  dayOfWeek: ["*"],
-};
+const refreshCronPresets = [
+  { id: "inherit", label: "Inherit global/default", cron: "" },
+  { id: "hourly_15", label: "Every hour at minute 15", cron: "15 * * * *" },
+  { id: "daily_2am", label: "Daily at 2:00 AM", cron: "0 2 * * *" },
+  { id: "daily_6am", label: "Daily at 6:00 AM", cron: "0 6 * * *" },
+  { id: "weekdays_6am", label: "Weekdays at 6:00 AM", cron: "0 6 * * 1,2,3,4,5" },
+  { id: "custom", label: "Custom schedule", cron: "" },
+];
 
-const range = (start: number, end: number) =>
-  Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
-
-const dayOfWeekLabels: Record<string, string> = {
-  "0": "Sun",
-  "1": "Mon",
-  "2": "Tue",
-  "3": "Wed",
-  "4": "Thu",
-  "5": "Fri",
-  "6": "Sat",
-};
-
-const monthLabels: Record<string, string> = {
-  "1": "Jan",
-  "2": "Feb",
-  "3": "Mar",
-  "4": "Apr",
-  "5": "May",
-  "6": "Jun",
-  "7": "Jul",
-  "8": "Aug",
-  "9": "Sep",
-  "10": "Oct",
-  "11": "Nov",
-  "12": "Dec",
-};
-
-const customCronOptions = {
-  minute: ["*", ...range(0, 59)],
-  hour: ["*", ...range(0, 23)],
-  dayOfMonth: ["*", ...range(1, 31)],
-  month: ["*", ...range(1, 12)],
-  dayOfWeek: ["*", ...range(0, 6)],
-};
-
-const compactSelection = (values: string[]) => {
-  if (!values.length) {
-    return "*";
-  }
-  if (values.includes("*")) {
-    return "*";
-  }
-  return values.join(",");
-};
-
-const formatSelection = (values: string[], labelMap?: Record<string, string>) => {
-  if (!values.length || values.includes("*")) {
-    return "any";
-  }
-  const labels = labelMap
-    ? values.map((value) => labelMap[value] || value)
-    : values;
-  return labels.join(", ");
-};
-
-const formatTime = (hour: string, minute: string) => {
-  const hourNum = Number(hour);
-  const minuteNum = Number(minute);
-  if (Number.isNaN(hourNum) || Number.isNaN(minuteNum)) {
-    return `${hour}:${minute}`;
-  }
-  const suffix = hourNum >= 12 ? "PM" : "AM";
-  const hour12 = hourNum % 12 === 0 ? 12 : hourNum % 12;
-  return `${hour12}:${String(minuteNum).padStart(2, "0")} ${suffix}`;
-};
-
-const getCronSummary = (cron: string, customCron: typeof defaultCustomCron) => {
+const getRefreshCronSummary = (cron: string, customCron: typeof defaultCustomCron, inheritedCron?: string | null) => {
   if (!cron) {
-    return "No schedule selected yet.";
+    if (inheritedCron) {
+      return `Inherits the global update-check schedule: ${inheritedCron}. This schedule runs the ArcGIS import and only updates datasets whose upstream source_last_updated changed.`;
+    }
+    return "No per-config override. This config will only run on schedule if a global update-check schedule is configured. When it runs, unchanged datasets are skipped based on source_last_updated.";
   }
-
-  const minute = compactSelection(customCron.minute);
-  const hour = compactSelection(customCron.hour);
-  const dayOfMonth = compactSelection(customCron.dayOfMonth);
-  const month = compactSelection(customCron.month);
-  const dayOfWeek = compactSelection(customCron.dayOfWeek);
-
-  const isSingleMinute = !minute.includes(",") && minute !== "*";
-  const isSingleHour = !hour.includes(",") && hour !== "*";
-  const isSingleDayOfMonth = !dayOfMonth.includes(",") && dayOfMonth !== "*";
-  const isSingleMonth = !month.includes(",") && month !== "*";
-  const isWeekday = dayOfWeek === "1,2,3,4,5";
-  const isEveryDay = dayOfWeek === "*" && dayOfMonth === "*" && month === "*";
-
-  if (isSingleMinute && isSingleHour && isWeekday && dayOfMonth === "*" && month === "*") {
-    return `Every weekday at ${formatTime(hour, minute)}.`;
-  }
-  if (isSingleMinute && isSingleHour && isEveryDay) {
-    return `Every day at ${formatTime(hour, minute)}.`;
-  }
-  if (isSingleMinute && isSingleHour && isSingleDayOfMonth && month === "*" && dayOfWeek === "*") {
-    return `Every month on day ${dayOfMonth} at ${formatTime(hour, minute)}.`;
-  }
-  if (isSingleMinute && isSingleHour && isSingleDayOfMonth && isSingleMonth && dayOfWeek === "*") {
-    const monthLabel = monthLabels[month] || month;
-    return `Every year on ${monthLabel} ${dayOfMonth} at ${formatTime(hour, minute)}.`;
-  }
-
-  return `Runs at minute ${formatSelection(customCron.minute)}, hour ${formatSelection(customCron.hour)}, day of month ${formatSelection(customCron.dayOfMonth)}, month ${formatSelection(customCron.month, monthLabels)}, day of week ${formatSelection(customCron.dayOfWeek, dayOfWeekLabels)}.`;
-};
-
-const buildCron = (customCron: typeof defaultCustomCron) =>
-  `${compactSelection(customCron.minute)} ${compactSelection(customCron.hour)} ${compactSelection(customCron.dayOfMonth)} ${compactSelection(customCron.month)} ${compactSelection(customCron.dayOfWeek)}`.trim();
-
-const parseCron = (cron: string) => {
-  if (!cron) {
-    return { ...defaultCustomCron };
-  }
-  const parts = cron.trim().split(/\s+/);
-  if (parts.length < 5) {
-    return { ...defaultCustomCron };
-  }
-  return {
-    minute: (parts[0] || "*").split(","),
-    hour: (parts[1] || "*").split(","),
-    dayOfMonth: (parts[2] || "*").split(","),
-    month: (parts[3] || "*").split(","),
-    dayOfWeek: (parts[4] || "*").split(","),
-  };
-};
-
-const resolveCronPreset = (cron: string) => {
-  const preset = cronPresets.find((item) => item.cron === cron);
-  return preset ? preset.id : "custom";
+  return `${getCronSummary(cron, customCron)} The run checks upstream source_last_updated and skips datasets that have not changed.`;
 };
 
 export default function ImportPanel(props: ImportPanelProps) {
@@ -201,8 +89,14 @@ export default function ImportPanel(props: ImportPanelProps) {
   const [languageOptions, setLanguageOptions] = useState<ImportLanguageOptions | null>(null);
 
   const [loading, setLoading] = useState({ save: false, saveAndRun: false, delete: false });
-  const [cronPreset, setCronPreset] = useState(() => resolveCronPreset(importConfig.cron_schedule));
+  const [cronPreset, setCronPreset] = useState(() => resolveCronPreset(importConfig.cron_schedule, cronPresets));
   const [customCron, setCustomCron] = useState(() => parseCron(importConfig.cron_schedule));
+  const [refreshCronPreset, setRefreshCronPreset] = useState(() =>
+    resolveCronPreset(importConfig.other_config.source_last_updated_cron_schedule || "", refreshCronPresets)
+  );
+  const [refreshCustomCron, setRefreshCustomCron] = useState(() =>
+    parseCron(importConfig.other_config.source_last_updated_cron_schedule || "")
+  );
   const [languageLoading, setLanguageLoading] = useState(false);
 
   useEffect(() => {
@@ -210,7 +104,14 @@ export default function ImportPanel(props: ImportPanelProps) {
   }, [props.defaultConfig?.uuid]);
 
   useEffect(() => {
-    const preset = resolveCronPreset(importConfig.cron_schedule);
+    const currentCron = importConfig.other_config.source_last_updated_cron_schedule || "";
+    const preset = resolveCronPreset(currentCron, refreshCronPresets);
+    setRefreshCronPreset(preset);
+    setRefreshCustomCron(parseCron(currentCron));
+  }, [importConfig.other_config.source_last_updated_cron_schedule]);
+
+  useEffect(() => {
+    const preset = resolveCronPreset(importConfig.cron_schedule, cronPresets);
     setCronPreset(preset);
     if (preset === "custom") {
       setCustomCron(parseCron(importConfig.cron_schedule));
@@ -383,8 +284,7 @@ class MyImport(CKANBasedImport):
     }));
   }
 
-  const handleChangeCronPreset = (e: any) => {
-    const value = e.target.value as string;
+  const handleChangeCronPreset = (value: string) => {
     setCronPreset(value);
     if (value === "custom") {
       const parsed = parseCron(importConfig.cron_schedule);
@@ -404,12 +304,8 @@ class MyImport(CKANBasedImport):
     }));
   };
 
-  const handleChangeCustomCron = (field: keyof typeof defaultCustomCron) => (e: any) => {
-    const value = (e.target.value as string[]) || [];
-    const cleaned = value.includes("*") && value.length > 1
-      ? value.filter((item) => item !== "*")
-      : value;
-    const normalized = cleaned.length ? cleaned : ["*"];
+  const handleChangeCustomCron = (field: CustomCronField, value: string[]) => {
+    const normalized = normalizeCronSelection(value);
     const next = {
       ...customCron,
       [field]: normalized,
@@ -421,8 +317,49 @@ class MyImport(CKANBasedImport):
     }));
   };
 
+  const handleChangeRefreshCronPreset = (value: string) => {
+    setRefreshCronPreset(value);
+    if (value === "custom") {
+      const parsed = parseCron(importConfig.other_config.source_last_updated_cron_schedule || "");
+      setRefreshCustomCron(parsed);
+      if (importConfig.other_config.source_last_updated_cron_schedule) {
+        setImportConfig((initials) => ({
+          ...initials,
+          other_config: {
+            ...initials.other_config,
+            source_last_updated_cron_schedule: buildCron(parsed),
+          },
+        }));
+      }
+      return;
+    }
+    const selectedPreset = refreshCronPresets.find((preset) => preset.id === value);
+    setImportConfig((initials) => ({
+      ...initials,
+      other_config: {
+        ...initials.other_config,
+        source_last_updated_cron_schedule: selectedPreset ? selectedPreset.cron : "",
+      },
+    }));
+  };
+
+  const handleChangeRefreshCustomCron = (field: CustomCronField, value: string[]) => {
+    const normalized = normalizeCronSelection(value);
+    const next = {
+      ...refreshCustomCron,
+      [field]: normalized,
+    };
+    setRefreshCustomCron(next);
+    setImportConfig((initials) => ({
+      ...initials,
+      other_config: {
+        ...initials.other_config,
+        source_last_updated_cron_schedule: buildCron(next),
+      },
+    }));
+  };
+
   const orgMappingComponent = useMemo(() => {
-    console.log(importConfig.other_config)
     return <OrganizationMapper defaultValue={importConfig.other_config.org_mapping} externalBaseApi={importConfig.other_config.base_api!} onChange={handleChangeOtherConfig('org_mapping')} />
   }, [importConfig.other_config.base_api]);
 
@@ -488,10 +425,40 @@ class MyImport(CKANBasedImport):
               </Grid>
             )}
 
+            {importConfig.platform === 'arcgis' && (
+              <Grid xs={12} md={6}>
+                <CronScheduleEditor
+                  idPrefix="refresh"
+                  label="Update Check Schedule"
+                  presetValue={refreshCronPreset}
+                  presets={refreshCronPresets}
+                  onPresetChange={handleChangeRefreshCronPreset}
+                  customCron={refreshCustomCron}
+                  onCustomCronChange={handleChangeRefreshCustomCron}
+                  selectHelperText={props.globalArcgisRefreshCron
+                    ? `This per-config schedule overrides the global update-check schedule: ${props.globalArcgisRefreshCron}. Each scheduled run checks upstream source_last_updated and only updates datasets that changed.`
+                    : "Set when this ArcGIS auto import should check upstream source_last_updated. Each scheduled run only updates datasets that changed; unchanged datasets are skipped."}
+                  previewLabel="Update Check Schedule Preview"
+                  previewValue={
+                    refreshCronPreset === 'custom'
+                      ? buildCron(refreshCustomCron)
+                      : (refreshCronPresets.find((preset) => preset.id === refreshCronPreset)?.cron || props.globalArcgisRefreshCron || '')
+                  }
+                  summaryText={getRefreshCronSummary(
+                    importConfig.other_config.source_last_updated_cron_schedule || '',
+                    refreshCustomCron,
+                    props.globalArcgisRefreshCron
+                  )}
+                  customGridColumns="repeat(3, minmax(0, 1fr))"
+                  dayOfWeekFullWidth={false}
+                />
+              </Grid>
+            )}
+
             <Grid xs={12} sx={{ mt: 2 }}>
               <FormControl fullWidth variant="standard">
                 <InputLabel shrink sx={{ fontSize: "22px", fontWeight: 600, mb: 10 }}>
-                  Delete previously imported packages
+                  Delete previously imported packages and Run full import <Box component="span" sx={{ fontWeight: 700 }}>next time</Box>
                 </InputLabel>
                 <Box sx={{ pt: 3 }}>
                   <Switch color="primary" checked={importConfig.other_config.delete_previously_imported} onChange={handleSwitchChangeDelete} />
@@ -556,145 +523,29 @@ class MyImport(CKANBasedImport):
           </>
         )}
 
-        <Grid xs={12}>
-          <FormControl fullWidth sx={{ mt: 1 }} variant="outlined">
-            <InputLabel id="cron-preset-label" shrink>
-              Cron Schedule
-            </InputLabel>
-            <Select
-              labelId="cron-preset-label"
-              value={cronPreset}
-              label="Cron Schedule"
-              onChange={handleChangeCronPreset}
-            >
-              {cronPresets.map((preset) => (
-                <MenuItem key={preset.id} value={preset.id}>
-                  {preset.label}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>
-              Choose a preset or customize with dropdowns.
-            </FormHelperText>
-          </FormControl>
-
-          {cronPreset === "custom" && (
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid xs={12} sm={6} md="auto">
-                <FormControl fullWidth variant="outlined" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cron-minute-label" shrink>
-                    Minute
-                  </InputLabel>
-                  <Select
-                    labelId="cron-minute-label"
-                    value={customCron.minute}
-                    label="Minute"
-                    onChange={handleChangeCustomCron("minute")}
-                    multiple
-                  >
-                    {customCronOptions.minute.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} sm={6} md="auto">
-                <FormControl fullWidth variant="outlined" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cron-hour-label" shrink>
-                    Hour
-                  </InputLabel>
-                  <Select
-                    labelId="cron-hour-label"
-                    value={customCron.hour}
-                    label="Hour"
-                    onChange={handleChangeCustomCron("hour")}
-                    multiple
-                  >
-                    {customCronOptions.hour.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} sm={6} md="auto">
-                <FormControl fullWidth variant="outlined" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cron-day-month-label" shrink>
-                    Day of Month
-                  </InputLabel>
-                  <Select
-                    labelId="cron-day-month-label"
-                    value={customCron.dayOfMonth}
-                    label="Day of Month"
-                    onChange={handleChangeCustomCron("dayOfMonth")}
-                    multiple
-                  >
-                    {customCronOptions.dayOfMonth.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} sm={6} md="auto">
-                <FormControl fullWidth variant="outlined" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cron-month-label" shrink>
-                    Month
-                  </InputLabel>
-                  <Select
-                    labelId="cron-month-label"
-                    value={customCron.month}
-                    label="Month"
-                    onChange={handleChangeCustomCron("month")}
-                    multiple
-                  >
-                    {customCronOptions.month.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {monthLabels[value] || value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} sm={6} md="auto">
-                <FormControl fullWidth variant="outlined" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cron-day-week-label" shrink>
-                    Day of Week
-                  </InputLabel>
-                  <Select
-                    labelId="cron-day-week-label"
-                    value={customCron.dayOfWeek}
-                    label="Day of Week"
-                    onChange={handleChangeCustomCron("dayOfWeek")}
-                    multiple
-                  >
-                    {customCronOptions.dayOfWeek.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {dayOfWeekLabels[value] || value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} md={6}>
-                <TextField
-                  label="Cron Preview"
-                  value={buildCron(customCron)}
-                  fullWidth
-                  InputProps={{ readOnly: true }}
-                />
-                <FormHelperText sx={{ mt: 1 }}>
-                  {getCronSummary(importConfig.cron_schedule, customCron)}
-                </FormHelperText>
-              </Grid>
-            </Grid>
-          )}
-
+        {importConfig.platform !== 'arcgis' && (
           <Grid xs={12}>
+            <CronScheduleEditor
+              idPrefix="cron"
+              label="Cron Schedule"
+              presetValue={cronPreset}
+              presets={cronPresets}
+              onPresetChange={handleChangeCronPreset}
+              customCron={customCron}
+              onCustomCronChange={handleChangeCustomCron}
+              selectHelperText="Choose a preset or customize with dropdowns."
+              previewLabel="Cron Preview"
+              previewValue={cronPreset === "custom"
+                ? buildCron(customCron)
+                : (cronPresets.find((preset) => preset.id === cronPreset)?.cron || "")}
+              summaryText={getCronSummary(importConfig.cron_schedule, customCron)}
+              customGridColumns="repeat(5, minmax(160px, 1fr))"
+              dayOfWeekFullWidth={false}
+            />
+          </Grid>
+        )}
+
+        <Grid xs={12}>
             <TextField
               label="Notes"
               value={importConfig.notes}
@@ -723,8 +574,6 @@ class MyImport(CKANBasedImport):
               </Box>
             </FormControl>
           </Grid>
-
-        </Grid>
 
         <Grid xs={12} sx={{ mt: 2 }}>
           <FormControl fullWidth variant="standard" disabled>

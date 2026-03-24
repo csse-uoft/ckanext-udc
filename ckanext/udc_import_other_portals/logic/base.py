@@ -235,6 +235,11 @@ class BaseImport:
             "arcgis": "ArcGIS",
         }.get(platform, platform.upper() if platform else "")
 
+    def should_delete_previously_imported_for_run(self) -> bool:
+        """Return whether this import run should purge prior imports before processing."""
+        runtime_attrs = getattr(self.import_config, "__dict__", {}) or {}
+        return bool(runtime_attrs.get("_delete_previously_imported_for_run", False))
+
     def map_to_cudc_package(self, src: dict, target: dict):
         """
         Map source package to cudc package.
