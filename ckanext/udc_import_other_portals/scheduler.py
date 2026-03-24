@@ -1,6 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
+from typing import Optional
 
 import ckan.lib.jobs as jobs
 import ckan.model as model
@@ -19,7 +20,7 @@ SOURCE_LAST_UPDATED_CRON_KEY = "source_last_updated_cron_schedule"
 ARCGIS_AUTO_IMPORT_FLAG = "auto_arcgis"
 
 
-def _start_scheduled_job(import_config_id: str, run_by: str, task_type: str) -> str | None:
+def _start_scheduled_job(import_config_id: str, run_by: str, task_type: str) -> Optional[str]:
     """Create the shared run-log record used by scheduled import tasks."""
     # Full imports and lightweight refreshes both use the same run-log model.
     config = CUDCImportConfig.get(import_config_id)

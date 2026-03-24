@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, cast
+from typing import Any, List, Dict, Optional, cast
 from datetime import datetime
 
 from ckanext.udc_import_other_portals.logger import ImportLogger
@@ -32,7 +32,7 @@ def _build_context_for_user(user_id: str) -> Context:
     )
 
 
-def _source_last_updated_iso(attributes: Dict[str, Any]) -> str | None:
+def _source_last_updated_iso(attributes: Dict[str, Any]) -> Optional[str]:
     """Convert upstream ArcGIS modified fields to the ISO format used in extras."""
     # ArcGIS uses either itemModified or modified depending on item type.
     modified_ms = (attributes or {}).get("itemModified") or (attributes or {}).get("modified")
