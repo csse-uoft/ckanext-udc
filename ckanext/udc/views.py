@@ -188,9 +188,12 @@ def _get_search_details() -> dict[str, Any]:
     ckan_fields_exact = ["tags", "organization", "license_id"]
 
     for (param, value) in request.args.items(multi=True):
+        # Keep the primary query and internal params out of custom facet parsing.
+        if param in [u'q', u'page', u'sort'] or not len(value) or param.startswith(u'_'):
+            continue
+
         # Ignore internal parameters
-        if param not in [u'q', u'page', u'sort'] and len(value) and not param.startswith(u'_'):
-            print(chalk.green(f"Param: {param}, Value: {value}"))
+        print(chalk.green(f"Param: {param}, Value: {value}"))
             
         # Toggle logic
         if param.startswith('filter-logic-'):
