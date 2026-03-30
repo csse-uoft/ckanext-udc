@@ -47,11 +47,16 @@ To temporary patch the CKAN configuration for the duration of a test you can use
     def test_some_action():
         pass
 """
+from pathlib import Path
+from types import SimpleNamespace
+
 import pytest
 
 import ckan.plugins.toolkit as tk
 
 import ckanext.udc.plugin as plugin
+from ckanext.udc.solr import index as udc_index
+from ckanext.udc.solr import solr as udc_solr
 from ckanext.udc.i18n import (
     udc_json_load,
     udc_lang_object,
@@ -60,7 +65,9 @@ from ckanext.udc.i18n import (
 
 
 @pytest.fixture()
-def udc_plugin():
+def udc_plugin(monkeypatch):
+    monkeypatch.setattr(plugin, "update_solr_maturity_model_fields", lambda *_args, **_kwargs: None)
+
     instance = plugin.UdcPlugin()
     # Force a clean slate for each test since the plugin stores state on the instance
     instance.disable_graphdb = True
@@ -152,3 +159,105 @@ def test_modify_package_schema_applies_expected_validators(udc_plugin):
 
     number_pipeline = schema["date_field"]
     assert number_pipeline == [ignore_missing, convert_to_extras]
+
+
+def test_reload_config_supports_portal_type_ckan_field(udc_plugin):
+    config = {
+        "maturity_model": [
+            {
+                "title": "Level 1",
+                "name": "lvl1",
+                "fields": [
+                    {
+                        "ckanField": "portal_type",
+                        "label": {"en": "Portal type", "fr": "Type de portail"},
+                        "type": "single_select",
+                        "options": [
+                            {"value": "CKAN", "text": "CKAN"},
+                            {"value": "ArcGIS", "text": "ArcGIS"},
+                        ],
+                    }
+                ],
+            }
+        ],
+        "mappings": {},
+        "preload_ontologies": {},
+    }
+
+    udc_plugin.reload_config(config)
+
+    assert udc_plugin.facet_titles["portal_type"] == "Portal type"
+    assert udc_plugin.dropdown_options["portal_type"] == {
+        "CKAN": "CKAN",
+        "ArcGIS": "ArcGIS",
+    }
+
+
+def test_ckan_fields_template_supports_portal_type_macro():
+    template_path = Path(__file__).resolve().parents[1] / "templates" / "package" / "macros" / "ckan_fields.html"
+    content = template_path.read_text()
+
+    assert "{% macro portal_type(data, errors, short_description=\"\", long_description=\"\") %}" in content
+    assert "'portal_type'" in content
+
+
+def test_update_solr_fields_includes_portal_type(monkeypatch):
+    added_fields = []
+
+    monkeypatch.setattr(udc_solr, "get_udc_langs", lambda: ["en", "fr"])
+    monkeypatch.setattr(udc_solr, "ensure_language_dynamic_fields", lambda langs: None)
+    monkeypatch.setattr(udc_solr, "get_extras_fields", lambda: {})
+    monkeypatch.setattr(udc_solr, "get_fields", lambda: {"tags_ngram": {}})
+    monkeypatch.setattr(udc_solr, "add_copy_field", lambda *args, **kwargs: None)
+    monkeypatch.setattr(udc_solr, "delete_copy_field", lambda *args, **kwargs: None)
+    monkeypatch.setattr(udc_solr, "delete_field", lambda *args, **kwargs: None)
+    monkeypatch.setattr(udc_solr, "add_field", lambda *args, **kwargs: added_fields.append((args, kwargs)))
+
+    udc_solr.update_solr_maturity_model_fields([
+        {
+            "title": "Level 1",
+            "name": "lvl1",
+            "fields": [
+                {
+                    "ckanField": "portal_type",
+                    "label": {"en": "Portal type"},
+                    "type": "single_select",
+                    "options": [
+                        {"value": "ArcGIS", "text": "ArcGIS"},
+                        {"value": "CKAN", "text": "CKAN"},
+                    ],
+                }
+            ],
+        }
+    ])
+
+    field_names = [call[0][0] for call in added_fields]
+    assert "extras_portal_type" in field_names
+
+    portal_type_call = next(call for call in added_fields if call[0][0] == "extras_portal_type")
+    assert portal_type_call[0][1] == "string"
+    assert portal_type_call[0][4] is True
+
+
+def test_before_dataset_index_handles_plain_text_values_for_text_fields(monkeypatch):
+    mock_plugin = SimpleNamespace(
+        multiple_select_fields=[],
+        text_fields=["unique_identifier"],
+    )
+
+    monkeypatch.setattr(udc_index.plugins, "get_plugin", lambda _name: mock_plugin)
+    monkeypatch.setattr(udc_index, "get_udc_langs", lambda: ["en", "fr"])
+
+    indexed = udc_index.before_dataset_index(
+        {
+            "id": "pkg-1",
+            "name": "example-dataset",
+            "title": "Example Dataset",
+            "notes": "Example notes",
+            "unique_identifier": "10",
+        }
+    )
+
+    assert indexed["unique_identifier_en_txt"] == "10"
+    assert indexed["unique_identifier_en_f"] == ["10"]
+    assert "unique_identifier_fr_txt" not in indexed

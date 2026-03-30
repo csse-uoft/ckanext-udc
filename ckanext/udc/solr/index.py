@@ -160,7 +160,13 @@ def before_dataset_index(pkg_dict: dict[str, Any]) -> dict[str, Any]:
         raw = index.get(name)
         if raw is None and f"extras_{name}" in index:
             raw = index.get(f"extras_{name}")
-        obj = _jsonish(raw) or {}
+        parsed = _jsonish(raw)
+        if isinstance(parsed, dict):
+            obj = parsed
+        elif isinstance(raw, str) and raw.strip():
+            obj = {default_lang: raw}
+        else:
+            obj = {}
         # Prevent JSON from going into 'extras_*' (default schema would copy to 'text')
         index.pop(f"extras_{name}", None)
 
