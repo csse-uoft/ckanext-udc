@@ -127,6 +127,9 @@ def update_solr_maturity_model_fields(maturity_model: list):
     new_fields = {}
     managed_special_fields: set[str] = set()
     special_field_status: dict[str, str] = {}
+    replaced_fields: list[str] = []
+    deleted_fields: list[str] = []
+    unchanged_fields: list[str] = []
     for level in maturity_model:
         for field in level.get("fields", []):
             name, ckan_field = _resolve_extras_field_name(field)
@@ -143,6 +146,12 @@ def update_solr_maturity_model_fields(maturity_model: list):
                 continue
             new_fields[key] = field_definition
 
+    log.info(
+        "Config-derived explicit extras fields (%s): %s",
+        len(new_fields),
+        ", ".join(sorted(new_fields)),
+    )
+
     # 3) Reconcile against existing 'extras_*' fields in Solr
     current_fields = get_extras_fields()
 
@@ -151,6 +160,7 @@ def update_solr_maturity_model_fields(maturity_model: list):
         if current_field_name not in new_fields:
             # If we used to index a text field here, drop it now (we're multilingual)
             delete_field(current_field_name)
+            deleted_fields.append(current_field_name)
         else:
             desired = new_fields[current_field_name]
             if (
@@ -169,10 +179,13 @@ def update_solr_maturity_model_fields(maturity_model: list):
                     desired["multiValued"],
                     desired.get("docValues", False),
                 )
+                replaced_fields.append(current_field_name)
                 if current_field_name in managed_special_fields:
                     special_field_status[current_field_name] = "replaced"
-            elif current_field_name in managed_special_fields:
-                special_field_status[current_field_name] = "unchanged"
+            else:
+                unchanged_fields.append(current_field_name)
+                if current_field_name in managed_special_fields:
+                    special_field_status[current_field_name] = "unchanged"
             # remove from "to add"
             new_fields.pop(current_field_name)
 
@@ -194,6 +207,23 @@ def update_solr_maturity_model_fields(maturity_model: list):
         log.info("No new 'extras_*' fields to add.")
     else:
         log.info(f"Added {len(pending_new_fields)} new 'extras_*' fields.")
+
+    log.info(
+        "extras schema reconcile summary: desired=%s current=%s added=%s replaced=%s deleted=%s unchanged=%s",
+        len(new_fields) + len(replaced_fields) + len(unchanged_fields),
+        len(current_fields),
+        len(pending_new_fields),
+        len(replaced_fields),
+        len(deleted_fields),
+        len(unchanged_fields),
+    )
+
+    if pending_new_fields:
+        log.info("Added extras fields: %s", ", ".join(sorted(pending_new_fields)))
+    if replaced_fields:
+        log.info("Replaced extras fields: %s", ", ".join(sorted(replaced_fields)))
+    if deleted_fields:
+        log.info("Deleted obsolete extras fields: %s", ", ".join(sorted(deleted_fields)))
 
     for special_field in sorted(managed_special_fields):
         status = special_field_status.get(special_field, "missing-from-config")
