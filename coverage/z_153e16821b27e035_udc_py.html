@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_94c817f248c88bdb___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.7.1">coverage.py v7.7.1</a>,
-            created at 2026-03-30 19:41 +0000
+            created at 2026-03-30 21:43 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -302,11 +302,11 @@
     <p class="pln"><span class="n"><a id="t220" href="#t220">220</a></span><span class="t">    <span class="str">"--fix"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t221" href="#t221">221</a></span><span class="t">    <span class="nam">is_flag</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t222" href="#t222">222</a></span><span class="t">    <span class="nam">default</span><span class="op">=</span><span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">    <span class="nam">help</span><span class="op">=</span><span class="str">"Normalize fixable localized number-field values in place."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">    <span class="nam">help</span><span class="op">=</span><span class="str">"Normalize fixable number-field values in place."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t225" href="#t225">225</a></span><span class="t"><span class="key">def</span> <span class="nam">migrate_number_fields</span><span class="op">(</span><span class="nam">fix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t"><span class="str">    Check all datasets/catalogues for malformed number extras.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t"><span class="str">    Check all non-deleted datasets/catalogues for malformed number extras.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t228" href="#t228">228</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t229" href="#t229">229</a></span><span class="t">    <span class="nam">udc_config</span> <span class="op">=</span> <span class="nam">_load_udc_config</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">    <span class="nam">number_fields</span> <span class="op">=</span> <span class="nam">_get_number_field_names</span><span class="op">(</span><span class="nam">udc_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -317,7 +317,7 @@
     <p class="pln"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">    <span class="nam">packages</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">        <span class="nam">model</span><span class="op">.</span><span class="nam">Session</span><span class="op">.</span><span class="nam">query</span><span class="op">(</span><span class="nam">model</span><span class="op">.</span><span class="nam">Package</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">        <span class="op">.</span><span class="nam">filter</span><span class="op">(</span><span class="nam">model</span><span class="op">.</span><span class="nam">Package</span><span class="op">.</span><span class="nam">state</span> <span class="op">==</span> <span class="str">"active"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">        <span class="op">.</span><span class="nam">filter</span><span class="op">(</span><span class="nam">model</span><span class="op">.</span><span class="nam">Package</span><span class="op">.</span><span class="nam">state</span> <span class="op">!=</span> <span class="str">"deleted"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t239" href="#t239">239</a></span><span class="t">        <span class="op">.</span><span class="nam">filter</span><span class="op">(</span><span class="nam">model</span><span class="op">.</span><span class="nam">Package</span><span class="op">.</span><span class="nam">type</span><span class="op">.</span><span class="nam">in_</span><span class="op">(</span><span class="op">[</span><span class="str">"catalogue"</span><span class="op">,</span> <span class="str">"dataset"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t240" href="#t240">240</a></span><span class="t">        <span class="op">.</span><span class="nam">yield_per</span><span class="op">(</span><span class="num">100</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t241" href="#t241">241</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -345,7 +345,7 @@
     <p class="pln"><span class="n"><a id="t263" href="#t263">263</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t264" href="#t264">264</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t265" href="#t265">265</a></span><span class="t">    <span class="key">if</span> <span class="nam">stats</span><span class="op">[</span><span class="str">"issues_found"</span><span class="op">]</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">fix</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">        <span class="nam">click</span><span class="op">.</span><span class="nam">echo</span><span class="op">(</span><span class="str">"Dry run only. Rerun with --fix to normalize the fixable localized values."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">        <span class="nam">click</span><span class="op">.</span><span class="nam">echo</span><span class="op">(</span><span class="str">"Dry run only. Rerun with --fix to normalize the fixable values."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t"><span class="op">@</span><span class="nam">udc</span><span class="op">.</span><span class="nam">command</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t"><span class="key">def</span> <span class="nam">initdb</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -429,7 +429,7 @@
             <a class="nav" href="z_94c817f248c88bdb___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.7.1">coverage.py v7.7.1</a>,
-            created at 2026-03-30 19:41 +0000
+            created at 2026-03-30 21:43 +0000
         </p>
     </div>
 </footer>
