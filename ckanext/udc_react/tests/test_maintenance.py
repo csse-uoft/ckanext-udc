@@ -54,3 +54,13 @@ def test_should_render_maintenance_only_for_non_exempt_html_pages():
         method="GET",
         accept_header="text/html,application/xhtml+xml",
     ) is False
+
+
+def test_should_not_render_maintenance_for_admin_users():
+    assert should_render_maintenance(
+        path="/dataset/example-dataset",
+        enabled=True,
+        method="GET",
+        accept_header="text/html,application/xhtml+xml",
+        user_is_admin=True,
+    ) is False

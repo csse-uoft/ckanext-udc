@@ -52,8 +52,12 @@ def should_render_maintenance(
     enabled: bool,
     method: str = "GET",
     accept_header: Optional[str] = None,
+    user_is_admin: bool = False,
 ) -> bool:
     if not enabled:
+        return False
+
+    if user_is_admin:
         return False
 
     if (method or "GET").upper() not in {"GET", "HEAD"}:

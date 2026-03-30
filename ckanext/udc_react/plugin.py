@@ -28,6 +28,13 @@ from ckanext.udc_react.maintenance import (
 
 log = logging.getLogger(__name__)
 
+
+def _current_request_user_is_admin() -> bool:
+    sysadmin = getattr(tk.current_user, "sysadmin", False)
+    if isinstance(sysadmin, str):
+        return sysadmin.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(sysadmin)
+
 @tk.blanket.actions(_action.get_actions)
 class UdcReactPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
@@ -74,6 +81,7 @@ class UdcReactPlugin(plugins.SingletonPlugin):
                 enabled=enabled,
                 method=request.method,
                 accept_header=request.headers.get("Accept"),
+                user_is_admin=_current_request_user_is_admin(),
             ):
                 return None
 
