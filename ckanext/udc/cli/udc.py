@@ -1,16 +1,190 @@
 import click
 import ckan.model as model
+import json
 import logging
 from importlib import import_module
 import os
 import polib
-from ckan.common import config
+from pathlib import Path
+from typing import Any, Callable, Iterable
+
 from ckan.lib.i18n import build_js_translations, get_ckan_i18n_dir
 
 
 @click.group(short_help=u"UDC commands.")
 def udc():
     pass
+
+
+def _load_udc_config() -> dict[str, Any]:
+    existing_config = model.system_info.get_system_info("ckanext.udc.config")
+    if existing_config:
+        return json.loads(existing_config)
+
+    config_path = Path(__file__).resolve().parents[1] / "config.example.json"
+    with config_path.open("r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _get_number_field_names(udc_config: dict[str, Any]) -> list[str]:
+    fields: list[str] = []
+    seen: set[str] = set()
+
+    for level in udc_config.get("maturity_model", []):
+        for field in level.get("fields", []):
+            if field.get("type") != "number":
+                continue
+            name = field.get("name")
+            if not name or name in seen:
+                continue
+            fields.append(name)
+            seen.add(name)
+
+    return fields
+
+
+def _normalize_scalar_number(value: Any) -> str | None:
+    if value is None:
+        return None
+
+    if isinstance(value, bool):
+        return None
+
+    if isinstance(value, (int, float)):
+        text = str(value)
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+    else:
+        return None
+
+    try:
+        float(text)
+    except (TypeError, ValueError):
+        return None
+
+    return text
+
+
+def _parse_jsonish(value: Any) -> Any:
+    if isinstance(value, (dict, list, int, float)):
+        return value
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip()
+    if not text:
+        return None
+
+    try:
+        return json.loads(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_localized_number(value: Any) -> str | None:
+    parsed = _parse_jsonish(value)
+    if not isinstance(parsed, dict):
+        return None
+
+    candidates: list[str] = []
+    for localized_value in parsed.values():
+        if localized_value in (None, ""):
+            continue
+        normalized = _normalize_scalar_number(localized_value)
+        if normalized is None:
+            return None
+        candidates.append(normalized)
+
+    if not candidates:
+        return None
+
+    if len(set(candidates)) == 1:
+        return candidates[0]
+
+    return None
+
+
+def _inspect_number_field_value(value: Any) -> dict[str, Any]:
+    scalar_value = _normalize_scalar_number(value)
+    if scalar_value is not None:
+        return {"status": "ok", "normalized": scalar_value}
+
+    if value in (None, ""):
+        return {"status": "empty", "normalized": None}
+
+    normalized_localized = _normalize_localized_number(value)
+    if normalized_localized is not None:
+        return {
+            "status": "fixable_localized",
+            "normalized": normalized_localized,
+        }
+
+    parsed = _parse_jsonish(value)
+    if isinstance(parsed, dict):
+        return {"status": "invalid_localized", "normalized": None}
+
+    return {"status": "invalid", "normalized": None}
+
+
+def _process_number_field_migration(
+    packages: Iterable[Any],
+    number_fields: list[str],
+    fix: bool = False,
+    echo: Callable[[str], None] | None = None,
+) -> dict[str, int]:
+    emit = echo or (lambda _message: None)
+    stats = {
+        "packages_scanned": 0,
+        "packages_with_issues": 0,
+        "issues_found": 0,
+        "fixable": 0,
+        "fixed": 0,
+        "invalid": 0,
+    }
+
+    for package in packages:
+        stats["packages_scanned"] += 1
+        package_has_issue = False
+
+        for field in number_fields:
+            raw_value = package.extras.get(field)
+            inspection = _inspect_number_field_value(raw_value)
+            status = inspection["status"]
+
+            if status in {"ok", "empty"}:
+                continue
+
+            package_has_issue = True
+            stats["issues_found"] += 1
+            package_id = getattr(package, "id", "<unknown>")
+            package_name = getattr(package, "name", package_id)
+
+            if status == "fixable_localized":
+                normalized = inspection["normalized"]
+                stats["fixable"] += 1
+                if fix:
+                    package.extras[field] = normalized
+                    stats["fixed"] += 1
+                    emit(
+                        f'Fix package {package_id} ({package_name}) field "{field}": {raw_value!r} -> {normalized!r}'
+                    )
+                else:
+                    emit(
+                        f'Would fix package {package_id} ({package_name}) field "{field}": {raw_value!r} -> {normalized!r}'
+                    )
+                continue
+
+            stats["invalid"] += 1
+            emit(
+                f'Invalid value on package {package_id} ({package_name}) field "{field}": {raw_value!r}'
+            )
+
+        if package_has_issue:
+            stats["packages_with_issues"] += 1
+
+    return stats
 
 @udc.command()
 def move_to_catalogues():
@@ -32,6 +206,57 @@ def move_to_catalogues():
     else:
         model.repo.commit_and_remove()
         click.echo("Done. Please restart the CKAN instance!")
+
+
+@udc.command()
+@click.option(
+    "--fix",
+    is_flag=True,
+    default=False,
+    help="Normalize fixable localized number-field values in place.",
+)
+def migrate_number_fields(fix):
+    """
+    Check all datasets/catalogues for malformed number extras.
+    """
+    udc_config = _load_udc_config()
+    number_fields = _get_number_field_names(udc_config)
+
+    if not number_fields:
+        click.echo("No number fields found in UDC config.")
+        return
+
+    packages = (
+        model.Session.query(model.Package)
+        .filter(model.Package.state == "active")
+        .filter(model.Package.type.in_(["catalogue", "dataset"]))
+        .yield_per(100)
+    )
+
+    click.echo(
+        "Checking number fields: " + ", ".join(number_fields)
+    )
+
+    stats = _process_number_field_migration(packages, number_fields, fix=fix, echo=click.echo)
+
+    if fix and stats["fixed"]:
+        model.repo.commit_and_remove()
+        click.echo(
+            "Applied fixes in the database. Rebuild the search index before retrying indexing."
+        )
+
+    click.echo(
+        "Summary: "
+        f'packages_scanned={stats["packages_scanned"]} '
+        f'packages_with_issues={stats["packages_with_issues"]} '
+        f'issues_found={stats["issues_found"]} '
+        f'fixable={stats["fixable"]} '
+        f'fixed={stats["fixed"]} '
+        f'invalid={stats["invalid"]}'
+    )
+
+    if stats["issues_found"] and not fix:
+        click.echo("Dry run only. Rerun with --fix to normalize the fixable localized values.")
 
 @udc.command()
 def initdb():
