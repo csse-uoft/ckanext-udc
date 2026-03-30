@@ -161,3 +161,33 @@ def test_process_number_field_migration_fix_updates_scalar_values_with_thousands
     assert messages == [
         'Fix package pkg-1 (housing-data) field "number_of_cells": \'10,556\' -> \'10556\''
     ]
+
+
+def test_process_number_field_migration_includes_draft_packages_when_provided():
+    package = SimpleNamespace(
+        id="pkg-draft-1",
+        name="draft-housing-data",
+        state="draft",
+        extras={"number_of_cells": "254,238"},
+    )
+    messages = []
+
+    stats = udc_cli._process_number_field_migration(
+        [package],
+        ["number_of_cells"],
+        fix=True,
+        echo=messages.append,
+    )
+
+    assert package.extras["number_of_cells"] == "254238"
+    assert stats == {
+        "packages_scanned": 1,
+        "packages_with_issues": 1,
+        "issues_found": 1,
+        "fixable": 1,
+        "fixed": 1,
+        "invalid": 0,
+    }
+    assert messages == [
+        'Fix package pkg-draft-1 (draft-housing-data) field "number_of_cells": \'254,238\' -> \'254238\''
+    ]

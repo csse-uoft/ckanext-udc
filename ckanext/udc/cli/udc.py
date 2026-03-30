@@ -220,11 +220,11 @@ def move_to_catalogues():
     "--fix",
     is_flag=True,
     default=False,
-    help="Normalize fixable localized number-field values in place.",
+    help="Normalize fixable number-field values in place.",
 )
 def migrate_number_fields(fix):
     """
-    Check all datasets/catalogues for malformed number extras.
+    Check all non-deleted datasets/catalogues for malformed number extras.
     """
     udc_config = _load_udc_config()
     number_fields = _get_number_field_names(udc_config)
@@ -235,7 +235,7 @@ def migrate_number_fields(fix):
 
     packages = (
         model.Session.query(model.Package)
-        .filter(model.Package.state == "active")
+        .filter(model.Package.state != "deleted")
         .filter(model.Package.type.in_(["catalogue", "dataset"]))
         .yield_per(100)
     )
@@ -263,7 +263,7 @@ def migrate_number_fields(fix):
     )
 
     if stats["issues_found"] and not fix:
-        click.echo("Dry run only. Rerun with --fix to normalize the fixable localized values.")
+        click.echo("Dry run only. Rerun with --fix to normalize the fixable values.")
 
 @udc.command()
 def initdb():
