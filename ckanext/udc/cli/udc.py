@@ -6,7 +6,7 @@ from importlib import import_module
 import os
 import polib
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 from ckan.lib.i18n import build_js_translations, get_ckan_i18n_dir
 
@@ -16,7 +16,7 @@ def udc():
     pass
 
 
-def _load_udc_config() -> dict[str, Any]:
+def _load_udc_config() -> Dict[str, Any]:
     existing_config = model.system_info.get_system_info("ckanext.udc.config")
     if existing_config:
         return json.loads(existing_config)
@@ -26,9 +26,9 @@ def _load_udc_config() -> dict[str, Any]:
         return json.load(fh)
 
 
-def _get_number_field_names(udc_config: dict[str, Any]) -> list[str]:
-    fields: list[str] = []
-    seen: set[str] = set()
+def _get_number_field_names(udc_config: Dict[str, Any]) -> List[str]:
+    fields: List[str] = []
+    seen: Set[str] = set()
 
     for level in udc_config.get("maturity_model", []):
         for field in level.get("fields", []):
@@ -43,7 +43,7 @@ def _get_number_field_names(udc_config: dict[str, Any]) -> list[str]:
     return fields
 
 
-def _normalize_scalar_number(value: Any) -> str | None:
+def _normalize_scalar_number(value: Any) -> Optional[str]:
     if value is None:
         return None
 
@@ -83,12 +83,12 @@ def _parse_jsonish(value: Any) -> Any:
         return None
 
 
-def _normalize_localized_number(value: Any) -> str | None:
+def _normalize_localized_number(value: Any) -> Optional[str]:
     parsed = _parse_jsonish(value)
     if not isinstance(parsed, dict):
         return None
 
-    candidates: list[str] = []
+    candidates: List[str] = []
     for localized_value in parsed.values():
         if localized_value in (None, ""):
             continue
@@ -106,7 +106,7 @@ def _normalize_localized_number(value: Any) -> str | None:
     return None
 
 
-def _inspect_number_field_value(value: Any) -> dict[str, Any]:
+def _inspect_number_field_value(value: Any) -> Dict[str, Any]:
     scalar_value = _normalize_scalar_number(value)
     if scalar_value is not None:
         return {"status": "ok", "normalized": scalar_value}
@@ -130,10 +130,10 @@ def _inspect_number_field_value(value: Any) -> dict[str, Any]:
 
 def _process_number_field_migration(
     packages: Iterable[Any],
-    number_fields: list[str],
+    number_fields: List[str],
     fix: bool = False,
-    echo: Callable[[str], None] | None = None,
-) -> dict[str, int]:
+    echo: Optional[Callable[[str], None]] = None,
+) -> Dict[str, int]:
     emit = echo or (lambda _message: None)
     stats = {
         "packages_scanned": 0,

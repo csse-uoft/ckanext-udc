@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 MAINTENANCE_MODE_CONFIG_KEY = "ckanext.udc.maintenance_mode"
 
 _EXACT_EXEMPT_PATHS = frozenset(
@@ -33,7 +35,7 @@ def is_maintenance_mode_enabled(value: object) -> bool:
     return normalized in {"1", "true", "yes", "on"}
 
 
-def is_maintenance_exempt_path(path: str | None) -> bool:
+def is_maintenance_exempt_path(path: Optional[str]) -> bool:
     normalized_path = path or "/"
     if normalized_path in _EXACT_EXEMPT_PATHS:
         return True
@@ -46,10 +48,10 @@ def is_maintenance_exempt_path(path: str | None) -> bool:
 
 
 def should_render_maintenance(
-    path: str | None,
+    path: Optional[str],
     enabled: bool,
     method: str = "GET",
-    accept_header: str | None = None,
+    accept_header: Optional[str] = None,
 ) -> bool:
     if not enabled:
         return False

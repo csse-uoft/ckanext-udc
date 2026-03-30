@@ -7,14 +7,15 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f4efe4;
-        --card: rgba(255, 251, 243, 0.92);
-        --line: rgba(40, 31, 17, 0.12);
-        --text: #241b10;
-        --muted: #665847;
-        --accent: #0f6c5c;
-        --accent-strong: #0b5145;
-        --shadow: 0 24px 80px rgba(36, 27, 16, 0.14);
+        --bg: #eef2f5;
+        --card: #ffffff;
+        --line: #d8e1e8;
+        --line-strong: #c8d3dc;
+        --text: #25313b;
+        --muted: #637381;
+        --accent: #2b7bb9;
+        --accent-soft: #f0f7fc;
+        --shadow: 0 8px 24px rgba(37, 49, 59, 0.08);
       }
 
       * {
@@ -24,71 +25,67 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: Georgia, "Times New Roman", serif;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         color: var(--text);
-        background:
-          radial-gradient(circle at top left, rgba(15, 108, 92, 0.18), transparent 28%),
-          radial-gradient(circle at bottom right, rgba(193, 123, 48, 0.14), transparent 24%),
-          linear-gradient(180deg, #fbf6eb 0%, var(--bg) 100%);
+        background: linear-gradient(180deg, #f7f9fb 0%, var(--bg) 100%);
       }
 
       main {
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 32px;
+        padding: 24px;
       }
 
       .panel {
-        width: min(760px, 100%);
-        padding: 48px;
-        border: 1px solid var(--line);
-        border-radius: 28px;
+        width: min(720px, 100%);
+        padding: 0;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
         background: var(--card);
         box-shadow: var(--shadow);
-        position: relative;
-        overflow: hidden;
       }
 
-      .panel::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(120deg, rgba(15, 108, 92, 0.08), transparent 32%),
-          linear-gradient(300deg, rgba(193, 123, 48, 0.08), transparent 36%);
-        pointer-events: none;
+      .panel-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcfd;
       }
 
       .eyebrow {
         display: inline-block;
-        padding: 8px 14px;
+        padding: 4px 10px;
         border-radius: 999px;
-        background: rgba(15, 108, 92, 0.1);
-        color: var(--accent-strong);
-        font-size: 12px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
+      .panel-body {
+        padding: 28px 24px 24px;
+      }
+
       h1 {
-        margin: 18px 0 16px;
-        font-size: clamp(2.4rem, 5vw, 4rem);
-        line-height: 0.95;
-        letter-spacing: -0.04em;
+        margin: 0 0 14px;
+        font-size: clamp(2rem, 4.4vw, 2.7rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        font-weight: 600;
       }
 
       p {
         margin: 0;
-        max-width: 58ch;
-        font-size: 1.08rem;
-        line-height: 1.75;
+        max-width: 60ch;
+        font-size: 16px;
+        line-height: 1.7;
         color: var(--muted);
       }
 
       .actions {
-        margin-top: 28px;
+        margin-top: 24px;
         display: flex;
         gap: 14px;
         flex-wrap: wrap;
@@ -98,38 +95,32 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 46px;
-        padding: 0 18px;
-        border-radius: 999px;
-        border: 1px solid transparent;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 3px;
+        border: 1px solid var(--line-strong);
         text-decoration: none;
-        font-weight: 700;
-        transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
       }
 
       .button:hover {
-        transform: translateY(-1px);
-      }
-
-      .button-primary {
-        background: var(--accent);
-        color: #fff;
-        box-shadow: 0 12px 24px rgba(15, 108, 92, 0.18);
+        background: #f7fafc;
       }
 
       .button-secondary {
         background: transparent;
-        color: var(--text);
-        border-color: var(--line);
+        color: var(--accent);
       }
 
       .meta {
-        margin-top: 34px;
-        padding-top: 20px;
+        margin-top: 24px;
+        padding-top: 18px;
         border-top: 1px solid var(--line);
         display: grid;
         gap: 8px;
-        font-size: 0.95rem;
+        font-size: 14px;
         color: var(--muted);
       }
 
@@ -138,9 +129,10 @@
           padding: 18px;
         }
 
-        .panel {
-          padding: 30px 24px;
-          border-radius: 22px;
+        .panel-header,
+        .panel-body {
+          padding-left: 18px;
+          padding-right: 18px;
         }
       }
     </style>
@@ -148,18 +140,21 @@
   <body>
     <main>
       <section class="panel">
-        <span class="eyebrow">Scheduled Maintenance</span>
-        <h1>We are temporarily offline.</h1>
-        <p>
-          The public CUDC site is currently in maintenance mode. We are applying changes and will bring regular pages back as soon as the work is complete.
-        </p>
-        <div class="actions">
-          <a class="button button-primary" href="{{ dashboard_path }}">Open UDRC Dashboard</a>
-          <a class="button button-secondary" href="mailto:{{ config.get('smtp.reply_to', 'admin@example.com') }}">Contact Site Admin</a>
+        <div class="panel-header">
+          <span class="eyebrow">Scheduled Maintenance</span>
         </div>
-        <div class="meta">
-          <div>Status: 503 Service Unavailable</div>
-          <div>Dashboard, login, and operational APIs remain available for maintenance work.</div>
+        <div class="panel-body">
+          <h1>We are temporarily offline.</h1>
+          <p>
+            The public CUDC site is currently in maintenance mode. We are applying changes and will bring regular pages back as soon as the work is complete.
+          </p>
+          <div class="actions">
+            <a class="button button-secondary" href="mailto:{{ config.get('smtp.reply_to', 'admin@example.com') }}">Contact Site Admin</a>
+          </div>
+          <div class="meta">
+            <div>Status: 503 Service Unavailable</div>
+            <div>Public pages are temporarily unavailable during this maintenance window.</div>
+          </div>
         </div>
       </section>
     </main>
