@@ -39,7 +39,7 @@ def test_inspect_number_field_value_accepts_thousands_separators():
     inspection = udc_cli._inspect_number_field_value("10,740")
 
     assert inspection == {
-        "status": "ok",
+        "status": "fixable_scalar",
         "normalized": "10740",
     }
 
@@ -131,4 +131,33 @@ def test_process_number_field_migration_fix_updates_fixable_values():
     assert messages == [
         'Fix package pkg-1 (housing-data) field "number_of_cells": \'{"en": "351"}\' -> \'351\'',
         'Invalid value on package pkg-1 (housing-data) field "number_of_rows": \'not-a-number\'',
+    ]
+
+
+def test_process_number_field_migration_fix_updates_scalar_values_with_thousands_separators():
+    package = SimpleNamespace(
+        id="pkg-1",
+        name="housing-data",
+        extras={"number_of_cells": "10,556"},
+    )
+    messages = []
+
+    stats = udc_cli._process_number_field_migration(
+        [package],
+        ["number_of_cells"],
+        fix=True,
+        echo=messages.append,
+    )
+
+    assert package.extras["number_of_cells"] == "10556"
+    assert stats == {
+        "packages_scanned": 1,
+        "packages_with_issues": 1,
+        "issues_found": 1,
+        "fixable": 1,
+        "fixed": 1,
+        "invalid": 0,
+    }
+    assert messages == [
+        'Fix package pkg-1 (housing-data) field "number_of_cells": \'10,556\' -> \'10556\''
     ]

@@ -114,6 +114,8 @@ def _normalize_localized_number(value: Any) -> Optional[str]:
 def _inspect_number_field_value(value: Any) -> Dict[str, Any]:
     scalar_value = _normalize_scalar_number(value)
     if scalar_value is not None:
+        if isinstance(value, str) and value.strip() != scalar_value:
+            return {"status": "fixable_scalar", "normalized": scalar_value}
         return {"status": "ok", "normalized": scalar_value}
 
     if value in (None, ""):
@@ -166,7 +168,7 @@ def _process_number_field_migration(
             package_id = getattr(package, "id", "<unknown>")
             package_name = getattr(package, "name", package_id)
 
-            if status == "fixable_localized":
+            if status in {"fixable_localized", "fixable_scalar"}:
                 normalized = inspection["normalized"]
                 stats["fixable"] += 1
                 if fix:
