@@ -2,6 +2,7 @@ import click
 import ckan.model as model
 import json
 import logging
+import re
 from importlib import import_module
 import os
 import polib
@@ -56,6 +57,10 @@ def _normalize_scalar_number(value: Any) -> Optional[str]:
         text = value.strip()
         if not text:
             return None
+
+        # Accept common thousands separators such as 10,740 or 1,234.56.
+        if re.match(r"^[+-]?\d{1,3}(,\d{3})+(\.\d+)?$", text):
+            text = text.replace(",", "")
     else:
         return None
 

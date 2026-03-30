@@ -35,6 +35,33 @@ def test_inspect_number_field_value_detects_fixable_localized_json():
     }
 
 
+def test_inspect_number_field_value_accepts_thousands_separators():
+    inspection = udc_cli._inspect_number_field_value("10,740")
+
+    assert inspection == {
+        "status": "ok",
+        "normalized": "10740",
+    }
+
+
+def test_inspect_number_field_value_detects_fixable_localized_json_with_thousands_separators():
+    inspection = udc_cli._inspect_number_field_value('{"en": "10,740", "fr": "10,740"}')
+
+    assert inspection == {
+        "status": "fixable_localized",
+        "normalized": "10740",
+    }
+
+
+def test_inspect_number_field_value_rejects_malformed_thousands_separators():
+    inspection = udc_cli._inspect_number_field_value("10,74")
+
+    assert inspection == {
+        "status": "invalid",
+        "normalized": None,
+    }
+
+
 def test_inspect_number_field_value_flags_conflicting_localized_json():
     inspection = udc_cli._inspect_number_field_value('{"en": "351", "fr": "352"}')
 
