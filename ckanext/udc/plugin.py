@@ -617,6 +617,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
                 "ckanext.udc.catalogue_side_panel_text": [ignore_missing, unicode_safe],
                 # ---- chatgpt summary config ------
                 "ckanext.udc.desc.config": [ignore_missing, unicode_safe],
+                "ckanext.udc.maintenance_mode": [ignore_missing, unicode_safe],
             }
         )
 

@@ -16,9 +16,15 @@ import sys
 from pathlib import Path
 import requests
 from .constants import UDC_REACT_PATH
+import ckan.model as model
 
 from ckanext.udc_react.socketio import initSocketIO
 import ckanext.udc_react.logic.action as _action
+from ckanext.udc_react.maintenance import (
+    MAINTENANCE_MODE_CONFIG_KEY,
+    is_maintenance_mode_enabled,
+    should_render_maintenance,
+)
 
 log = logging.getLogger(__name__)
 
@@ -50,8 +56,35 @@ class UdcReactPlugin(plugins.SingletonPlugin):
         if not ("run" in sys.argv or "uwsgi" in sys.argv):
             # Do not load the plugin if we are running the CLI
             return app
+
+        def render_maintenance_page():
+            html = base.render(
+                "udc_react/maintenance.html",
+                extra_vars={
+                    "dashboard_path": f"/{UDC_REACT_PATH}",
+                },
+            )
+            return Response(html, status=503, headers={"Retry-After": "3600"})
+
+        def maybe_render_maintenance_page():
+            raw_value = model.system_info.get_system_info(MAINTENANCE_MODE_CONFIG_KEY)
+            enabled = is_maintenance_mode_enabled(raw_value)
+            if not should_render_maintenance(
+                path=request.path,
+                enabled=enabled,
+                method=request.method,
+                accept_header=request.headers.get("Accept"),
+            ):
+                return None
+
+            return render_maintenance_page()
+
         # In Development mode, redirect calls to vite
         if not self.is_production:
+
+            @app.before_request
+            def maintenance_before_request_func():
+                return maybe_render_maintenance_page()
 
             def download_file(streamable):
                 with streamable as stream:
@@ -123,6 +156,10 @@ class UdcReactPlugin(plugins.SingletonPlugin):
             # Production build
             @app.before_request
             def before_request_func():
+                maintenance_response = maybe_render_maintenance_page()
+                if maintenance_response is not None:
+                    return maintenance_response
+
                 if request.path.startswith(f"/{UDC_REACT_PATH}"):
                     path = request.path[len(f"/{UDC_REACT_PATH}"):]
                     print("request.path", request.path, path)
