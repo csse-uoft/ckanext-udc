@@ -14,3 +14,4 @@ pychalk>=1.0.0
 # so pin the newest compatible scheduler release explicitly.
 rq_scheduler==0.13.1
 rq==1.16.2
+bs4
