@@ -168,6 +168,7 @@ To install ckanext-udc:
     cd ckanext-udc
     pip install -e .
     pip install -r requirements.txt
+    pip install -r dev-requirements.txt
     ```
 
 3. Add `udc udc_theme udc_import udc_import_other_portals udc_react` to the `ckan.plugins` setting in your CKAN
