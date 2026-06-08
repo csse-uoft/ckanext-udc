@@ -3,7 +3,8 @@ PyLD==2.0.3
 rdflib==6.3.2
 graphdb-importer @ git+https://github.com/csse-uoft/graphdb-importer@f1cf9597833e909bd0e71aca9024877e73ac523b
 numpy==1.26.4
-pandas==2.0.3
+pandas==2.0.3; python_version < "3.12"
+pandas==2.1.4; python_version >= "3.12"
 openai==1.37.1
 Flask-SocketIO==5.3.6
 python-socketio[client]==5.11.3

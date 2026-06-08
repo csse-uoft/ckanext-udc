@@ -1,3 +1,5 @@
 pytest-ckan
 pytest_factoryboy
 pytest-cov
+gevent
+uwsgi
