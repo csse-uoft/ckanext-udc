@@ -1,4 +1,4 @@
-requests==2.29.0
+requests>=2.32.4,<3
 PyLD==2.0.3
 rdflib==6.3.2
 graphdb-importer @ git+https://github.com/csse-uoft/graphdb-importer@f1cf9597833e909bd0e71aca9024877e73ac523b
@@ -10,7 +10,7 @@ Flask-SocketIO==5.3.6
 python-socketio[client]==5.11.3
 typing-extensions>=4.14.1,<5
 pychalk>=1.0.0
-# CKAN currently pins rq==1.11.0, which is compatible with rq-scheduler 0.11.x.
-# rq-scheduler 0.13+ expects Job.enqueue_at_front, which rq 1.11.0 does not expose.
-rq_scheduler==0.11.0
-rq==1.11.0
+# CKAN 2.11.5 pins rq==1.16.2. rq-scheduler 0.14+ no longer resolves with rq 1.x,
+# so pin the newest compatible scheduler release explicitly.
+rq_scheduler==0.13.1
+rq==1.16.2
