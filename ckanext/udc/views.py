@@ -362,16 +362,6 @@ def custom_dataset_search():
     package_type = 'catalogue'
     extra_vars: dict[str, Any] = {}
 
-    try:
-        context = cast(Context, {
-            u'model': model,
-            u'user': current_user.name,
-            u'auth_user_obj': current_user
-        })
-        logic.check_access(u'site_read', context)
-    except logic.NotAuthorized:
-        base.abort(403, _(u'Not authorized to see this page'))
-
     # unicode format (decoded from utf8)
     extra_vars[u'q'] = q = request.args.get(u'q', u'')
 
