@@ -35,6 +35,45 @@
     background-color: #264173;
 }
 
+.homepage .module-stats {
+    margin-top: 1rem;
+    color: #444;
+}
+
+.homepage .module-stats .card {
+    padding: 1.5rem 1.75rem;
+}
+
+.homepage .module-stats .card ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.homepage .module-stats .card ul::after {
+    display: block;
+    clear: both;
+    content: "";
+}
+
+.homepage .module-stats .card ul li {
+    float: left;
+    width: 25%;
+    font-weight: 300;
+}
+
+.homepage .module-stats .card ul li a {
+    display: block;
+}
+
+.homepage .module-stats .card ul li a:hover {
+    text-decoration: none;
+}
+
+.homepage .module-feeds .module-stats {
+    margin-top: 0;
+}
+
 .masthead .main-navbar ul li:hover a, .masthead .main-navbar ul li:focus a, .masthead .main-navbar ul li.active a {
   border-radius: 0.3rem;
   background-color: #002a56;
@@ -59,5 +98,17 @@
     display: initial;
     font-weight: bold;
     padding-left: 2px;
+}
+
+@media (max-width: 767.98px) {
+    .homepage .module-stats {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .homepage .module-feeds .card {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
 }
 
