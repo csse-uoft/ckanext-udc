@@ -6,8 +6,8 @@ numpy==1.26.4
 pandas==2.0.3; python_version < "3.12"
 pandas==2.1.4; python_version >= "3.12"
 openai==1.37.1
-Flask-SocketIO==5.3.6
-python-socketio[client]==5.11.3
+Flask-SocketIO==5.6.1
+python-socketio[client]==5.16.3
 typing-extensions>=4.14.1,<5
 pychalk>=1.0.0
 # CKAN 2.11.5 pins rq==1.16.2. rq-scheduler 0.14+ no longer resolves with rq 1.x,
