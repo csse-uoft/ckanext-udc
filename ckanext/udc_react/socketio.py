@@ -201,7 +201,7 @@ def initSocketIO(app):
         sid = request.sid  # Get the unique session ID for the client
         log.info(f"Register event received from sid {sid}: job_id={job_id}")
 
-        if config.get("beaker.session.validate_key") != valication_key:
+        if (config.get("beaker.session.validate_key") or config.get("SECRET_KEY")) != valication_key:
             emit(
                 "error",
                 {"message": f"Invalid valication_key {valication_key} provided."},

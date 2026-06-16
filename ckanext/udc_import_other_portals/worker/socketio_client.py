@@ -61,7 +61,7 @@ class SocketClient:
         Register the client with the server.
         """
         # Reuse beaker.session.validate_key for socket validation
-        validation_key = config.get("beaker.session.validate_key")
+        validation_key = config.get("beaker.session.validate_key") or config.get("SECRET_KEY")
         self.sio.emit(
             "register", data=(job_id, validation_key), namespace=self.namespace
         )
