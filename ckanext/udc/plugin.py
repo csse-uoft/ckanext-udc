@@ -29,7 +29,7 @@ import ckan.lib.base as base
 from ckan.plugins.toolkit import chained_action, side_effect_free
 import ckan.lib.helpers as h
 from ckan.lib.helpers import Page
-from ckan.common import asbool, current_user, CKANConfig, request, g, config, _
+from ckan.common import asbool, current_user, CKANConfig, request, config, _
 from ckan.lib.search import SearchQueryError, SearchError
 from ckan.lib.plugins import DefaultTranslation
 
@@ -858,7 +858,6 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
         # params.setdefault('qs', '2')
         fq = params.get("fq") or ""
         if not _is_catalogue_search_fq(fq):
-            g.udc_facet_alias_to_solr = None
             return params
 
         ext_items = []
