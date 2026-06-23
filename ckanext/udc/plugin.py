@@ -49,8 +49,10 @@ from ckanext.udc.helpers import (
     get_system_info,
     udc_json_attr,
     render_markdown,
+    udc_search_details,
 )
 from ckanext.udc.solr.config import pick_locale, pick_locale_with_fallback, get_udc_langs, get_current_lang
+from ckanext.udc.search.params import facet_alias_map, get_search_details
 from ckanext.udc.graph.sparql_client import SparqlClient
 from ckanext.udc.graph.preload import preload_ontologies
 from ckanext.udc.graph.logic import get_catalogue_graph
@@ -123,6 +125,14 @@ See https://docs.ckan.org/en/2.10/extensions/custom-config-settings.html?highlig
 See https://docs.ckan.org/en/2.10/theming/webassets.html
 """
 log = logging.getLogger(__name__)
+
+
+def _is_catalogue_search_fq(fq: Any) -> bool:
+    if isinstance(fq, str):
+        return "dataset_type:catalogue" in fq
+    if isinstance(fq, Iterable):
+        return any("dataset_type:catalogue" in item for item in fq if isinstance(item, str))
+    return False
 
 # Add UDC CLI
 # We can then `ckan -c /etc/ckan/default/ckan.ini udc move-to-catalogues` to run the migration script
@@ -565,6 +575,7 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
             "get_maturity_percentages": get_maturity_percentages,
             "get_system_info": get_system_info,
             "udc_json_attr": udc_json_attr,
+            "udc_search_details": udc_search_details,
             "license_options_details": license_options_details,
             "pick_locale_with_fallback": pick_locale_with_fallback,
         }
@@ -593,6 +604,12 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
     def package_types(self):  # -> list[str]
         # This plugin just registers itself as the 'catalogue'.
         return ["dataset", "catalogue"]
+
+    def search_template(self, package_type: Optional[str] = None) -> str:
+        """Return custom search template for catalogue package type."""
+        if package_type == "catalogue":
+            return "package/custom_search.html"
+        return super().search_template()
 
     def update_config_schema(self, schema: Schema):
 
@@ -839,11 +856,64 @@ class UdcPlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm, DefaultTranslati
         # params['qf'] = ' '.join(qf)
         # params.setdefault('pf', f"title_{L}_txt^8")
         # params.setdefault('qs', '2')
+        fq = params.get("fq") or ""
+        if not _is_catalogue_search_fq(fq):
+            g.udc_facet_alias_to_solr = None
+            return params
+
+        ext_items = []
+        for key, value in (params.get("extras") or {}).items():
+            if isinstance(value, list):
+                ext_items.extend((key, item) for item in value)
+            else:
+                ext_items.append((key, value))
+
+        details = get_search_details(ext_items)
+        if details["fq"]:
+            params["fq"] = f"{fq} {details['fq']}".strip()
+
+        facet_fields = params.get("facet.field") or []
+        solr_facet_fields, alias_to_solr = facet_alias_map(facet_fields)
+        params["facet.field"] = solr_facet_fields
+
+        params.setdefault("extras", {})["__udc_facet_alias_to_solr"] = dict(alias_to_solr)
         return params
 
     def after_dataset_search(
         self, search_results: dict[str, Any], search_params: dict[str, Any]
     ) -> dict[str, Any]:
+        if not _is_catalogue_search_fq(search_params.get("fq") or ""):
+            return search_results
+
+        alias_to_solr = (search_params.get("extras") or {}).get("__udc_facet_alias_to_solr")
+        if not alias_to_solr:
+            facet_keys = [
+                "organization",
+                "groups",
+                "tags",
+                "res_format",
+                "license_id",
+            ]
+            for name in self.facet_titles:
+                if name == "portal_type" or name in self.text_fields:
+                    facet_keys.append(name)
+                else:
+                    facet_keys.append("extras_" + name)
+            _, alias_to_solr = facet_alias_map(facet_keys)
+
+        solr_to_alias = {solr_name: alias for alias, solr_name in alias_to_solr.items()}
+
+        raw_facets = search_results.get("search_facets", {})
+        stable_facets = {}
+        for solr_name, payload in raw_facets.items():
+            stable_facets[solr_to_alias.get(solr_name, solr_name)] = payload
+        search_results["search_facets"] = stable_facets
+
+        raw_counts = search_results.get("facets", {})
+        stable_counts = {}
+        for solr_name, payload in raw_counts.items():
+            stable_counts[solr_to_alias.get(solr_name, solr_name)] = payload
+        search_results["facets"] = stable_counts
         return search_results
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:

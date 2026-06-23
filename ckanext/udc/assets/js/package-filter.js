@@ -17,6 +17,11 @@ function multiSelectLabelRenderer(data) {
 
 const CKANFields = ["title", "notes", "url", "version",
     "author", "author_email", "maintainer", "maintainer_email"];
+const UDCFilterParamPrefix = "ext_udc_";
+
+function udcFilterParam(kind, fieldName) {
+    return `${UDCFilterParamPrefix}${kind}_${fieldName}`;
+}
 
 this.ckan.module('advanced-filter', function ($) {
     return {
@@ -76,12 +81,12 @@ this.ckan.module('advanced-filter', function ($) {
 });
 
 /**
- * For full text search, we add a prefix `fts_` to the field name.
- * For exact match search, we add a prefix `exact_` to the field name.
+ * For full text search, we add a prefix `ext_udc_fts_` to the field name.
+ * For exact match search, we add a prefix `ext_udc_exact_` to the field name.
  * 
  * Only type=text fields are supported for full text search
  * 
- * filter-logic-<field_name> is used to determine if the filter logic is AND or OR.
+ * ext_udc_filter_logic_<field_name> is used to determine if the filter logic is AND or OR.
  * 
  */
 this.ckan.module('filter-multiple-select', function ($) {
@@ -129,11 +134,11 @@ this.ckan.module('filter-multiple-select', function ($) {
             // Number filters
             if (this.options.type === "number") {
                 let min, max;
-                if (urlParams.has(`min_${fieldName}`)) {
-                    min = urlParams.get(`min_${fieldName}`)[0];
+                if (urlParams.has(udcFilterParam("min", fieldName))) {
+                    min = urlParams.get(udcFilterParam("min", fieldName))[0];
                 }
-                if (urlParams.has(`max_${fieldName}`)) {
-                    max = urlParams.get(`max_${fieldName}`)[0];
+                if (urlParams.has(udcFilterParam("max", fieldName))) {
+                    max = urlParams.get(udcFilterParam("max", fieldName))[0];
                 }
                 console.log(fieldName, "min", min, "max", max);
 
@@ -172,7 +177,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                 this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
 
                 // Check if the filter logic is set
-                if (urlParams.has(`filter-logic-${fieldName}`)) {
+                if (urlParams.has(udcFilterParam("filter_logic", fieldName))) {
                     document.getElementById(`filter-toggle-${fieldName}`).checked = true;
                     document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Include items without a number');
                 }
@@ -189,11 +194,11 @@ this.ckan.module('filter-multiple-select', function ($) {
             // Date filters
             else if (this.options.type === "date") {
                 let min, max;
-                if (urlParams.has(`min_${fieldName}`)) {
-                    min = urlParams.get(`min_${fieldName}`)[0];
+                if (urlParams.has(udcFilterParam("min", fieldName))) {
+                    min = urlParams.get(udcFilterParam("min", fieldName))[0];
                 }
-                if (urlParams.has(`max_${fieldName}`)) {
-                    max = urlParams.get(`max_${fieldName}`)[0];
+                if (urlParams.has(udcFilterParam("max", fieldName))) {
+                    max = urlParams.get(udcFilterParam("max", fieldName))[0];
                 }
                 console.log(fieldName, "min", min, "max", max);
 
@@ -232,7 +237,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                 this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', checkboxHTML);
 
                 // Check if the filter logic is set
-                if (urlParams.has(`filter-logic-${fieldName}`)) {
+                if (urlParams.has(udcFilterParam("filter_logic", fieldName))) {
                     document.getElementById(`filter-toggle-${fieldName}`).checked = true;
                     document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Include items without a date');
                 }
@@ -260,7 +265,7 @@ this.ckan.module('filter-multiple-select', function ($) {
                     this.el[0].parentElement.nextElementSibling.insertAdjacentHTML('afterend', html);
 
                     // Check if the filter logic is set to "and"
-                    if (urlParams.has(`filter-logic-${fieldName}`) && urlParams.get(`filter-logic-${fieldName}`)[0] === "AND") {
+                    if (urlParams.has(udcFilterParam("filter_logic", fieldName)) && urlParams.get(udcFilterParam("filter_logic", fieldName))[0] === "AND") {
                         document.getElementById(`filter-toggle-${fieldName}`).checked = true;
                         document.getElementById(`filter-toggle-label-${fieldName}`).textContent = self._('Match all selected (AND)');
                     }
@@ -290,8 +295,8 @@ this.ckan.module('filter-multiple-select', function ($) {
                 }
 
                 // Add fields that are not in facets (title, description, etc.)
-                if (urlParams.has(`fts_${fieldName}`)) {
-                    for (const value of urlParams.get(`fts_${fieldName}`)) {
+                if (urlParams.has(udcFilterParam("fts", fieldName))) {
+                    for (const value of urlParams.get(udcFilterParam("fts", fieldName))) {
                         console.log("Adding fts_", fieldName, value);
                         let item = {
                             value: value,
@@ -308,8 +313,8 @@ this.ckan.module('filter-multiple-select', function ($) {
                 }
 
                 // Add fields beginning with `exact_`
-                if (urlParams.has(`exact_${fieldName}`)) {
-                    for (const value of urlParams.get(`exact_${fieldName}`)) {
+                if (urlParams.has(udcFilterParam("exact", fieldName))) {
+                    for (const value of urlParams.get(udcFilterParam("exact", fieldName))) {
                         console.log("Adding exact_", fieldName, value);
                         const item = {
                             value: value,
@@ -372,14 +377,14 @@ this.ckan.module('filter-apply-button', function ($) {
                         const min = document.querySelector(`#filter-${fieldName}-min`);
                         const max = document.querySelector(`#filter-${fieldName}-max`);
                         if (min && min.value) {
-                            params.add(`min_${fieldName}=${min.value}`);
+                            params.add(`${udcFilterParam("min", encodeURIComponent(fieldName))}=${min.value}`);
                         }
                         if (max && max.value) {
-                            params.add(`max_${fieldName}=${max.value}`);
+                            params.add(`${udcFilterParam("max", encodeURIComponent(fieldName))}=${max.value}`);
                         }
                         const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
                         if (filterToggle && filterToggle.checked) {
-                            params.add(`filter-logic-${fieldName}=${type === "date" ? "date" : "number"}`);
+                            params.add(`${udcFilterParam("filter_logic", encodeURIComponent(fieldName))}=${type === "date" ? "date" : "number"}`);
                         }
                     } else {
                         const filterToggle = document.getElementById(`filter-toggle-${fieldName}`);
@@ -389,15 +394,15 @@ this.ckan.module('filter-apply-button', function ($) {
                         for (let { value, label, isNew } of filterValues) {
 
                             if (isNew) {
-                                params.add(`fts_${encodeURIComponent(fieldName)}=${value}`);
+                                params.add(`${udcFilterParam("fts", encodeURIComponent(fieldName))}=${value}`);
                                 console.log("Adding fts_", fieldName, value);
                             } else {
-                                params.add(`exact_${encodeURIComponent(fieldName)}=${value}`);
+                                params.add(`${udcFilterParam("exact", encodeURIComponent(fieldName))}=${value}`);
                                 console.log("Adding exact_", fieldName, value);
                             }
                         }
                         if (filterToggle && filterToggle.checked) {
-                            params.add(`filter-logic-${fieldName}=AND`);
+                            params.add(`${udcFilterParam("filter_logic", encodeURIComponent(fieldName))}=AND`);
                         }
                     }
                 }
@@ -407,7 +412,7 @@ this.ckan.module('filter-apply-button', function ($) {
                 console.log("usedNames", usedNames);
                 for (const [k, v] of currURLSearchParams.entries()) {
                     // Add those params that are not covered by the usedNames
-                    if (k.startsWith("filter-logic-") || k.startsWith("min_") || k.startsWith("max_") || k.startsWith("exact_") || k.startsWith("fts_")) {
+                    if (k.startsWith(UDCFilterParamPrefix) || k.startsWith("filter-logic-") || k.startsWith("min_") || k.startsWith("max_") || k.startsWith("exact_") || k.startsWith("fts_")) {
                         // Skip these params
                         continue;
                     }

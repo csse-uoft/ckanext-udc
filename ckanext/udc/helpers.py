@@ -18,6 +18,7 @@ import ckan.lib.helpers as h
 from ckan.common import current_user, _
 
 from .graph.logic import onUpdateCatalogue, onDeleteCatalogue, get_catalogue_graph
+from .search.params import get_search_details
 from ckanext.udc.file_format.logic import before_package_update as before_package_update_for_file_format
 
 import logging
@@ -148,13 +149,16 @@ def get_default_facet_titles():
 
 def process_facets_fields(facets_fields: dict):
     """For search page displaying search filters"""
-    print("facets_fields", facets_fields)
     results = {}
     for field in facets_fields:
         if field.startswith("filter-logic"):
             continue
-        
-        if field.startswith("extras_"):
+
+        field_value = facets_fields[field]
+        field_name = field_value.get("ui") if isinstance(field_value, dict) else None
+        if field_name:
+            pass
+        elif field.startswith("extras_"):
             field_name = field[7:]
         elif field.endswith("_ngram"):
             field_name = field[:-6]
@@ -164,7 +168,6 @@ def process_facets_fields(facets_fields: dict):
         if field_name not in results:
             results[field_name] = {"logic": "or", "values": []}
         
-        field_value = facets_fields[field]
         if isinstance(field_value, list):
             for item in field_value:
                 results[field_name]["values"].append({
@@ -177,9 +180,10 @@ def process_facets_fields(facets_fields: dict):
         if isinstance(field_value, dict) and 'values' in field_value:
             values = field_value['values']
             is_fts = field_value.get('fts', False)
-            for item in values:
+            params = field_value.get("params", [])
+            for index, item in enumerate(values):
                 results[field_name]["values"].append({
-                    "ori_field": field,
+                    "ori_field": params[index] if index < len(params) else field,
                     "ori_value": item,
                     "value": f'Search for "{item}"' if is_fts else item,
                 })
@@ -190,13 +194,13 @@ def process_facets_fields(facets_fields: dict):
 
             if min:
                 results[field_name]["values"].append({
-                    "ori_field": "min_" + field_name,
+                    "ori_field": field_value.get("min_param", "min_" + field_name),
                     "ori_value": min,
                     "value": f"From: {min}",
                 })
             if max:
                 results[field_name]["values"].append({
-                    "ori_field": "max_" + field_name,
+                    "ori_field": field_value.get("max_param", "max_" + field_name),
                     "ori_value": max,
                     "value": f"To: {max}",
                 })
@@ -206,6 +210,15 @@ def process_facets_fields(facets_fields: dict):
             results[field_name]["logic"] = "and"
             
     return results
+
+def udc_search_details(default_fields: Optional[dict] = None):
+    details = get_search_details()
+    fields_grouped = {}
+    if isinstance(default_fields, dict):
+        fields_grouped.update(default_fields)
+    fields_grouped.update(details["fields_grouped"])
+    details["fields_grouped"] = fields_grouped
+    return details
 
 def get_maturity_percentages(config, pkg_dict):
     percentages = []

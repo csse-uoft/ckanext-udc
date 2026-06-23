@@ -9,6 +9,7 @@ UDC extends Solr in three areas:
 - **Configuration helpers** (`solr/config.py`) expose the language list that drives multilingual fields and resolve the active user interface language.
 - **Schema helpers** (`solr/helpers.py` and `solr/solr.py`) manage dynamic and static Solr fields for the maturity model, translated core fields, and tags.
 - **Index pipeline hooks** (`solr/index.py`) rewrite CKAN package dictionaries before they reach Solr to populate language-aware text and facet fields.
+- **Search-time helpers** (`search/params.py` and `plugin.py`) translate UDC filter UI parameters into Solr filters and map language-aware Solr facet names back to stable UI names.
 
 At runtime the CKAN plugin uses these components to keep schema state aligned with the maturity model configuration and to emit multilingual documents.
 
@@ -99,6 +100,31 @@ Key steps:
 
 All helper functions (`_jsonish`, `_tag_names`) and log messages are designed to aid debugging complex multilingual payloads.
 
+## Search-Time Transformations (`search/params.py`)
+
+CKAN 2.11 owns the package-type search route for `/catalogue`. UDC customizes that native flow with `IDatasetForm.search_template()` and `IPackageController` hooks instead of registering a copied search blueprint.
+
+The advanced filter UI sends UDC-specific query parameters with the `ext_udc_` prefix:
+
+- `ext_udc_exact_<field>` for exact/facet-style filters.
+- `ext_udc_fts_<field>` for full-text field filters.
+- `ext_udc_min_<field>` and `ext_udc_max_<field>` for numeric/date ranges.
+- `ext_udc_filter_logic_<field>` for AND logic or range metadata.
+
+The prefix keeps CKAN 2.11's native search parser from treating these UI parameters as direct Solr fields. `get_search_details()` reads the UDC parameters from the request (or from CKAN's `extras` dict inside search hooks), resolves the active language with `get_current_lang()`, and builds the Solr `fq` fragment.
+
+Field mapping is intentionally split between stable UI names and Solr field names:
+
+- Translated text facets use `<field>_<lang>_f`; translated full-text filters use `<field>_<lang>_txt`.
+- Tags use `tags_<lang>_f` and `tags_<lang>_txt`.
+- `portal_type` maps to `extras_portal_type`.
+- `version_dataset` and `dataset_versions` map to their URL facet helper fields.
+- Non-text maturity model fields continue to use `extras_<field>`.
+
+`before_dataset_search()` appends the generated `fq` only for catalogue searches and replaces requested facet names with Solr field names. `after_dataset_search()` then rewrites `search_facets` and `facets` back to the stable UI names so templates, JavaScript, and API consumers can keep using names like `theme`, `tags`, and `portal_type`.
+
+These search-time changes do not require a Solr schema update or reindex by themselves. Reindexing is only required when schema fields, language configuration, or index-time population changes.
+
 ## Operational Notes
 
 - **Reindexing**: Any schema change (dynamic field adjustments, new extras fields) requires rerunning `ckan search-index rebuild` after Solr restart.
@@ -108,7 +134,8 @@ All helper functions (`_jsonish`, `_tag_names`) and log messages are designed to
 
 ## Related Components
 
-- `ckanext/udc/plugin.py` wires `before_dataset_index` into CKAN’s search hooks and exposes helper lists (`text_fields`, `multiple_select_fields`).
+- `ckanext/udc/plugin.py` wires `before_dataset_index`, `before_dataset_search`, and `after_dataset_search` into CKAN’s search hooks and exposes helper lists (`text_fields`, `multiple_select_fields`).
+- `ckanext/udc/search/params.py` converts UDC filter parameters into Solr fields and facet aliases.
 - `ckanext/udc/search/logic/actions.py` uses `get_current_lang()` to request language-specific facets from Solr.
 
 With this reference you can adapt schema behaviour, extend the index-time logic, or troubleshoot Solr integration issues within CKAN-UDC.

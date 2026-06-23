@@ -10,13 +10,14 @@
 {% endblock %}
 
 {% block form %}
+  {% set udc_search = h.udc_search_details(fields_grouped) %}
   {% set facets = {
-    'fields': fields_grouped,
+    'fields': udc_search.fields_grouped,
     'search': search_facets,
     'titles': facet_titles,
     'translated_fields': translated_fields,
     'remove_field': remove_field,
-    'filter_logics': filter_logics }
+    'filter_logics': udc_search.filter_logics }
   %}
   {% do facets.titles.update({
     'title': _("Title"),
@@ -65,4 +66,3 @@
     <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span class="text">{{_('close')}}</span></a>
   </div>
 {% endblock %}
-

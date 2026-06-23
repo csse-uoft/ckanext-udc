@@ -588,6 +588,7 @@ def redirect_to_catalogue_search():
 
 # Blueprint for raw graph endpoints
 graph_blueprint = Blueprint('udc_graph', __name__)
+__all__ = ["graph_blueprint"]
 
 
 @graph_blueprint.route('/catalogue/<package_id>/graph')

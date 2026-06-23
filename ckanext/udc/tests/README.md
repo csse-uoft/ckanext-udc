@@ -41,9 +41,16 @@ Tests for helper functions used throughout the extension.
 **Functions Tested:**
 - `process_facets_fields()` - Normalizes facet filters and logic operators
   - Removes `extras_` prefixes from field names
+  - Preserves stable UI field names from search details (`ui`)
+  - Preserves UDC query parameter names for filter pill removal
   - Extracts filter logic (AND/OR) from field keys
   - Handles range filters (min/max for numeric fields)
   - Processes full-text search indicators
+
+- `udc_search_details()` / `search.params.get_search_details()` - Builds CKAN 2.11 catalogue search filter metadata
+  - Reads `ext_udc_exact_*`, `ext_udc_fts_*`, `ext_udc_min_*`, and `ext_udc_max_*` parameters
+  - Maps stable UI names to language-aware Solr fields
+  - Returns grouped filter data for the template and Solr `fq` fragments for search hooks
   
 - `get_maturity_percentages()` - Calculates dataset maturity scores
   - Counts completed core CKAN fields
